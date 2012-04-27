@@ -1,0 +1,116 @@
+/*
+// Copyright (C) 2012 Brett Dixon
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the 
+// "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish,
+// distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject 
+// to the following conditions:
+
+// The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO 
+// THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT 
+// SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN 
+// ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE 
+// USE OR OTHER DEALINGS IN THE SOFTWARE.
+*/
+
+body {
+    overflow-x: hidden;
+}
+#main {
+    position: relative;
+    width: 100%;
+    font-family: sans-serif;
+    font-size: 13px;
+    padding-left: 40px;
+}
+#url {
+    width: 50%;
+    height: 24px;
+    font-size: 16px;
+    padding: 4px;
+    border: 1px solid #CCC;
+    border-radius: 4px;
+    -webkit-border-radius: 4px;
+    -moz-border-radius: 4px;
+    -o-border-radius: 4px;
+}
+#controls {
+    border-bottom: 1px solid #CCC;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+    -webkit-box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+    -moz-box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+    -o-box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+}
+fieldset {
+    border: none;
+}
+
+.close {
+    border-bottom: 1px solid #ccc;
+}
+
+ul {
+    padding: 0 18px;
+    border-left: 1px dotted #aaa;
+}
+li {
+    line-height: 16px;
+}
+.rest-array { list-style-image:url('../i/Array.png'); cursor: pointer; }
+.rest-object { list-style-image:url('../i/Dictionary.png'); cursor: pointer; }
+.rest-boolean { list-style-image:url('../i/Bool.png'); }
+.rest-number { list-style-image:url('../i/Number.png'); }
+.rest-string { list-style-image:url('../i/String.png'); }
+.rest-null { list-style-image:url('../i/Null.png'); }
+
+div.button {
+    display: inline-block;
+    margin: 8px;
+    padding: 3px 12px;
+    text-align: center;
+    vertical-align: middle;
+    white-space: nowrap;
+    cursor: default;
+    outline: none;
+    color: #333;
+    font-size: 75%;
+    font-family: arial;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-top-color: rgba(0, 0, 0, 0.1);
+    border-bottom-color: rgba(0, 0, 0, 0.1);
+    font-weight: bold;
+    padding-top: 7px;
+    padding-bottom: 7px;
+    background: whiteSmoke;
+    background-image: -webkit-gradient(linear,left top,left bottom,from(#f5f5f5),to(#f1f1f1));
+    background-image: -webkit-linear-gradient(top,#f5f5f5,#f1f1f1);
+    background-image: -moz-linear-gradient(top,#f5f5f5,#f1f1f1);
+    background-image: -ms-linear-gradient(top,#f5f5f5,#f1f1f1);
+    background-image: -o-linear-gradient(top,#f5f5f5,#f1f1f1);
+    background-image: linear-gradient(top,#f5f5f5,#f1f1f1);
+    text-shadow: 0 1px rgba(0, 0, 0, 0.1);
+    text-transform: uppercase;
+    border-radius: 2px;
+    -webkit-border-radius: 2px;
+    -moz-border-radius: 2px;
+    transition: border-color .218s;
+    -webkit-transition: border-color .218s;
+    -moz-transition: border-color .218s;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+}
+div.button:hover {
+    background-image: -webkit-gradient(linear,left top,left bottom,from(#f8f8f8),to(#f1f1f1));
+    background-image: -webkit-linear-gradient(top,#f8f8f8,#f1f1f1);
+    background-image: -moz-linear-gradient(top,#f8f8f8,#f1f1f1);
+    background-image: -ms-linear-gradient(top,#f8f8f8,#f1f1f1);
+    background-image: -o-linear-gradient(top,#f8f8f8,#f1f1f1);
+    background-image: linear-gradient(top,#f8f8f8,#f1f1f1);
+    border-bottom-color: rgba(0,0,0,0.4);
+    box-shadow: 0 1px 1px rgba(0,0,0,0.2);
+    -webkit-box-shadow: 0 1px 1px rgba(0,0,0,0.2);
+    -moz-box-shadow: 0 1px 1px rgba(0,0,0,0.2);
+}

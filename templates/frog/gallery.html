@@ -1,0 +1,41 @@
+<!doctype html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+        <title>{{object.title}}</title>
+        <meta name="description" content="">
+
+        <!-- Place favicon.ico and apple-touch-icon.png in the root directory: mathiasbynens.be/notes/touch-icons -->
+
+        <link rel="stylesheet" href="{{STATIC_URL}}c/style.css">
+
+        <script src="{{STATIC_URL}}j/libs/modernizr-2.5.3.min.js"></script>
+        <script src="{{STATIC_URL}}j/mootoolsCore.js"></script>
+
+        <script>
+            var t, thumbnails, g;
+            window.addEvent('domready', function() {
+                g = new Frog.Gallery();
+                g.request();
+            });
+        </script>
+    </head>
+    <body>
+        <div id="main">
+            
+        </div>
+        <!-- JavaScript at the bottom for fast page loading -->
+        <script src="{{STATIC_URL}}j/mootoolsMore.js"></script>
+
+        <!-- scripts concatenated and minified via build script -->
+        <script src="{{STATIC_URL}}j/libs/frog.js"></script>
+        <script src="{{STATIC_URL}}j/libs/frog.thumbnail.js"></script>
+        <script src="{{STATIC_URL}}j/libs/frog.viewer.js"></script>
+        <script src="{{STATIC_URL}}j/libs/frog.gallery.js"></script>
+
+        <script src="{{STATIC_URL}}j/plugins.js"></script>
+        <script src="{{STATIC_URL}}j/script.js"></script>
+        <!-- end scripts -->
+    </body>
+</html>
