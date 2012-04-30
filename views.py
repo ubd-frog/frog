@@ -276,7 +276,6 @@ class TagView(MainView):
 
     @csrf_exempt
     def search(self, request):
-        print request.method
         q = request.GET.get('q', '')
         includeSearch = request.GET.get('search', False)
 

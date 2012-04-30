@@ -25,7 +25,6 @@ class Uploader(object):
     @csrf_exempt
     def post(self, request):
         res = Result()
-        pprint(request.FILES)
         for filename, f in request.FILES.iteritems():
             try:
                 filename = f.name
