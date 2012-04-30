@@ -74,11 +74,14 @@ Frog.Thumbnail = new Class({
                 }
             }
         }).inject(this.imgLink);
+
+        var tags = new Element('div', {'class': 'tag-hover'}).inject(this.element);
+        this.tagList = new Element('div').inject(tags);
+
         var bot = new Element('div').inject(this.element);
         this.title = new Element('div', {'text': this.options.title}).inject(bot);
         var artistDiv = new Element('div', {'text': 'Artist: '}).inject(bot);
         this.artist = new Element('a', {'href': "javascript:void(0);"}).inject(artistDiv);
-        this.tagList = new Element('div').inject(bot);
     },
     toElement: function() {
         return this.element;

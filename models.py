@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.core.exceptions import ObjectDoesNotExist
 
 from dev.settings import MEDIA_ROOT
 
@@ -53,7 +54,7 @@ class Piece(models.Model):
     def getUniqueID(path, user):
         path = Path(path)
         username = 'Anonymous' if user.is_anonymous() else user.username
-        return '%s_%s/%s' % (username, path.parent.namebase, path.name)
+        return '%s_%s' % (username, path.name)
 
     def getGuid(self):
         return Guid(self.id, self.AssetType)
@@ -115,7 +116,12 @@ class Image(Piece):
             else:
                 setattr(self, n[0], self.source)
 
-        
+        for gal in galleries:
+            g = Gallery.objects.get(pk=int(gal))
+            g.images.add(self)
+
+        artistTag = Tag.objects.get_or_create(name=self.author.first_name + ' ' + self.author.last_name)[0]
+        self.tags.add(artistTag)
 
         if not self.guid:
             self.guid = self.getGuid().guid

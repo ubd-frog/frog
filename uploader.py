@@ -25,10 +25,14 @@ class Uploader(object):
     @csrf_exempt
     def post(self, request):
         res = Result()
+        pprint(request.FILES)
         for filename, f in request.FILES.iteritems():
             try:
+                filename = f.name
                 paths = json.loads(request.POST.get('paths', '{}').replace("'", "\""))
                 foreignPath = paths.get(filename, "%s/%s"% (uniqueID(), filename))
+                galleries = request.POST.get('galleries', '').split(',');
+                print 'galleries:', galleries
                 
                 uniqueName = Piece.getUniqueID(foreignPath, request.user)
                 
@@ -61,7 +65,7 @@ class Uploader(object):
                 obj.hash = hashVal
                 obj.foreign_path = foreignPath
                 obj.title = objPath.namebase
-                obj.export(hashVal, hashPath)
+                obj.export(hashVal, hashPath, galleries=galleries)
 
                 res.append(obj.json())
             except Exception, e:

@@ -64,8 +64,10 @@ Which UI to use?
         initialize: function() {
             this.tags = {};
             var self = this;
+            
             new Request.JSON({
                 url: '/frog/tag/',
+                async: false,
                 onSuccess: function(res) {
                     if (res.isSuccess) {
                         res.values.each(function(tag) {
@@ -112,6 +114,27 @@ Which UI to use?
 
         }
     });
+    Frog.Tag = new Class({
+        Implements: Events,
+        initialize: function(id, name) {
+            var self = this;
+            this.id = id;
+            this.name = name;
+            this.element = new Element('li', {'class': 'frog-tag', id: id});
+            new Element('a', {href: 'javascript:void(0);', text: name}).inject(this.element);
+            this.closeButton = new Element('div', {
+                text: 'x',
+                events: {
+                    'click': function(e) {
+                        self.fireEvent('onClose', [self]);
+                    }
+                }
+            }).inject(this.element);
+        },
+        toElement: function() {
+            return this.element;
+        }
+    })
     Frog.Tags = new Frog.TagManager();
 
 })(window);

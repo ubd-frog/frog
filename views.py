@@ -85,18 +85,16 @@ class GalleryView(MainView):
     def filter(self, request, obj_id):
         self._processRequest(request, obj_id)
         
-        tags = json.loads(request.GET.get('tags', '[]'))
-        search = request.GET.get('search', '')
+        tags = json.loads(request.GET.get('filters', '[]'))
         rng = request.GET.get('rng', None)
         more = request.GET.get('more', False)
         models = request.GET.get('models', 'image,video')
 
         models = [ContentType.objects.get(app_label='frog', model=x) for x in models.split(',')]
 
+        return self._filter(tags=tags, rng=rng, models=models, more=more)
 
-        return self._filter(tags=tags, search=search, rng=rng, models=models, more=more)
-
-    def _filter(self, search=None, tags=None, models=(Image, Video), rng=None, more=False):
+    def _filter(self, tags=None, models=(Image, Video), rng=None, more=False):
         ''' filter on
         search, tags, models
         accept range in #:#
@@ -139,11 +137,15 @@ class GalleryView(MainView):
             idDict[m.model] = m.model_class().objects.filter(gallery=self.object, id__lt=self.request.session['last_%s_id' % m.model])
             logger.debug(m.model + '_initial_query: %f' % (time.clock() - NOW))
 
-            if search:
-                pass
-            elif tags:
-                for bucket in tags:
-                    o = Q(tags__id__in=bucket)
+            if tags:
+                for bucket in tags:#[t for t in tags if isinstance(t, int) or isinstance(t, long)]:
+                    o = Q()
+                    for item in bucket:
+                        if isinstance(item, int) or isinstance(item, long):
+                            o |= Q(tags__id=item)
+                        else:
+                            ## -- Too simple, replace with solution using a real search engine. overkill?
+                            o |= Q(title__icontains=item)
                     idDict[m.model] = idDict[m.model].filter(o)
                 logger.debug(m.model + '_added_buckets(%i): %f' % (len(tags), time.clock() - NOW))
             else:
@@ -271,6 +273,21 @@ class TagView(MainView):
         self._manageTags(tagList, guids, add=False)
 
         return JsonResponse(res)
+
+    @csrf_exempt
+    def search(self, request):
+        print request.method
+        q = request.GET.get('q', '')
+        includeSearch = request.GET.get('search', False)
+
+        if includeSearch:
+            l = [{'id': 0, 'name': 'Search for: %s' % q}]
+        else:
+            l = []
+
+        l += [t.json() for t in Tag.objects.filter(name__icontains=q)]
+
+        return JsonResponse(l)
 
     def _manageTags(self, tagList, guids, add=True):
         objects = getObjectsFromGuids(guids)

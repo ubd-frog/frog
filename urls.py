@@ -16,6 +16,7 @@ urlpatterns = patterns('',
     url(r'^video/(?P<obj_id>\d+)$', video.view),
 
     url(r'^tag/$', tag.index),
+    url(r'^tag/search$', tag.search),
     url(r'^tag/(?P<obj_id>\d+)$', tag.view),
 
     url(r'^$', uploader.post),
