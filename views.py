@@ -18,7 +18,7 @@ from models import Gallery, Image, Video, Tag
 from common import MainView, Result, JsonResponse, getObjectsFromGuids
 
 
-gRange = 3
+gRange = 300
 logger = logging.getLogger('dev.frog')
 
 

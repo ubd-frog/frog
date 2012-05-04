@@ -214,10 +214,12 @@ td { vertical-align: top; }
 
 body {
     background: #202020;
+    overflow-y: scroll;
+}
+body > div {
     font-family: Verdana;
     font-size: 11px;
     color: #ccc;
-    overflow-y: scroll;
 }
 a, a:visited { color: #b8d364; text-decoration: none; }
 a:hover { color: #fff; }
@@ -314,19 +316,35 @@ a:hover { color: #fff; }
         -webkit-transition: background 0.3s 0.5s;
         -webkit-transition: opacity 0.3s 0.5s;
     }
+/*Query Builder*/
 ul.frog-bucket {
     list-style-type: none;
-    margin: 0;
+    margin: 10px;
     padding: 0;
 }
     ul.frog-bucket li {
         float: left;
     }
 li.frog-tag {
+    position: relative;
     min-width: 140px;
+    margin: 4px;
+    padding: 2px 0 2px 20px;
     background: #333;
     border: 1px solid #666;
+    -webkit-border-radius: 10px 0 0 10px;
 }
+    li.frog-tag span {
+        display: inline-block;
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        width: 14px;
+        height: 14px;
+        background: #202020;
+        border: 1px solid #666;
+        -webkit-border-radius: 7px;
+    }
     li.frog-tag * {
 
     }
@@ -334,13 +352,31 @@ li.frog-tag {
         float: right;
         width: 16px;
         height: 16px;
-        border: 1px solid #000;
+        border-left: 1px solid #000;
+        text-align: center;
+        cursor: pointer;
     }
+        li.frog-tag div:last-child:hover {
+            color: #fff;
+        }
+#frog_builder {
+    width: 100%;
+    overflow: auto;
+}
+#frog_builder input {
+    width: 240px;
+    height: 22px;
+    font-size: 16px;
+    margin: 4px;
+}
+
+/*Main Elements*/
 #gallery {
     width: 100%;
     overflow: auto;
 }
 #upload {
+    display: none;
     position: absolute;
     top: 0;
     left: 0;
@@ -351,7 +387,71 @@ li.frog-tag {
 }
     #upload_drop {
         width: 80%;
-        height: 100px;
-        margin: 0 auto;
-        background: rgba(255,255,255,0.5);
+        height: 160px;
+        margin: 160px auto 0;
+        background: #ccc;
+        font-size: 34px;
+        text-align: center;
+        padding-top: 48px;
+        color: #333;
+        border: 4px solid #999;
+        -webkit-border-radius: 12px;
     }
+    #upload_files {
+        width: 80%;
+        margin: 0 auto;
+    }
+.frog-tools {
+    width: 100%;
+    height: 28px;
+}
+.ma-container li span {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    margin-right: 4px;
+    background: url(/static/i/tag_orange.png) no-repeat;
+}
+/*Autocomplete*/
+.ma-container{
+    color: #000;
+    border: 1px solid #333;
+    background-color: #fff;
+    position: absolute;
+    visibility: hidden;
+    overflow-y: auto;
+    overflow-x: hidden;
+    box-sizing: content-box;
+    -moz-box-sizing: content-box;
+    -ms-box-sizing: content-box;
+    -webkit-box-sizing: content-box;
+}
+.ma-container ul{
+    list-style: none;
+    overflow: hidden;
+    width: 100%;
+    padding: 0;
+    margin: 0;
+}
+.ma-container li{
+    padding: 2px 5px;
+    line-height: 16px;
+    cursor: pointer;
+    float: left;
+    width: 100%;
+    overflow: hidden;
+    font-size: 15px;
+}
+.ma-container .ma-hover{
+    color: #fff;
+    background-color: #921506 !important;
+}
+.ma-container .ma-odd{
+}
+.ma-container .ma-even{
+    background-color: #efefef;
+}
+.ma-loading{
+    background-color: #fafba4;
+}
+

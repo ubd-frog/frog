@@ -119,9 +119,10 @@ Which UI to use?
         initialize: function(id, name) {
             var self = this;
             this.id = id;
-            this.name = name;
-            this.element = new Element('li', {'class': 'frog-tag', id: id});
-            new Element('a', {href: 'javascript:void(0);', text: name}).inject(this.element);
+            this.name = name || Frog.Tags.get(id);
+            this.element = new Element('li', {'class': 'frog-tag', id: this.id});
+            new Element('span').inject(this.element)
+            new Element('a', {href: 'javascript:void(0);', text: this.name}).inject(this.element);
             this.closeButton = new Element('div', {
                 text: 'x',
                 events: {

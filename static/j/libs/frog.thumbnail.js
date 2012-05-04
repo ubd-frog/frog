@@ -41,7 +41,7 @@ Frog.Thumbnail = new Class({
             events: {
                 click: function(e) {
                     if (e.target.get('tag') === 'div') {
-                        self.fireEvent('onSelect', [e]);
+                        self.setSelected();
                     }
                 }
             }
@@ -75,7 +75,7 @@ Frog.Thumbnail = new Class({
             }
         }).inject(this.imgLink);
 
-        var tags = new Element('div', {'class': 'tag-hover'}).inject(this.element);
+        var tags = new Element('div', {'class': 'tag-hover'})//.inject(this.element);
         this.tagList = new Element('div').inject(tags);
 
         var bot = new Element('div').inject(this.element);
@@ -107,7 +107,13 @@ Frog.Thumbnail = new Class({
         });
     },
     setSelected: function(sel) {
-        sel = (typeof sel === 'undefined') ? true : sel;
+        this.selected = (typeof sel === 'undefined') ? !this.selected : sel;
+        if (this.selected) {
+            this.element.addClass('selected');
+        }
+        else {
+            this.element.removeClass('selected');
+        }
         this.fireEvent('onSelect', [this]);
     },
     addTag: function(id) {

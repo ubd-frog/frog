@@ -10,8 +10,8 @@ Frog.QueryBuilder = new Class({
         var self = this;
         this.setOptions(options);
 
-        this.data = this.options.data;
-        this.element = new Element('div');
+        this.data = this.options.data || [];
+        this.element = new Element('div', {id: 'frog_builder'});
 
         var dirty = false;
 
@@ -51,10 +51,23 @@ Frog.QueryBuilder = new Class({
         var self = this;
         var idx = this.data.length - 1;
         var li = new Element('li');
-        var input = new Element('input').inject(li);
+        var input = new Element('input', {placeholder: "Search"}).inject(li);
+        input.addEvent('keyup', function(e) {
+            if (e.code === 13) {
+                self._selectCallback(idx, {id: 0, name: this.value}, this);
+            }
+        })
         var completer = new Meio.Autocomplete(input, '/frog/tag/search', {
             filter: {
-                path: 'name'
+                path: 'name',
+                formatItem: function(text, data) {
+                    if (data.id === 0) {
+                        return '<span class="search"></span>' + data.name
+                    }
+                    else {
+                        return '<span></span>' + data.name
+                    }
+                }
             },
             urlOptions: {
                 extraParams: [{
@@ -62,29 +75,7 @@ Frog.QueryBuilder = new Class({
                 }]
             },
             onSelect: function(elements, value) {
-                var tag, name;
-                if (value.id > 0) {
-                    self.data[idx].push(value.id);
-                    name = value.name;
-                }
-                else {
-                    self.data[idx].push(this.inputedText);
-                    name = this.inputedText;
-                }
-                tag = new Frog.Tag(value.id, name);
-                tag.addEvent('close', function(t) {
-                    $(t).destroy();
-                    if (value.id > 0) {
-                        self.data[idx].erase(t.id)
-                    }
-                    else {
-                        self.data[idx].erase(t.name)
-                    }
-                    self.fireEvent('onChange', [self.data]);
-                })
-                ul.grab($(tag), 'top');
-                elements.field.node.value = "";
-                self.fireEvent('onChange', [self.data]);
+                self._selectCallback(idx, value, elements.field.node);
             }
         });
         li.inject(ul);
@@ -92,5 +83,52 @@ Frog.QueryBuilder = new Class({
     },
     removeBucket: function(idx) {
 
+    },
+    addTag: function(bucket, tag_id) {
+        if (!this.data[bucket]) {
+            this.addBucket();
+        }
+        if (this.data[bucket].indexOf(tag_id) === -1) {
+            this.data[bucket].push(tag_id);
+            var tag = new Frog.Tag(tag_id);
+            tag.addEvent('close', function(t) {
+                $(t).destroy();
+                if (t.id > 0) {
+                    this.data[bucket].erase(t.id)
+                }
+                else {
+                    this.data[bucket].erase(t.name)
+                }
+                this.fireEvent('onChange', [this.data]);
+            }.bind(this))
+            this.element.getChildren()[bucket].grab($(tag), 'top');
+            this.fireEvent('onChange', [this.data]);
+        }
+    },
+    _selectCallback: function(idx, value, el) {
+        var tag, name;
+        var self = this;
+        if (value.id > 0) {
+            self.data[idx].push(value.id);
+            name = value.name;
+        }
+        else {
+            self.data[idx].push(el.value);
+            name = el.value;
+        }
+        tag = new Frog.Tag(value.id, name);
+        tag.addEvent('close', function(t) {
+            $(t).destroy();
+            if (value.id > 0) {
+                self.data[idx].erase(t.id)
+            }
+            else {
+                self.data[idx].erase(t.name)
+            }
+            self.fireEvent('onChange', [self.data]);
+        })
+        self.element.getChildren()[idx].grab($(tag), 'top');
+        el.value = "";
+        self.fireEvent('onChange', [self.data]);
     }
 })

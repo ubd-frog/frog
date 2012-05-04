@@ -8,14 +8,16 @@
 
         <!-- Place favicon.ico and apple-touch-icon.png in the root directory: mathiasbynens.be/notes/touch-icons -->
 
+        <link rel="stylesheet" href="{{STATIC_URL}}c/ext-all-gray.css">
         <link rel="stylesheet" href="{{STATIC_URL}}c/style.css">
         <!-- <link rel="stylesheet" href="{{STATIC_URL}}c/meio.aucomplete.css"> -->
 
         <script src="{{STATIC_URL}}j/libs/modernizr-2.5.3.min.js"></script>
+        <script src="{{STATIC_URL}}j/ext-all.js"></script>
         <script src="{{STATIC_URL}}j/mootoolsCore.js"></script>
 
         <script>
-            var t, thumbnails, g;
+            var t, thumbnails, g, DEBUG;
             window.addEvent('domready', function() {
                 g = new Frog.Gallery(undefined, {{object.id}});
                 g.request();
@@ -24,10 +26,8 @@
     </head>
     <body>
         <div id="upload">
-            <div id='upload_browse'>Browse</div>
-            <div id='upload_start'>Upload</div>
-            <div id='upload_drop'></div>
-            <ul id='upload_list'><ul>
+            <div id='upload_drop'>Drag Files Here</div>
+            <div id='upload_files'</div>
         </div>
         <div id="main">
             

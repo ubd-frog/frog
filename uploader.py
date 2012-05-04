@@ -31,7 +31,6 @@ class Uploader(object):
                 paths = json.loads(request.POST.get('paths', '{}').replace("'", "\""))
                 foreignPath = paths.get(filename, "%s/%s"% (uniqueID(), filename))
                 galleries = request.POST.get('galleries', '').split(',');
-                print 'galleries:', galleries
                 
                 uniqueName = Piece.getUniqueID(foreignPath, request.user)
                 
@@ -70,7 +69,6 @@ class Uploader(object):
             except Exception, e:
                 res.isError = True
                 res.message = str(e)
-                print e
                 return JsonResponse(res)
 
         res.isSuccess = True
