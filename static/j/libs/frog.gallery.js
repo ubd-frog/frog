@@ -45,6 +45,7 @@ Frog.Gallery = new Class({
         this.controls = new Frog.Gallery.Controls(this.toolsElement);
         this.controls.addEvent('remove', this.removeItems.bind(this))
         this._uploader();
+        this.viewer = new Frog.Viewer();
         
         var builderData;
         if (location.hash !== "") {
@@ -95,6 +96,8 @@ Frog.Gallery = new Class({
         if (append) {
             this.requestData.more = true;
         }
+
+        this.requestData.models = 'image';
         
         var self = this;
         new Request.JSON({
@@ -261,6 +264,7 @@ Frog.Gallery = new Class({
             text: 'Upload Files',
             renderTo: 'upload_files',
             scale: 'large',
+            icon: '/static/i/add.png',
             handler: function() {
                 self.uploader.start();
             }
