@@ -1,6 +1,6 @@
 from django.conf.urls import patterns, include, url
 
-from views import gallery, tag, image, video
+from views import gallery, tag, image, video, downloadView
 from uploader import uploader
 
 # Uncomment the next two lines to enable the admin:
@@ -18,6 +18,8 @@ urlpatterns = patterns('',
     url(r'^tag/$', tag.index),
     url(r'^tag/search$', tag.search),
     url(r'^tag/(?P<obj_id>\d+)$', tag.view),
+
+    url(r'^download$', downloadView),
 
     url(r'^$', uploader.post),
 )

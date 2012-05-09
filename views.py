@@ -1,3 +1,4 @@
+import os
 import time
 import logging
 try:
@@ -16,6 +17,10 @@ from django.views.decorators.csrf import csrf_exempt
 from models import Gallery, Image, Video, Tag
 
 from common import MainView, Result, JsonResponse, getObjectsFromGuids
+
+from sendFile import send_file, send_zipfile
+
+from dev.settings import MEDIA_ROOT
 
 
 gRange = 300
@@ -353,6 +358,23 @@ class VideoView(ImageView):
         super(VideoView, self).__init__(Video)
 
 
+def downloadView(request):
+    guids = request.GET.get('guids', '').split(',')
+
+    if guids:
+        objects = getObjectsFromGuids(guids)
+        if len(objects) == 1:
+            response = send_file(request, MEDIA_ROOT + objects[0].source.name)
+            response['Content-Disposition'] = 'attachment; filename=%s' % os.path.split(objects[0].foreign_path)[1]
+            return response
+        else:
+            fileList = {}
+            for n in objects:
+                fileList.setdefault(n.author.username, [])
+                fileList[n.author.username].append([MEDIA_ROOT + n.source.name, os.path.split(n.foreign_path)[1]])
+
+            response = send_zipfile(request, fileList)
+            return response
 
 
 gallery = GalleryView()
