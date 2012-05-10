@@ -10,6 +10,7 @@ Frog.Thumbnail = new Class({
         artist: null,
         title: '',
         imageID: 0,
+        guid: "",
         onClick: function(){},
         onSelect: function(){},
         onLoad: function(){}
@@ -20,6 +21,7 @@ Frog.Thumbnail = new Class({
         this.width = width;
         this.height = height;
         this.loaded = false;
+        this.guid = this.options.guid;
 
         this.dimension = {};
 
@@ -50,6 +52,7 @@ Frog.Thumbnail = new Class({
 
         }
         this.element.dataset.frog_tn_id = this.id;
+        this.element.dataset.frog_guid = this.guid;
         var top = new Element('div').inject(this.element);
         this.spacer = new Element('div', {styles: {
             width: '100%',
@@ -57,9 +60,10 @@ Frog.Thumbnail = new Class({
         }}).inject(top);
         this.imgLink = new Element('a', {
             href: '/frog/image/' + this.options.imageID,
+            'class': 'frog-image-link',
             events: {
                 click: function(e) {
-                    e.stop();
+                    //e.stop();
                 }
             }
         }).inject(top);
@@ -81,7 +85,7 @@ Frog.Thumbnail = new Class({
         var bot = new Element('div').inject(this.element);
         this.title = new Element('div', {'text': this.options.title}).inject(bot);
         var artistDiv = new Element('div', {'text': 'Artist: '}).inject(bot);
-        this.artist = new Element('a', {'href': "javascript:void(0);"}).inject(artistDiv);
+        this.artist = new Element('a', {'href': "javascript:void(0);", 'class': 'frog-tag'}).inject(artistDiv);
     },
     toElement: function() {
         return this.element;

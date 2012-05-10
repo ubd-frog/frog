@@ -122,7 +122,7 @@ Which UI to use?
             this.name = name || Frog.Tags.get(id);
             this.element = new Element('li', {'class': 'frog-tag', id: this.id});
             new Element('span').inject(this.element)
-            new Element('a', {href: 'javascript:void(0);', text: this.name}).inject(this.element);
+            new Element('a', {href: 'javascript:void(0);', text: this.name, 'class': 'frog-tag'}).inject(this.element);
             this.closeButton = new Element('div', {
                 text: 'x',
                 events: {

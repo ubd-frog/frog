@@ -28,17 +28,42 @@ Frog.Gallery = new Class({
         this.isRequesting = false;
         this.uploader = null;
         this.requestData = {};
+        this.spinner = new Spinner(undefined, {message: "fetching images..."});
 
         // -- Events
         window.addEvent('scroll', this._scroll.bind(this));
         window.addEvent('resize', this.resize.bind(this));
         window.addEventListener('hashchange', this.historyEvent.bind(this), false)
-        this.container.addEvent('click:relay(a)', function(e, el) {
+        this.container.addEvent('click:relay(a.frog-tag)', function(e, el) {
             self.filter(el.dataset.frog_tag_id);
+        });
+        this.container.addEvent('click:relay(a.frog-image-link)', function(e, el) {
+            e.stop();
+            var selection = $$('.thumbnail.selected');
+            var id = el.parentNode.parentNode.dataset.frog_tn_id;
+            var objects = [];
+            if (selection.length) {
+                self.thumbnails[id].setSelected(true);
+                objects.push(self.objects[id])
+                selection.each(function(item) {
+                    var idx = item.dataset.frog_tn_id;
+                    objects.push(self.objects[idx]);
+                });
+                self.viewer.setImages(objects);
+            }
+            else {
+                var objects = Array.clone(self.objects);
+                self.viewer.setImages(objects, id);
+            }
+            
+            
+            self.viewer.fitToWindow();
+            self.viewer.show();
         });
         this.container.addEventListener('dragenter', function() {
             uploaderElement.show();
             self._uploaderList();
+            self.uploaderList.show();
         }, false);
 
         // -- Instance objects
@@ -104,6 +129,7 @@ Frog.Gallery = new Class({
             url: '/frog/gallery/1/filter',
             onRequest: function() {
                 self.isRequesting = true;
+                self.spinner.show();
             },
             onSuccess: function(res) {
                 self.requestValue = res.value;
@@ -121,7 +147,8 @@ Frog.Gallery = new Class({
                             artist: o.author.first + ' ' + o.author.last,
                             tags: o.tags,
                             image: o.thumbnail,
-                            imageID: o.id
+                            imageID: o.id,
+                            guid: o.guid
                         });
                         self.thumbnails.push(t);
                         t.setSize(self.tileSize);
@@ -130,6 +157,7 @@ Frog.Gallery = new Class({
                     self._getScreen();
                 }
                 self.isRequesting = false;
+                self.spinner.hide();
             }
         }).GET(this.requestData);
     },
@@ -141,7 +169,7 @@ Frog.Gallery = new Class({
     },
     historyEvent: function(e) {
         var key = (typeOf(e) === 'string') ? e : e.newURL;
-        var data = JSON.parse(key.split('#')[1]);
+        var data = JSON.parse(unescape(key.split('#')[1]));
         data.filters = JSON.stringify(data.filters);
         this.request(data)
     },
@@ -193,6 +221,12 @@ Frog.Gallery = new Class({
             uploader.init();
 
             uploader.bind('FilesAdded', function(up, files) {
+                var uploaderElement = $('upload');
+                if (!uploaderElement.isVisible()) {
+                    uploaderElement.show();
+                    self._uploaderList();
+                    self.uploaderList.show();
+                }
                 var ul = $('upload_list');
                 files.each(function(f) {
                     self.uploaderList.store.add({
@@ -210,6 +244,8 @@ Frog.Gallery = new Class({
 
             uploader.bind('UploadComplete', function(up, files) {
                 $('upload').hide();
+                self.uploaderList.store.removeAll();
+                self.uploaderList.hide();
                 self.request();
             });
 
@@ -220,6 +256,9 @@ Frog.Gallery = new Class({
     },
     _uploaderList: function() {
         var self = this;
+        if (this.uploaderList) {
+            return this.uploaderList;
+        }
         Ext.require(['*']);
         var store = Ext.create('Ext.data.ArrayStore', {
             fields: [
@@ -264,9 +303,18 @@ Frog.Gallery = new Class({
             text: 'Upload Files',
             renderTo: 'upload_files',
             scale: 'large',
-            icon: '/static/i/add.png',
             handler: function() {
                 self.uploader.start();
+            }
+        });
+        var uploadButton = Ext.create('Ext.Button', {
+            text: 'Cancel',
+            renderTo: 'upload_files',
+            scale: 'large',
+            handler: function() {
+                $('upload').hide();
+                self.uploaderList.store.removeAll();
+                self.uploaderList.hide();
             }
         });
 
@@ -316,13 +364,30 @@ Frog.Gallery.Controls = new Class({
         Ext.require(['*']);
         this.toolbar = Ext.create('Ext.toolbar.Toolbar');
         this.toolbar.render(el);
-        this.toolbar.add({
+        this.bUpload = this.toolbar.add({
             id: 'frogBrowseButton',
             text: 'Upload',
             icon: '/static/i/add.png'
-        },
-        '-',
-        {
+        });
+        // this.bEditTags = this.toolbar.add({
+        //     text: 'Edit Tags',
+        //     icon: '/static/i/tag_orange.png',
+        //     handler: function() {
+        //         var win = Ext.create('widget.window', {
+        //             title: 'Edit Tags',
+        //             closable: true,
+        //             closeAction: 'hide',
+        //             resizable: false,
+        //             modal: true,
+        //             width: 600,
+        //             height: 350,
+        //             layout: 'border',
+        //             bodyStyle: 'padding: 5px;'
+        //         });
+        //         win.show();
+        //     }
+        // });
+        this.mRemove = Ext.create('Ext.menu.Item', {
             text: 'Remove Selected',
             icon: '/static/i/cross.png',
             handler: function() {
@@ -332,26 +397,44 @@ Frog.Gallery.Controls = new Class({
                 });
                 self.fireEvent('onRemove', [ids])
             }
-        },
-        '-',
-        {
-            text: 'Edit Tags',
-            icon: '/static/i/tag_orange.png',
+        });
+        // this.mCopy = Ext.create('Ext.menu.Item', {
+        //     text: 'Copy to gallery'
+        // });
+        this.mDownload = Ext.create('Ext.menu.Item', {
+            text: 'Download Sources',
+            icon: '/static/i/compress.png',
             handler: function() {
-                var win = Ext.create('widget.window', {
-                    title: 'Edit Tags',
-                    closable: true,
-                    closeAction: 'hide',
-                    resizable: false,
-                    modal: true,
-                    width: 600,
-                    height: 350,
-                    layout: 'border',
-                    bodyStyle: 'padding: 5px;'
+                var selected = $$('.thumbnail.selected');
+                guids = [];
+                selected.each(function(item) {
+                    guids.push(item.dataset.frog_guid);
                 });
-                win.show();
+                location.href = '/frog/download?guids=' + guids.join(',');
             }
-        }
-        );
+        });
+        // this.mSwitchArtist = Ext.create('Ext.menu.Item', {
+        //     text: 'Switch Artist'
+        // });
+        
+        var m = Ext.create('Ext.menu.Menu', {
+            items: [this.mRemove, this.mDownload]
+        });
+        
+        this.toolbar.add({
+            text: 'Manage',
+            icon: '/static/i/photos.png',
+            menu: m
+        });
+
+        // this.bRSS = this.toolbar.add({
+        //     icon: '/static/i/feed.png',
+        // });
+        // this.bHelp = this.toolbar.add({
+        //     icon: '/static/i/help.png',
+        // });
+        // this.bPreferences = this.toolbar.add({
+        //     icon: '/static/i/cog.png',
+        // });
     }
 })

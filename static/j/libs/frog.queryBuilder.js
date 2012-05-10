@@ -10,7 +10,12 @@ Frog.QueryBuilder = new Class({
         var self = this;
         this.setOptions(options);
 
-        this.data = this.options.data || [];
+        var data = this.options.data || [];
+        this.data = [];
+        data.each(function(bucket) {
+            var clean = bucket.filter(function(item) { return item !== "" });
+            self.data.push(clean);
+        })
         this.element = new Element('div', {id: 'frog_builder'});
 
         var dirty = false;
@@ -53,7 +58,7 @@ Frog.QueryBuilder = new Class({
         var li = new Element('li');
         var input = new Element('input', {placeholder: "Search"}).inject(li);
         input.addEvent('keyup', function(e) {
-            if (e.code === 13) {
+            if (e.code === 13 && this.value !== "") {
                 self._selectCallback(idx, {id: 0, name: this.value}, this);
             }
         })
@@ -75,7 +80,9 @@ Frog.QueryBuilder = new Class({
                 }]
             },
             onSelect: function(elements, value) {
-                self._selectCallback(idx, value, elements.field.node);
+                if (value !== "") {
+                    self._selectCallback(idx, value, elements.field.node);
+                }
             }
         });
         li.inject(ul);
