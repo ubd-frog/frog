@@ -50,7 +50,6 @@ class MainView(object):
             self._ctype = ContentType.objects.get_for_model(self.model)
             self.template = '%s/%s.html' % (self._ctype.app_label, self._ctype.model)
         self.context = {}
-        self.context['MEDIA_URL'] = MEDIA_URL
 
     def _processRequest(self, request, obj_id=None):
         try:
@@ -125,6 +124,7 @@ class MainView(object):
         return HttpResponse()
 
     def render(self):
+        print self.context
         return render(self.request, self.template, self.context)
 
 

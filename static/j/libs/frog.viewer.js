@@ -151,8 +151,9 @@ Frog.Viewer = new Class({
     },
     fitToWindow: function() {
         var padding = 40;
-        var scale = (window.getWidth() - padding) / this.image.width;
-        // scale = (scale < 1.0) ? 1.0 : scale;
+        var dim = Frog.util.fitToRect(window.getWidth() - padding, window.getHeight() - padding, this.image.width, this.image.height);
+        var scale = dim.width / this.image.width;
+        scale = (scale > 1.0) ? 1.0 : scale;
 
         this.center(scale);
     },

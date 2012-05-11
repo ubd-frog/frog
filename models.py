@@ -199,3 +199,10 @@ class Guid(object):
         else:
             self.int = 0
             self.guid = ''
+
+
+class RSSStorage(models.Model):
+    date = models.DateTimeField()
+    interval = models.CharField(max_length=6)
+    data = models.TextField()
+    gallery = models.ForeignKey(Gallery, related_name='rss_storage')

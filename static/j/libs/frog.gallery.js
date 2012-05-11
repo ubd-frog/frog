@@ -37,29 +37,7 @@ Frog.Gallery = new Class({
         this.container.addEvent('click:relay(a.frog-tag)', function(e, el) {
             self.filter(el.dataset.frog_tag_id);
         });
-        this.container.addEvent('click:relay(a.frog-image-link)', function(e, el) {
-            e.stop();
-            var selection = $$('.thumbnail.selected');
-            var id = el.parentNode.parentNode.dataset.frog_tn_id;
-            var objects = [];
-            if (selection.length) {
-                self.thumbnails[id].setSelected(true);
-                objects.push(self.objects[id])
-                selection.each(function(item) {
-                    var idx = item.dataset.frog_tn_id;
-                    objects.push(self.objects[idx]);
-                });
-                self.viewer.setImages(objects);
-            }
-            else {
-                var objects = Array.clone(self.objects);
-                self.viewer.setImages(objects, id);
-            }
-            
-            
-            self.viewer.fitToWindow();
-            self.viewer.show();
-        });
+        this.container.addEvent('click:relay(a.frog-image-link)', this.viewImages.bind(this));
         this.container.addEventListener('dragenter', function() {
             uploaderElement.show();
             self._uploaderList();
@@ -194,6 +172,30 @@ Frog.Gallery = new Class({
                 }.bind(this)
             }).DELETE({guids: guids.join(',')});
         }
+    },
+    viewImages: function(e, el) {
+        e.stop();
+        var selection = $$('.thumbnail.selected');
+        var id = el.parentNode.parentNode.dataset.frog_tn_id;
+        var objects = [];
+        if (selection.length) {
+            this.thumbnails[id].setSelected(true);
+            objects.push(this.objects[id]);
+            selection.each(function(item) {
+                var idx = item.dataset.frog_tn_id;
+                objects.push(this.objects[idx]);
+            }, this);
+            objects = objects.unique();
+            this.viewer.setImages(objects);
+        }
+        else {
+            var objects = Array.clone(this.objects);
+            this.viewer.setImages(objects, id);
+        }
+        
+        
+        this.viewer.fitToWindow();
+        this.viewer.show();
     },
     _uploader: function() {
         var self = this;
