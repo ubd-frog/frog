@@ -11,6 +11,7 @@ Frog.Viewer = new Class({
         this.objects = [];
         this.current = 0;
         this.isMouseDown = false;
+        this.isOpen = false;
 
         this.element = new Element('div', {id: 'frog_viewer'}).inject(document.body);
         this.canvas = new Element('canvas', {width: window.getWidth(), height: window.getHeight()}).inject(this.element);
@@ -26,10 +27,7 @@ Frog.Viewer = new Class({
             zoom: this.zoom.bind(this)
         }
 
-        this.canvas.addEvent('mousedown', this.events.down);
-        window.addEvent('mouseup', this.events.up);
-        window.addEvent('mousemove', this.events.move);
-        window.addEvent('mousewheel', this.events.zoom);
+        
 
         this.build();
     },
@@ -213,10 +211,32 @@ Frog.Viewer = new Class({
     },
     show: function() {
         this.element.show();
-        this.fireEvent('onShow', [this])
+        
+        this.canvas.addEvent('mousedown', this.events.down);
+        window.addEvent('mouseup', this.events.up);
+        window.addEvent('mousemove', this.events.move);
+        window.addEvent('mousewheel', this.events.zoom);
+
+        var data = JSON.parse(unescape(location.hash.split('#')[1]));
+        data.viewer = true;
+        location.hash = JSON.stringify(data);
+
+        this.fireEvent('onShow', [this]);
+        this.isOpen = true;
     },
     hide: function() {
         this.element.hide();
-        this.fireEvent('onHide', [this])
+
+        this.canvas.removeEvent('mousedown', this.events.down);
+        window.removeEvent('mouseup', this.events.up);
+        window.removeEvent('mousemove', this.events.move);
+        window.removeEvent('mousewheel', this.events.zoom);
+
+        var data = JSON.parse(unescape(location.hash.split('#')[1]));
+        delete data.viewer;
+        location.hash = JSON.stringify(data);
+
+        this.fireEvent('onHide', [this]);
+        this.isOpen = false;
     }
 })

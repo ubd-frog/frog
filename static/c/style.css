@@ -336,6 +336,7 @@ li.frog-tag {
     margin: 4px;
     padding: 2px 0 2px 20px;
     background: #333;
+    color: #b8d364;
     border: 1px solid #666;
     -webkit-border-radius: 10px 0 0 10px;
     -moz-border-radius: 10px 0 0 10px;
@@ -356,7 +357,9 @@ li.frog-tag {
 
     }
     li.frog-tag div:last-child {
-        float: right;
+        position: absolute;
+        top: 0;
+        right: 0;
         width: 16px;
         height: 16px;
         border-left: 1px solid #000;
@@ -380,6 +383,7 @@ li.frog-tag {
 /*Main Elements*/
 #gallery {
     width: 100%;
+    min-height: 800px;
     overflow: auto;
 }
 #upload {
@@ -417,7 +421,7 @@ li.frog-tag {
     width: 16px;
     height: 16px;
     margin-right: 4px;
-    background: url(/static/i/tag_orange.png) no-repeat;
+    background: url(../i/tag_orange.png) no-repeat;
 }
 /*Autocomplete*/
 .ma-container{
@@ -428,6 +432,7 @@ li.frog-tag {
     visibility: hidden;
     overflow-y: auto;
     overflow-x: hidden;
+    z-index: 3000;
     box-sizing: content-box;
     -moz-box-sizing: content-box;
     -ms-box-sizing: content-box;

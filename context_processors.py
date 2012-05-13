@@ -6,7 +6,7 @@ def media(request):
     obj = {
         'MEDIA_URL': MEDIA_URL,
         'MEDIA_ROOT': MEDIA_ROOT,
+        'isAjax': request.is_ajax(),
     }
-    print obj
 
     return obj

@@ -3,14 +3,14 @@
 Frog.QueryBuilder = new Class({
     Implements: [Options, Events],
     options: {
-        data: [],
+        data: [[]],
         onChange: function(){}
     },
     initialize: function(options) {
         var self = this;
         this.setOptions(options);
 
-        var data = this.options.data || [];
+        var data = this.options.data || [[]];
         this.data = [];
         data.each(function(bucket) {
             var clean = bucket.filter(function(item) { return item !== "" });

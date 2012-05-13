@@ -14,6 +14,7 @@ gThumbSize = 256
 class Tag(models.Model):
     name = models.CharField(max_length=255)
     parent = models.ForeignKey('self', blank=True, null=True)
+    artist = models.BooleanField(default=False)
 
     def __unicode__(self):
         return self.name
@@ -25,6 +26,12 @@ class Tag(models.Model):
         }
 
         return obj
+
+    def count(self):
+        i = self.image_set.all().count()
+        v = self.video_set.all().count()
+
+        return i + v
 
 
 class Piece(models.Model):

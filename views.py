@@ -6,17 +6,19 @@ try:
 except ImportError:
     import json
 
-from django.http import HttpResponse, Http404
+from django.http import HttpResponse, Http404, HttpResponseRedirect
 from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import render
 from django.db.models import Q
 from django.contrib.contenttypes.models import ContentType
 from django.db import connection
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth import authenticate, login, logout
 
 from models import Gallery, Image, Video, Tag
 
 from common import MainView, Result, JsonResponse, getObjectsFromGuids
+from uploader import uploader
 
 from sendFile import send_file, send_zipfile
 
@@ -184,8 +186,8 @@ class GalleryView(MainView):
         logger.debug('total: %f' % (time.clock() - NOW))
         data = {
             'count': len(objects),
-            'last_image_id': self.request.session['last_image_id'],
-            'last_video_id': self.request.session['last_video_id'],
+            'last_image_id': self.request.session.get('last_image_id', 0),
+            'last_video_id': self.request.session.get('last_video_id', 0),
             'queries': connection.queries,
         }
 
@@ -283,15 +285,72 @@ class TagView(MainView):
     def search(self, request):
         q = request.GET.get('q', '')
         includeSearch = request.GET.get('search', False)
+        nonZero = request.GET.get('zero', False)
+        excludeArtist = request.GET.get('artist', False)
 
         if includeSearch:
             l = [{'id': 0, 'name': 'Search for: %s' % q}]
         else:
             l = []
 
-        l += [t.json() for t in Tag.objects.filter(name__icontains=q)]
+        query = Tag.objects.filter(name__icontains=q)
+
+        if excludeArtist:
+            query = query.exclude(artist=True)
+
+        if nonZero:
+            l += [t.json() for t in query if t.count() > 0]
+        else:
+            l += [t.json() for t in query]
 
         return JsonResponse(l)
+
+    @csrf_exempt
+    def manage(self, request):
+        if request.method == 'GET':
+            guids = request.GET.get('guids', '').split(',')
+            guids = filter(None, guids)
+
+            objects = getObjectsFromGuids(guids)
+            ids = [o.id for o in objects]
+
+            tags = list(set(Tag.objects.filter(image__id__in=ids).exclude(artist=True)))
+
+            if request.GET.get('json', False):
+                res = Result()
+                data = {
+                    'queries': connection.queries,
+                }
+
+                res.value = data
+
+                res.isSuccess = True
+
+                return JsonResponse(res)
+
+            return render(request, 'frog/tag_manage.html', {'tags': tags})
+        else:
+            add = request.POST.get('add', '').split(',')
+            rem = request.POST.get('rem', '').split(',')
+            guids = request.POST.get('guids', '').split(',')
+
+            add = filter(None, add)
+            rem = filter(None, rem)
+
+            objects = getObjectsFromGuids(guids)
+            addTags = Tag.objects.filter(id__in=add)
+            remTags = Tag.objects.filter(id__in=rem)
+
+            for o in objects:
+                for a in addTags:
+                    o.tags.add(a)
+                for r in remTags:
+                    o.tags.remove(r)
+
+            res = Result()
+            res.isSuccess = True
+
+            return JsonResponse(res)
 
     def _manageTags(self, tagList, guids, add=True):
         objects = getObjectsFromGuids(guids)
@@ -375,6 +434,40 @@ def downloadView(request):
 
             response = send_zipfile(request, fileList)
             return response
+
+def index(request):
+    if request.method == 'GET':
+        return render(request, 'frog/index.html', {'title': 'Frog Login'})
+    else:
+        return uploader.post(request)
+
+@csrf_exempt
+def frogLogin(request):
+    res = Result()
+
+    res.isSuccess = True
+    email = request.POST.get('email', 'noauthor@domain.com')
+    username = email.split('@')[0]
+    first_name, last_name = request.POST.get('name', 'No Author').split(' ')
+
+    user = authenticate(username=username)
+    user.first_name = first_name
+    user.last_name = last_name
+    user.email = email
+    user.save()
+
+    Tag.objects.get_or_create(name=first_name + ' ' + last_name, defaults={'artist': True})
+
+    if user.is_active:
+        login(request, user)
+        return HttpResponseRedirect('/frog/gallery/1')
+    else:
+        return render(request, 'frog/index.html', {'message': 'User account not active'})
+
+def frogLogout(request):
+    logout(request)
+
+    return HttpResponseRedirect('/frog')
 
 
 gallery = GalleryView()

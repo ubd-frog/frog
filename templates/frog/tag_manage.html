@@ -1,0 +1,128 @@
+{% if not isAjax %}
+<!doctype html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+        <title>Edit Tags</title>
+        <meta name="description" content="">
+
+        <!-- Place favicon.ico and apple-touch-icon.png in the root directory: mathiasbynens.be/notes/touch-icons -->
+
+        <link rel="stylesheet" href="{{MEDIA_URL}}frog/c/ext-all-gray.css">
+        <link rel="stylesheet" href="{{MEDIA_URL}}frog/c/style.css">
+
+        <script src="{{MEDIA_URL}}frog/j/mootoolsCore.js"></script>
+{% endif %}
+
+        <style>
+            #tag_manage {
+                position: relative;
+                width: 578px;
+                height: 350px;
+                background: #202020;
+                color: #d2d2d2;
+            }
+            #tag_manage section {
+                position: relative;
+                float: left;
+                width: 30%;
+                height: 100%;
+                margin: 9px;
+                padding: 4px;
+            }
+            #tag_manage ul {
+                position: relative;
+                width: 100%;
+                min-height: 280px;
+                background: #333;
+                margin: 0;
+                padding: 0;
+                border: 1px solid #666;
+            }
+            #frog_tag_search {
+                position: relative;
+                width: 298px;
+                height: 24px;
+                margin: 4px 0;
+                font-size: 20px;
+                z-index: 2000;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="tag_manage" class='x-border-box'>
+            <section id='frog_add'>
+                <header>Add</header>
+                <ul>
+
+                </ul>
+                <input type='search' id='frog_tag_search' />
+            </section>
+            <section id='frog_sel'>
+                <header>Selection</header>
+                <ul>
+                    {% for tag in tags %}
+                    <li class="frog-tag" id="{{tag.id}}">
+                        <span></span>
+                        {{tag.name}}
+                        <div></div>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </section>
+            <section id='frog_rem'>
+                <header>Remove</header>
+                <ul>
+
+                </ul>
+            </section>
+        </div>
+{% if not isAjax %}
+        <!-- JavaScript at the bottom for fast page loading -->
+        <script src="{{MEDIA_URL}}frog/j/mootoolsMore.js"></script>
+        <script src="{{MEDIA_URL}}frog/j/libs/Meio.Autocomplete.min.js"></script>
+
+        <!-- scripts concatenated and minified via build script -->
+        <script src="{{MEDIA_URL}}frog/j/libs/frog.js"></script>
+        <!-- end scripts -->
+{% endif %}
+        <script type='text/JavaScript'>
+            new Sortables($$('#tag_manage UL'), {
+                clone: true,
+                revert: true,
+                opacity: 0.7
+            });
+
+            var completer = new Meio.Autocomplete('frog_tag_search', '/frog/tag/search', {
+                filter: {
+                    path: 'name',
+                    formatItem: function(text, data) {
+                        if (data.id === 0) {
+                            return '<span class="search"></span>' + data.name
+                        }
+                        else {
+                            return '<span></span>' + data.name
+                        }
+                    }
+                },
+                urlOptions: {
+                    extraParams: [{
+                        name: 'zero', value: true
+                    }, {
+                        name: 'artist', value: true
+                    }]
+                },
+                onSelect: function(elements, value) {
+                    if (value !== "") {
+                        var tag = new Frog.Tag(value.id, value.name);
+                        $$('#frog_add ul')[0].grab($(tag));
+                        elements.field.node.value = "";
+                    }
+                }
+            });
+        </script>
+{% if not isAjax %}
+    </body>
+</html>
+{% endif %}

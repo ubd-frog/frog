@@ -149,7 +149,12 @@ Frog.Gallery = new Class({
         var key = (typeOf(e) === 'string') ? e : e.newURL;
         var data = JSON.parse(unescape(key.split('#')[1]));
         data.filters = JSON.stringify(data.filters);
-        this.request(data)
+        if (typeof data.viewer === 'undefined') {
+            this.viewer.hide();
+        }
+        if (data.filters !== this.requestData.filters || !this.requestData.filters) {
+            this.request(data)
+        }
     },
     removeItems: function(ids) {
         var guids = [];
@@ -192,7 +197,6 @@ Frog.Gallery = new Class({
             var objects = Array.clone(this.objects);
             this.viewer.setImages(objects, id);
         }
-        
         
         this.viewer.fitToWindow();
         this.viewer.show();
@@ -371,24 +375,64 @@ Frog.Gallery.Controls = new Class({
             text: 'Upload',
             icon: '/static/i/add.png'
         });
-        // this.bEditTags = this.toolbar.add({
-        //     text: 'Edit Tags',
-        //     icon: '/static/i/tag_orange.png',
-        //     handler: function() {
-        //         var win = Ext.create('widget.window', {
-        //             title: 'Edit Tags',
-        //             closable: true,
-        //             closeAction: 'hide',
-        //             resizable: false,
-        //             modal: true,
-        //             width: 600,
-        //             height: 350,
-        //             layout: 'border',
-        //             bodyStyle: 'padding: 5px;'
-        //         });
-        //         win.show();
-        //     }
-        // });
+        this.bEditTags = this.toolbar.add({
+            text: 'Edit Tags',
+            icon: '/static/i/tag_orange.png',
+            handler: function() {
+                var guids = [];
+                $$('.selected').each(function(item) {
+                    guids.push(item.dataset.frog_guid);
+                });
+                var win = Ext.create('widget.window', {
+                    title: 'Edit Tags',
+                    closable: true,
+                    closeAction: 'hide',
+                    resizable: false,
+                    modal: true,
+                    width: 600,
+                    height: 450,
+                    layout: 'border',
+                    bodyStyle: 'padding: 5px;',
+                    items: [{
+                        loader: {
+                            url: '/frog/tag/manage?guids=' + guids.join(','),
+                            contentType: 'html',
+                            loadMask: true,
+                            autoLoad: true,
+                            scripts: true,
+                            cache: false
+                        }
+                    }],
+                    buttons: [{
+                        text: 'Save',
+                        handler: function() {
+                            var add = [], rem = [];
+                            $$('#frog_add li').each(function(item) {
+                                add.push(item.id.toInt());
+                            });
+                            $$('#frog_rem li').each(function(item) {
+                                rem.push(item.id.toInt());
+                            });
+                            
+                            new Request.JSON({
+                                url: '/frog/tag/manage',
+                            }).POST({
+                                add: add.join(','),
+                                rem: rem.join(','),
+                                guids: guids.join(',')
+                            });
+                            win.close();
+                        }
+                    },{
+                        text: 'Cancel',
+                        handler: function() {
+                            win.close();
+                        }
+                    }]
+                });
+                win.show();
+            }
+        });
         this.mRemove = Ext.create('Ext.menu.Item', {
             text: 'Remove Selected',
             icon: '/static/i/cross.png',
