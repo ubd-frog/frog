@@ -1,0 +1,11 @@
+{% load tablecols %}
+<table>
+    {% for row in images|tablecols:5 %}
+    <tr>
+        {% for img in row %}
+        <td><a href='{{SITE_URL}}/frog/image/{{img.id}}'><img src='{{img.thumbnail.url}}' {% if img.width > img.height %}width="200"{% else %}height="200"{% endif %} /></a>
+        {% endfor %}
+    </tr>
+    {% endfor %}
+    </tr>
+</table>

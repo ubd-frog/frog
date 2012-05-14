@@ -209,7 +209,7 @@ class Guid(object):
 
 
 class RSSStorage(models.Model):
-    date = models.DateTimeField()
+    date = models.DateTimeField(auto_now_add=True)
     interval = models.CharField(max_length=6)
     data = models.TextField()
     gallery = models.ForeignKey(Gallery, related_name='rss_storage')

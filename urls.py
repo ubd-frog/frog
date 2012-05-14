@@ -1,6 +1,7 @@
 from django.conf.urls import patterns, include, url
 
 from views import gallery, tag, image, video, downloadView, index, frogLogin, frogLogout
+from rss import Daily, Weekly
 from uploader import uploader
 
 # Uncomment the next two lines to enable the admin:
@@ -21,6 +22,9 @@ urlpatterns = patterns('',
     url(r'^tag/manage$', tag.manage),
 
     url(r'^download$', downloadView),
+
+    url(r'^rss/(?P<obj_id>\d+)/daily$', Daily()),
+    url(r'^rss/(?P<obj_id>\d+)/weekly$', Weekly()),
 
     url(r'^login$', frogLogin),
     url(r'^logout$', frogLogout),

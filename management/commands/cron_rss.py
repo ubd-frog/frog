@@ -35,6 +35,6 @@ class Command(BaseCommand):
             rss = RSSStorage()
             rss.date = thisDay
             rss.gallery = g
-            rss.type = kwargs['intervalType']
+            rss.interval = kwargs['intervalType']
             rss.data = json.dumps(obj)
             rss.save()

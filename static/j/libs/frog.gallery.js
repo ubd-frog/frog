@@ -45,7 +45,7 @@ Frog.Gallery = new Class({
         }, false);
 
         // -- Instance objects
-        this.controls = new Frog.Gallery.Controls(this.toolsElement);
+        this.controls = new Frog.Gallery.Controls(this.toolsElement, this.id);
         this.controls.addEvent('remove', this.removeItems.bind(this))
         this._uploader();
         this.viewer = new Frog.Viewer();
@@ -211,6 +211,7 @@ Frog.Gallery = new Class({
                 container: 'upload',
                 max_file_size: '100mb',
                 url: '/frog/',
+                headers: {"X-CSRFToken": Cookie.read('csrftoken')},
                 multipart_params: {
                     'galleries': this.id.toString()
                 },
@@ -365,8 +366,9 @@ Frog.Gallery = new Class({
 
 Frog.Gallery.Controls = new Class({
     Implements: Events,
-    initialize: function(el) {
+    initialize: function(el, id) {
         var self = this;
+        this.id = id;
         Ext.require(['*']);
         this.toolbar = Ext.create('Ext.toolbar.Toolbar');
         this.toolbar.render(el);
@@ -416,6 +418,7 @@ Frog.Gallery.Controls = new Class({
                             
                             new Request.JSON({
                                 url: '/frog/tag/manage',
+                                headers: {"X-CSRFToken": Cookie.read('csrftoken')}
                             }).POST({
                                 add: add.join(','),
                                 rem: rem.join(','),
@@ -473,9 +476,50 @@ Frog.Gallery.Controls = new Class({
             menu: m
         });
 
-        // this.bRSS = this.toolbar.add({
-        //     icon: '/static/i/feed.png',
-        // });
+        this.bRSS = this.toolbar.add({
+            icon: '/static/i/feed.png',
+            handler: function() {
+                var win = Ext.create('widget.window', {
+                    closable: true,
+                    closeAction: 'hide',
+                    resizable: false,
+                    modal: true,
+                    width: 300,
+                    height: 150,
+                    layou1t: 'border',
+                    bodyStyle: 'padding: 5px;'
+                });
+                win.show();
+                var fp = Ext.create('Ext.FormPanel', {
+                    title: 'RSS Feeds',
+                    defaultType: 'radio',
+                    items: [{
+                        boxLabel: 'Daily',
+                        name: 'rss_int',
+                        inputValue: 'daily'
+                    }, {
+                        checked: true,
+                        boxLabel: 'Weekly',
+                        name: 'rss_int',
+                        inputValue: 'weekly'
+                    }],
+                    buttons: [{
+                        text: 'Save',
+                        handler: function() {
+                            var r = fp.getForm().getValues(true).split('=')[1];
+                            location.href = 'feed://' + location.host + '/frog/rss/' + self.id + '/' + r;
+                            win.close();
+                        }
+                    },{
+                        text: 'Cancel',
+                        handler: function() {
+                            win.close();
+                        }
+                    }]
+                });
+                win.add(fp)
+            }
+        });
         // this.bHelp = this.toolbar.add({
         //     icon: '/static/i/help.png',
         // });

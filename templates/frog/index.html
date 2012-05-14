@@ -5,133 +5,46 @@
 <!--[if IE 8]>    <html class="no-js lt-ie9" lang="en"> <![endif]-->
 <!-- Consider adding a manifest.appcache: h5bp.com/d/Offline -->
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en"> <!--<![endif]-->
-<head>
-  <meta charset="utf-8">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
 
-  <!-- Use the .htaccess and remove these lines to avoid edge case issues.
-       More info: h5bp.com/i/378 -->
-  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <title>{{title}}</title>
+        <meta name="description" content="">
 
-  <title>{{title}}</title>
-  <meta name="description" content="">
+        <!-- Place favicon.ico and apple-touch-icon.png in the root directory: mathiasbynens.be/notes/touch-icons -->
 
-  <!-- Mobile viewport optimized: h5bp.com/viewport -->
-  <meta name="viewport" content="width=device-width">
+        <link rel="stylesheet" href="{{MEDIA_URL}}frog/c/style.css">
+    </head>
+    <body>
+        <div role="main">
+            <div id='frog_login'>
+                <header> Frog login</header>
+                <section>
+                    <form method='post' action='/frog/login'>
+                        {% csrf_token %}
+                        <p>
+                            <label for='frog_login_email'>Email:</label>
+                            <input id='frog_login_email' type='email' name='email' autofocus='autofocus' required='required' />
+                        </p>
+                        <p>
+                            <label for='frog_login_first_name'>First:</label>
+                            <input id='frog_login_first_name' type='text' name='first_name' required='required' />
+                        </p>
+                        <p>
+                            <label for='frog_login_last_name'>Last:</label>
+                            <input id='frog_login_last_name' type='text' name='last_name' required='required' />
+                        </p>
+                        <p>
+                            <input id='frog_login_button' type='submit' value='Login' class='disabled1' />
+                        </p>
+                    </form>
+                </section>
+            </div>
+        </div>
 
-  <!-- Place favicon.ico and apple-touch-icon.png in the root directory: mathiasbynens.be/notes/touch-icons -->
+        <script src="{{MEDIA_URL}}frog/j/mootoolsCore.js"></script>
+        <script src="{{MEDIA_URL}}frog/j/mootoolsMore.js"></script>
 
-  <link rel="stylesheet" href="{{MEDIA_URL}}frog/c/style.css">
-
-  <style type='text/css'>
-    #frog_login {
-      width: 580px;
-      height: 300px;
-      margin: 300px auto;
-      background: #a7a9ab;
-      color: #666;
-      font-family: Verdana;
-      border: 1px solid #8a8d8e;
-      -webkit-border-radius: 10px;
-    }
-      #frog_login header {
-        width: 100%;
-        height: 50px;
-        background: #bcbec0;
-        font-size: 30px;
-        border-bottom: 1px solid #8a8d8e;
-        -webkit-border-radius: 10px 10px 0 0;
-      }
-      #frog_login section {
-        padding-top: 20px;
-      }
-      #frog_login label {
-        float: left;
-        font-size: 24px;
-        text-align: right;
-      }
-      #frog_login input[type='text'], #frog_login input[type='email'] {
-        float: right;
-        width: 420px;
-        height: 24px;
-        padding: 4px;
-        background: #cdced0;
-        font-size: 24px;
-        border: 1px solid #8a8d8e;
-      }
-      #frog_login section p {
-        width: 520px;
-        margin: 20px auto;
-        overflow: auto;
-        text-align: center;
-      }
-      #frog_login input[type='submit'] {
-        width: 180px;
-        height: 40px;
-        background: #bcbec0;
-        font-size: 20px;
-        color: #666;
-        border: 1px solid #8a8d8e;
-        -webkit-border-radius: 10px;
-        -webkit-transition: background 0.3s, color 0.3s;
-      }
-      #frog_login input[type='submit']:hover {
-        background: #cdced0;
-        color: #333;
-      }
-      #frog_login input[type='submit'].disabled {
-        background: #a7a9ab;
-        text-decoration: line-through;
-      }
-  </style>
-
-  <!-- More ideas for your <head> here: h5bp.com/d/head-Tips -->
-
-  <!-- All JavaScript at the bottom, except this Modernizr build.
-       Modernizr enables HTML5 elements & feature detects for optimal performance.
-       Create your own custom Modernizr build: www.modernizr.com/download/ -->
-  <script src="{{MEDIA_URL}}frog/j/libs/modernizr-2.5.3.min.js"></script>
-</head>
-<body>
-  <!-- Prompt IE 6 users to install Chrome Frame. Remove this if you support IE 6.
-       chromium.org/developers/how-tos/chrome-frame-getting-started -->
-  <!--[if lt IE 7]><p class=chromeframe>Your browser is <em>ancient!</em> <a href="http://browsehappy.com/">Upgrade to a different browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">install Google Chrome Frame</a> to experience this site.</p><![endif]-->
-  <header>
-
-  </header>
-  <div role="main">
-      <div id='frog_login'>
-          <header> Frog</header>
-          <section>
-            <form method='post' action='/frog/login'>
-              <p>
-                <label for='frog_login_email'>Email:</label>
-                <input id='frog_login_email' type='email' name='email' autofocus='autofocus' required='required' />
-              </p>
-              <p>
-                <label for='frog_login_name'>Name:</label>
-                <input id='frog_login_name' type='text' name='name' required='required' />
-              </p>
-              <p>
-                <input id='frog_login_button' type='submit' value='Login' class='disabled1' />
-              </p>
-            </form>
-          </section>
-      </div>
-  </div>
-  <footer>
-
-  </footer>
-
-
-  <!-- JavaScript at the bottom for fast page loading -->
-
-  <!-- Grab Google CDN's jQuery, with a protocol relative URL; fall back to local if offline -->
-  <script src="{{MEDIA_URL}}frog/j/mootoolsCore.js"></script>
-  <script src="{{MEDIA_URL}}frog/j/mootoolsMore.js"></script>
-
-  <!-- scripts concatenated and minified via build script -->
-  <script src="{{MEDIA_URL}}frog/j/plugins.js"></script>
-  <script src="{{MEDIA_URL}}frog/j/script.js"></script>
-  <!-- end scripts -->
-</body>
+    </body>
 </html>

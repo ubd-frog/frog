@@ -95,6 +95,7 @@ Which UI to use?
                     new Request.JSON({
                         url: '/frog/tag/',
                         async: false,
+                        headers: {"X-CSRFToken": Cookie.read('csrftoken')},
                         onSuccess: function(res) {
                             if (res.isSuccess) {
                                 value = res.value.id;

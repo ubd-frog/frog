@@ -14,6 +14,8 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import connection
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
+from django.utils.decorators import method_decorator
 
 from models import Gallery, Image, Video, Tag
 
@@ -27,6 +29,7 @@ from dev.settings import MEDIA_ROOT
 
 gRange = 300
 logger = logging.getLogger('dev.frog')
+LoginRequired = method_decorator(login_required)
 
 
 class GalleryView(MainView):
@@ -36,6 +39,7 @@ class GalleryView(MainView):
     def index1(self, request):
         return render(request, 'frog/index.html', {})
 
+    @LoginRequired
     def get(self, request, obj_id=None):
         if obj_id:
             return super(GalleryView, self).get(request, obj_id)
@@ -47,6 +51,7 @@ class GalleryView(MainView):
 
             return JsonResponse(res)
 
+    @LoginRequired
     def post(self, request):
         title = request.POST.get('title', 'New Gallery' + str(Gallery.objects.all().values_list('id', flat=True)[0] + 1))
         #parent = request.POST.get('parent', 1)
@@ -59,6 +64,7 @@ class GalleryView(MainView):
 
         return JsonResponse(res)
 
+    @LoginRequired
     def put(self, request, obj_id=None):
         guids = self.PUT.get('guids', '').split(',')
         objects = getObjectsFromGuids(guids)
@@ -74,6 +80,7 @@ class GalleryView(MainView):
 
         return JsonResponse(res)
 
+    @LoginRequired
     def delete(self, request, obj_id=None):
         guids = self.DELETE.get('guids', '').split(',')
         objects = getObjectsFromGuids(guids)
@@ -89,6 +96,7 @@ class GalleryView(MainView):
 
         return JsonResponse(res)
 
+    @LoginRequired
     def filter(self, request, obj_id):
         self._processRequest(request, obj_id)
         
@@ -226,6 +234,7 @@ class TagView(MainView):
     def __init__(self):
         super(TagView, self).__init__(Tag)
 
+    @LoginRequired
     def get(self, request, obj_id=None):
         if obj_id:
             return super(TagView, self).get(request, obj_id)
@@ -237,7 +246,7 @@ class TagView(MainView):
 
             return JsonResponse(res)
 
-    @csrf_exempt
+    @LoginRequired
     def post(self, request, obj_id=None):
         res = Result()
         if not obj_id:
@@ -259,7 +268,7 @@ class TagView(MainView):
 
             return JsonResponse(res)
 
-    @csrf_exempt
+    @LoginRequired
     def put(self, request, obj_id=None):
         tagList = filter(None, request.POST.get('tags', '').split(','))
         guids = request.POST.get('guids', '').split(',')
@@ -270,7 +279,7 @@ class TagView(MainView):
 
         return JsonResponse(res)
 
-    @csrf_exempt
+    @LoginRequired
     def delete(self, request, obj_id=None):
         tagList = filter(None, self.DELETE.get('tags', '').split(','))
         guids = self.DELETE.get('guids', '').split(',')
@@ -281,7 +290,7 @@ class TagView(MainView):
 
         return JsonResponse(res)
 
-    @csrf_exempt
+    @LoginRequired
     def search(self, request):
         q = request.GET.get('q', '')
         includeSearch = request.GET.get('search', False)
@@ -305,7 +314,7 @@ class TagView(MainView):
 
         return JsonResponse(l)
 
-    @csrf_exempt
+    @LoginRequired
     def manage(self, request):
         if request.method == 'GET':
             guids = request.GET.get('guids', '').split(',')
@@ -387,6 +396,7 @@ class ImageView(MainView):
     def __init__(self, *args):
         super(ImageView, self).__init__(Image)
 
+    @LoginRequired
     def post(self, request, obj_id):
         tags = request.POST.get('tags', '').split(',')
         res = Result()
@@ -403,6 +413,7 @@ class ImageView(MainView):
 
         return JsonResponse(res)
 
+    @LoginRequired
     def delete(self, request, obj_id):
         self.object.deleted = True
         self.object.save()
@@ -416,7 +427,7 @@ class VideoView(ImageView):
     def __init__(self):
         super(VideoView, self).__init__(Video)
 
-
+@login_required
 def downloadView(request):
     guids = request.GET.get('guids', '').split(',')
 
@@ -437,18 +448,20 @@ def downloadView(request):
 
 def index(request):
     if request.method == 'GET':
+        if not request.user.is_anonymous():
+            return HttpResponseRedirect('/frog/gallery/1')
         return render(request, 'frog/index.html', {'title': 'Frog Login'})
     else:
         return uploader.post(request)
 
-@csrf_exempt
 def frogLogin(request):
     res = Result()
 
     res.isSuccess = True
     email = request.POST.get('email', 'noauthor@domain.com')
     username = email.split('@')[0]
-    first_name, last_name = request.POST.get('name', 'No Author').split(' ')
+    first_name = request.POST.get('first_name', 'No')
+    last_name = request.POST.get('last_name', 'Author')
 
     user = authenticate(username=username)
     user.first_name = first_name
