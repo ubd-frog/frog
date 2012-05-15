@@ -24,10 +24,9 @@ Frog.Viewer = new Class({
             up: this.up.bind(this),
             down: this.down.bind(this),
             move: this.move.bind(this),
-            zoom: this.zoom.bind(this)
+            zoom: this.zoom.bind(this),
+            resize: this.resize.bind(this)
         }
-
-        
 
         this.build();
     },
@@ -183,6 +182,12 @@ Frog.Viewer = new Class({
         m2 = this.xform.x(m1);
         this.xform = m2.dup();
     },
+    resize: function(e) {
+        this.canvas.width = window.getWidth();
+        this.canvas.height = window.getHeight();
+
+        this.render();
+    },
     setImage: function(img) {
         this.clear();
         this.image.src = img;
@@ -216,6 +221,7 @@ Frog.Viewer = new Class({
         window.addEvent('mouseup', this.events.up);
         window.addEvent('mousemove', this.events.move);
         window.addEvent('mousewheel', this.events.zoom);
+        window.addEvent('resize', this.events.resize);
 
         var data = JSON.parse(unescape(location.hash.split('#')[1]));
         data.viewer = true;
@@ -231,6 +237,7 @@ Frog.Viewer = new Class({
         window.removeEvent('mouseup', this.events.up);
         window.removeEvent('mousemove', this.events.move);
         window.removeEvent('mousewheel', this.events.zoom);
+        window.removeEvent('resize', this.events.resize);
 
         var data = JSON.parse(unescape(location.hash.split('#')[1]));
         delete data.viewer;

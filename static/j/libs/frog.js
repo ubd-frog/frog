@@ -32,14 +32,15 @@ Which UI to use?
     Frog.pixel = null;
     Frog.getPixel = function() {
         if (Frog.pixel === null) {
-            var canvas = document.createElement('canvas');
-            var ctx = canvas.getContext('2d');
-            canvas.width = 1;
-            canvas.height = 1;
+            // var canvas = document.createElement('canvas');
+            // var ctx = canvas.getContext('2d');
+            // canvas.width = 1;
+            // canvas.height = 1;
 
-            ctx.fillStyle = 'rgba(0,0,0,0)';
-            ctx.fillRect(0,0,1,1);
-            Frog.pixel = 'data:image/png;base64,' + canvas.toDataURL('image/png','').substring(22);
+            // ctx.fillStyle = 'rgba(0,0,0,0)';
+            // ctx.fillRect(0,0,1,1);
+            // Frog.pixel = 'data:image/png;base64,' + canvas.toDataURL('image/png','').substring(22);
+            Frog.pixel = '/static/frog/i/pixel.png';
         }
 
         return Frog.pixel;

@@ -17,6 +17,7 @@ Frog.QueryBuilder = new Class({
             self.data.push(clean);
         })
         this.element = new Element('div', {id: 'frog_builder'});
+        this.change = this._change.bind(this);
 
         var dirty = false;
 
@@ -34,14 +35,14 @@ Frog.QueryBuilder = new Class({
                     else {
                         self.data[idx].erase(t.name)
                     }
-                    self.fireEvent('onChange', [self.data]);
+                    self.change();
                 })
                 self.element.getChildren()[idx].grab($(tag), 'top');
             })
         })
 
         if (dirty) {
-            this.fireEvent('onChange', [this.data]);
+            this.change();
         }
     },
     toElement: function() {
@@ -89,12 +90,25 @@ Frog.QueryBuilder = new Class({
 
     },
     removeBucket: function(idx) {
-
+        var uls = this.element.getElements('ul');
+        this.data.each(function(bucket, idx) {
+            var tags = uls[idx].getElements('li.frog-tag');
+            tagIds = tags.filter(function(tag) {
+                var id = tag.id;
+                if (!isNaN(parseInt(tag.id))) {
+                    tag = tag.id.toInt();
+                }
+                
+                return (bucket.indexOf(id) == -1) ? false : true;
+            });
+            log(tagIds);
+        })
     },
     addTag: function(bucket, tag_id) {
         if (!this.data[bucket]) {
             this.addBucket();
         }
+
         if (this.data[bucket].indexOf(tag_id) === -1) {
             this.data[bucket].push(tag_id);
             var tag = new Frog.Tag(tag_id);
@@ -106,15 +120,20 @@ Frog.QueryBuilder = new Class({
                 else {
                     this.data[bucket].erase(t.name)
                 }
-                this.fireEvent('onChange', [this.data]);
+                this.change();
             }.bind(this))
             this.element.getChildren()[bucket].grab($(tag), 'top');
-            this.fireEvent('onChange', [this.data]);
+            this.change();
         }
+    },
+    cleanBuckets: function() {
+        
     },
     _selectCallback: function(idx, value, el) {
         var tag, name;
         var self = this;
+        // Reset filter on each add
+        this.data = [[]];
         if (value.id > 0) {
             self.data[idx].push(value.id);
             name = value.name;
@@ -132,10 +151,15 @@ Frog.QueryBuilder = new Class({
             else {
                 self.data[idx].erase(t.name)
             }
-            self.fireEvent('onChange', [self.data]);
+            self.change();
         })
         self.element.getChildren()[idx].grab($(tag), 'top');
         el.value = "";
         self.fireEvent('onChange', [self.data]);
+        self.change();
+    },
+    _change: function(e) {
+
+        this.fireEvent('onChange', [this.data]);
     }
 })

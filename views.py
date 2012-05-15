@@ -458,10 +458,10 @@ def frogLogin(request):
     res = Result()
 
     res.isSuccess = True
-    email = request.POST.get('email', 'noauthor@domain.com')
+    email = request.POST.get('email', 'noauthor@domain.com').lower()
     username = email.split('@')[0]
-    first_name = request.POST.get('first_name', 'No')
-    last_name = request.POST.get('last_name', 'Author')
+    first_name = request.POST.get('first_name', 'no').lower()
+    last_name = request.POST.get('last_name', 'author').lower()
 
     user = authenticate(username=username)
     user.first_name = first_name
