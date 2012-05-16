@@ -19,7 +19,11 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         thisDay = datetime.date.today()
-        prevDay = thisDay - datetime.timedelta(100)
+        if kwargs['intervalType'] == 'daily':
+            delta = 1
+        else:
+            delta = 7
+        prevDay = thisDay - datetime.timedelta(delta)
 
         galleries = Gallery.objects.all()
 

@@ -122,7 +122,8 @@ Which UI to use?
             var self = this;
             this.id = id;
             this.name = name || Frog.Tags.get(id);
-            this.element = new Element('li', {'class': 'frog-tag', id: this.id});
+            this.element = new Element('li', {'class': 'frog-tag'});
+            this.element.dataset.frog_tag_id = this.id;
             new Element('span').inject(this.element)
             new Element('a', {href: 'javascript:void(0);', text: this.name, 'class': 'frog-tag'}).inject(this.element);
             this.closeButton = new Element('div', {

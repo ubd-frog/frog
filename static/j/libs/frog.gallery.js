@@ -167,6 +167,7 @@ Frog.Gallery = new Class({
             new Request.JSON({
                 url: location.href,
                 emulation: false,
+                headers: {"X-CSRFToken": Cookie.read('csrftoken')},
                 onSuccess: function(res) {
                     if (res.isSuccess) {
                         ids.each(function(id) {
@@ -207,7 +208,7 @@ Frog.Gallery = new Class({
             var uploader = new plupload.Uploader({
                 runtimes: 'html5',
                 browse_button: 'frogBrowseButton',
-                drop_element: 'upload_drop',
+                drop_element: 'upload',
                 container: 'upload',
                 max_file_size: '100mb',
                 url: '/frog/',
@@ -298,7 +299,7 @@ Frog.Gallery = new Class({
                 }
             ],
             height: 350,
-            width: '80%',
+            width: '100%',
             title: 'Files to Upload',
             renderTo: 'upload_files',
             viewConfig: {
