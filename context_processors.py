@@ -1,6 +1,6 @@
 
 
-from dev.settings import MEDIA_URL, MEDIA_ROOT
+from settings import MEDIA_URL, MEDIA_ROOT
 
 def media(request):
     obj = {

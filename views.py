@@ -24,7 +24,7 @@ from uploader import uploader
 
 from sendFile import send_file, send_zipfile
 
-from dev.settings import MEDIA_ROOT
+from settings import MEDIA_ROOT
 
 
 gRange = 300
@@ -345,9 +345,19 @@ class TagView(MainView):
 
             add = filter(None, add)
             rem = filter(None, rem)
+            addList = []
+
+            for t in add:
+                try:
+                    addList.append(int(t))
+                except ValueError:
+                    tag, created = Tag.objects.get_or_create(name=t)
+                    tag.save()
+                    addList.append(tag.id)
+
 
             objects = getObjectsFromGuids(guids)
-            addTags = Tag.objects.filter(id__in=add)
+            addTags = Tag.objects.filter(id__in=addList)
             remTags = Tag.objects.filter(id__in=rem)
 
             for o in objects:
@@ -446,6 +456,7 @@ def downloadView(request):
             response = send_zipfile(request, fileList)
             return response
 
+@csrf_exempt
 def index(request):
     if request.method == 'GET':
         if not request.user.is_anonymous():

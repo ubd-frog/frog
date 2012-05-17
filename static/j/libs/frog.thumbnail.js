@@ -92,7 +92,7 @@ Frog.Thumbnail = new Class({
     },
     setArtist: function(artist) {
         var id = Frog.Tags.get(artist);
-        this.artist.set('text', artist);
+        this.artist.set('text', artist.capitalize());
         this.artist.dataset.frog_tag_id = id;
     },
     setSize: function(size) {
@@ -128,7 +128,7 @@ Frog.Thumbnail = new Class({
             this.tagList.innerHTML += ', ';
         }
         var tag = Frog.Tags.get(id);
-        var a = new Element('a', {'href': 'javascript:void(0);', text: tag, 'class': 'frog-tag'}).inject(this.tagList);
+        var a = new Element('a', {'href': 'javascript:void(0);', text: tag.capitalize(), 'class': 'frog-tag'}).inject(this.tagList);
         a.dataset.frog_tag_id = id;
         this.tags.push(id);
     },

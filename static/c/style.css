@@ -447,7 +447,7 @@ li.frog-tag {
     visibility: hidden;
     overflow-y: auto;
     overflow-x: hidden;
-    z-index: 3000;
+    z-index: 20000;
     box-sizing: content-box;
     -moz-box-sizing: content-box;
     -ms-box-sizing: content-box;

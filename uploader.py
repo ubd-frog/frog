@@ -13,7 +13,7 @@ from django.contrib.auth.models import User
 from models import Piece, Image, Video
 from common import JsonResponse, Result, uniqueID, getHashForFile
 
-from dev.settings import MEDIA_ROOT
+from settings import MEDIA_ROOT
 
 from path import path as Path
 
@@ -25,12 +25,18 @@ class Uploader(object):
     @csrf_exempt
     def post(self, request):
         res = Result()
-        for filename, f in request.FILES.iteritems():
+        if request.FILES.has_key('file'):
             try:
+                f = request.FILES['file']
                 filename = f.name
-                paths = json.loads(request.POST.get('paths', '{}').replace("'", "\""))
-                foreignPath = paths.get(filename, "%s/%s"% (uniqueID(), filename))
-                galleries = request.POST.get('galleries', '').split(',');
+
+                path = request.POST.get('path', None)
+                if path:
+                    foreignPath = path[0].replace("'", "\"")
+                else:
+                    foreignPath = "%s/%s"% (uniqueID(), filename)
+
+                galleries = request.POST.get('galleries', '1').split(',');
                 
                 uniqueName = Piece.getUniqueID(foreignPath, request.user)
                 
@@ -50,6 +56,8 @@ class Uploader(object):
 
                 if hashVal == obj.hash:
                     res.isSuccess = True
+                    res.message = "Files were the same"
+
                     return JsonResponse(res)
 
                 objPath = Path(MEDIA_ROOT) / guid.guid[-2:] / guid.guid / filename
@@ -66,12 +74,19 @@ class Uploader(object):
                 obj.export(hashVal, hashPath, galleries=galleries)
 
                 res.append(obj.json())
+
+                for f in request.FILES.itervalues():
+                    dest = objPath.parent / f.name
+                    self.handle_uploaded_file(dest, f)
+
+                res.isSuccess = True
             except Exception, e:
                 res.isError = True
                 res.message = str(e)
                 return JsonResponse(res)
-
-        res.isSuccess = True
+        else:
+            res.isError = True
+            res.message = "No file found"
 
         return JsonResponse(res)
 

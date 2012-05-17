@@ -125,7 +125,7 @@ Which UI to use?
             this.element = new Element('li', {'class': 'frog-tag'});
             this.element.dataset.frog_tag_id = this.id;
             new Element('span').inject(this.element)
-            new Element('a', {href: 'javascript:void(0);', text: this.name, 'class': 'frog-tag'}).inject(this.element);
+            new Element('a', {href: 'javascript:void(0);', text: this.name.capitalize(), 'class': 'frog-tag'}).inject(this.element);
             this.closeButton = new Element('div', {
                 text: 'x',
                 events: {

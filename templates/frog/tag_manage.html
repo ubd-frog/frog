@@ -63,7 +63,7 @@
                 <header>Selection</header>
                 <ul>
                     {% for tag in tags %}
-                    <li class="frog-tag" id="{{tag.id}}">
+                    <li class="frog-tag" dataset-frog_tag_id="{{tag.id}}">
                         <span></span>
                         {{tag.name}}
                         <div></div>
@@ -88,39 +88,62 @@
         <!-- end scripts -->
 {% endif %}
         <script type='text/JavaScript'>
-            new Sortables($$('#tag_manage UL'), {
-                clone: true,
-                revert: true,
-                opacity: 0.7
-            });
+            (function() {
+                new Sortables($$('#tag_manage UL'), {
+                    clone: true,
+                    revert: true,
+                    opacity: 0.7
+                });
 
-            var completer = new Meio.Autocomplete('frog_tag_search', '/frog/tag/search', {
-                filter: {
-                    path: 'name',
-                    formatItem: function(text, data) {
-                        if (data.id === 0) {
-                            return '<span class="search"></span>' + data.name
-                        }
-                        else {
-                            return '<span></span>' + data.name
-                        }
+                function callback(value, el) {
+                    var name, tag;
+                    if (value.id > 0) {
+                        name = value.name;
+                        tag = new Frog.Tag(value.id, name);
                     }
-                },
-                urlOptions: {
-                    extraParams: [{
-                        name: 'zero', value: true
-                    }, {
-                        name: 'artist', value: true
-                    }]
-                },
-                onSelect: function(elements, value) {
-                    if (value !== "") {
-                        var tag = new Frog.Tag(value.id, value.name);
-                        $$('#frog_add ul')[0].grab($(tag));
-                        elements.field.node.value = "";
+                    else {
+                        name = el.value;
+                        tag = new Frog.Tag(name, name);
                     }
+                    
+                    $$('#frog_add ul')[0].grab($(tag));
+                    el.value = "";
                 }
-            });
+
+                $('frog_tag_search').addEvent('keyup', function(e) {
+                    if (e.code === 13 && this.value !== "") {
+                        callback({id: 0, name: this.value}, this);
+                    }
+                })
+                var completer = new Meio.Autocomplete('frog_tag_search', '/frog/tag/search', {
+                    filter: {
+                        path: 'name',
+                        formatItem: function(text, data) {
+                            if (data.id === 0) {
+                                return '<span class="search"></span>' + data.name
+                            }
+                            else {
+                                return '<span></span>' + data.name
+                            }
+                        }
+                    },
+                    urlOptions: {
+                        extraParams: [{
+                            name: 'zero', value: true
+                        }, {
+                            name: 'artist', value: true
+                        }]
+                    },
+                    requestOptions: {
+                        headers: {"X-CSRFToken": Cookie.read('csrftoken')},
+                    },
+                    onSelect: function(elements, value) {
+                        if (value !== "") {
+                            callback(value, elements.field.node);
+                        }
+                    }
+                });
+            })();
         </script>
 {% if not isAjax %}
     </body>

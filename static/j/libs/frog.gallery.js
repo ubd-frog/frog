@@ -389,7 +389,6 @@ Frog.Gallery.Controls = new Class({
                 var win = Ext.create('widget.window', {
                     title: 'Edit Tags',
                     closable: true,
-                    closeAction: 'hide',
                     resizable: false,
                     modal: true,
                     width: 600,
@@ -411,10 +410,12 @@ Frog.Gallery.Controls = new Class({
                         handler: function() {
                             var add = [], rem = [];
                             $$('#frog_add li').each(function(item) {
-                                add.push(item.id.toInt());
+                                var id = item.dataset.frog_tag_id;
+                                add.push(id);
                             });
                             $$('#frog_rem li').each(function(item) {
-                                rem.push(item.id.toInt());
+                                var id = item.dataset.frog_tag_id;
+                                rem.push(id);
                             });
                             
                             new Request.JSON({

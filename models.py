@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
 
-from dev.settings import MEDIA_ROOT
+from settings import MEDIA_ROOT
 
 from path import path as Path
 from PIL import Image as pilImage
