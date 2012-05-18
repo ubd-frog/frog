@@ -17,6 +17,12 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 
+try:
+    from haystack.query import SearchQuerySet
+    HAYSTACK = True
+except ImportError:
+    HAYSTACK = False
+
 from models import Gallery, Image, Video, Tag
 
 from common import MainView, Result, JsonResponse, getObjectsFromGuids
@@ -153,15 +159,24 @@ class GalleryView(MainView):
             logger.debug(m.model + '_initial_query: %f' % (time.clock() - NOW))
 
             if tags:
+                searchQuery = ""
                 for bucket in tags:#[t for t in tags if isinstance(t, int) or isinstance(t, long)]:
                     o = Q()
                     for item in bucket:
                         if isinstance(item, int) or isinstance(item, long):
                             o |= Q(tags__id=item)
                         else:
-                            ## -- Too simple, replace with solution using a real search engine. overkill?
-                            o |= Q(title__icontains=item)
+                            searchQuery += item + ' '
+                            if not HAYSTACK:
+                                logger.debug('search From LIKE')
+                                o |= Q(title__icontains=item)
+                    if HAYSTACK:
+                        searchIDs = self._search(searchQuery.strip())
+                        logger.debug('searchFrom haystack:' + str(searchIDs))
+                        o |= Q(id__in=searchIDs)
+
                     idDict[m.model] = idDict[m.model].filter(o)
+
                 logger.debug(m.model + '_added_buckets(%i): %f' % (len(tags), time.clock() - NOW))
             else:
                 # all
@@ -228,6 +243,9 @@ class GalleryView(MainView):
                 return -1
             else:
                 return 0
+
+    def _search(self, query):
+        return [o.object.id for o in SearchQuerySet().auto_query(query)]
 
 
 class TagView(MainView):
