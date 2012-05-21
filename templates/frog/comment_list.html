@@ -1,0 +1,69 @@
+{% if not isAjax %}
+<!doctype html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+        <title>Edit Tags</title>
+        <meta name="description" content="">
+
+        <!-- Place favicon.ico and apple-touch-icon.png in the root directory: mathiasbynens.be/notes/touch-icons -->
+
+        <link rel="stylesheet" href="{{MEDIA_URL}}frog/c/ext-all-gray.css">
+        <link rel="stylesheet" href="{{MEDIA_URL}}frog/c/style.css">
+
+        <script src="{{MEDIA_URL}}frog/j/mootoolsCore.js"></script>
+{% endif %}
+
+        <style>
+            #frog_comments .even {
+                background: #333;
+            }
+            #frog_comments li {
+                padding: 8px;
+            }
+            #frog_comments li header {
+                font-size: 12px;
+                font-weight: bold;
+                color: #b8d364;
+                text-transform:capitalize;
+            }
+            #frog_comments p {
+                font-size: 12px;
+                padding: 4px 12px;
+            }
+            #frog_comments span {
+                font-size: 10px;
+                color: #797979;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="frog_comments" class='x-border-box'>
+            <ul>
+                {% for comment in comments %}
+                <li class="{% cycle 'even' 'odd' %}">
+                    <header>{{comment.user.get_full_name}}</header>
+                    <p>{{comment.comment}}</p>
+                    <span>{{comment.submit_date|date:"F d, Y at h:ia"}}</span>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+{% if not isAjax %}
+        <!-- JavaScript at the bottom for fast page loading -->
+        <script src="{{MEDIA_URL}}frog/j/mootoolsMore.js"></script>
+
+        <!-- scripts concatenated and minified via build script -->
+        <script src="{{MEDIA_URL}}frog/j/libs/frog.js"></script>
+        <!-- end scripts -->
+{% endif %}
+        <script type='text/JavaScript'>
+            (function() {
+                
+            })();
+        </script>
+{% if not isAjax %}
+    </body>
+</html>
+{% endif %}

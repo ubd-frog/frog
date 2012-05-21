@@ -16,6 +16,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
+from django.contrib.comments.models import Comment
 
 try:
     from haystack.query import SearchQuerySet
@@ -25,7 +26,7 @@ except ImportError:
 
 from models import Gallery, Image, Video, Tag
 
-from common import MainView, Result, JsonResponse, getObjectsFromGuids
+from common import MainView, Result, JsonResponse, getObjectsFromGuids, commentToJson
 from uploader import uploader
 
 from sendFile import send_file, send_zipfile
@@ -455,6 +456,85 @@ class VideoView(ImageView):
     def __init__(self):
         super(VideoView, self).__init__(Video)
 
+
+class CommentView(MainView):
+    def __init__(self):
+        super(CommentView, self).__init__(Comment)
+
+    @csrf_exempt
+    def view(self, request, obj_id=None):
+
+        if request.method == 'GET':
+            return self.get(request, obj_id)
+        elif request.method == 'POST':
+            return self.post(request, obj_id)
+        elif request.method == 'PUT':
+            return self.put(request, obj_id)
+        elif request.method == 'DELETE':
+            return self.delete(request, obj_id)
+
+    def get(self, request, obj_id=None):
+        res = Result()
+        if obj_id:
+            c = Comment.objects.get(pk=obj_id)
+            res.append(commentToJson(c))
+            res.isSuccess = True
+
+            return JsonResponse(res)
+
+        guid = request.GET.get('guid', None)
+        if guid:
+            if request.GET.get('json', False):
+                for c in Comment.objects.all():
+                    res.append(commentToJson(c))
+
+                res.isSuccess = True
+
+                return JsonResponse(res)
+            else:
+                comments = Comment.objects.all()
+                return render(request, 'frog/comment_list.html', {'comments': comments})
+
+    def post(self, request, obj_id=None):
+        guid = request.POST.get('guid', None)
+        res = Result()
+        if obj_id:
+            c = Comment.objects.get(pk=obj_id)
+            newComment = request.POST.get('comment', None)
+            if newComment:
+                c.comment = newComment
+                c.save()
+
+                res.append(commentToJson(c))
+                res.isSuccess = True
+            else:
+                res.isError = True
+                res.message = "No comment provided"
+
+            return JsonResponse(res)
+
+        if guid:
+            obj = getObjectsFromGuids([guid,])[0]
+            c = Comment()
+            c.comment = request.POST.get('comment', 'No comment')
+            c.user = request.user
+            c.user_name = request.user.get_full_name()
+            c.user_email = request.user.email
+            c.content_object = obj
+            c.site_id = 1
+            c.save()
+
+            res.append({'id': c.id, 'comment': c.comment})
+            res.isSuccess = True
+        else:
+            res.isError = True
+            res.message = "No guid provided"
+
+        return JsonResponse(res)
+
+
+
+
 @login_required
 def downloadView(request):
     guids = request.GET.get('guids', '').split(',')
@@ -516,3 +596,4 @@ gallery = GalleryView()
 tag = TagView()
 image = ImageView()
 video = VideoView()
+comment = CommentView()

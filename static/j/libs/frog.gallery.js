@@ -49,6 +49,13 @@ Frog.Gallery = new Class({
         this.controls.addEvent('remove', this.removeItems.bind(this))
         this._uploader();
         this.viewer = new Frog.Viewer();
+        this.keyboard = new Keyboard({
+            active: true,
+            events: {
+                'ctrl+a': function(e) { e.stop(); $$('.thumbnail').addClass('selected'); },
+                'ctrl+d': function(e) { e.stop(); $$('.thumbnail').removeClass('selected'); }
+            }
+        })
         
         var builderData;
         if (location.hash !== "") {
@@ -388,12 +395,13 @@ Frog.Gallery.Controls = new Class({
                 });
                 var win = Ext.create('widget.window', {
                     title: 'Edit Tags',
+                    icon: '/static/i/tag_orange.png',
                     closable: true,
                     resizable: false,
                     modal: true,
-                    width: 600,
-                    height: 450,
-                    layout: 'border',
+                    width: 800,
+                    height: 600,
+                    layout: 'fit',
                     bodyStyle: 'padding: 5px;',
                     items: [{
                         loader: {

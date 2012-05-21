@@ -28,6 +28,16 @@ Frog.Viewer = new Class({
             resize: this.resize.bind(this)
         }
 
+        this.keyboard = new Keyboard({
+            events: {
+                'left': function(e) { e.stop(); this.prev(); }.bind(this),
+                'right': function(e) { e.stop(); this.next(); }.bind(this),
+                'escape': function(e) { 
+                    e.stop(); this.hide(); 
+                }.bind(this)
+            }
+        })
+
         this.build();
     },
     toElement: function() {
@@ -223,6 +233,8 @@ Frog.Viewer = new Class({
         window.addEvent('mousewheel', this.events.zoom);
         window.addEvent('resize', this.events.resize);
 
+        this.keyboard.activate();
+
         var data = JSON.parse(unescape(location.hash.split('#')[1]));
         data.viewer = true;
         location.hash = JSON.stringify(data);
@@ -238,6 +250,8 @@ Frog.Viewer = new Class({
         window.removeEvent('mousemove', this.events.move);
         window.removeEvent('mousewheel', this.events.zoom);
         window.removeEvent('resize', this.events.resize);
+
+        this.keyboard.relinquish();
 
         var data = JSON.parse(unescape(location.hash.split('#')[1]));
         delete data.viewer;

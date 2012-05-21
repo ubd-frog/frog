@@ -5,6 +5,7 @@ import collections
 import random
 import string
 import hashlib
+from pprint import pprint
 try:
     import ujson as json
 except ImportError:
@@ -27,7 +28,7 @@ def userToJson(user, context=None, **kwargs):
     obj = {
         'id': user.id,
         'username': user.username,
-        'name': user.first_name + ' ' + user.last_name,
+        'name': user.get_full_name(),
         'email': user.email,
     }
 
@@ -161,3 +162,13 @@ def getObjectsFromGuids(guids):
     objects = img + vid
 
     return objects
+
+def commentToJson(comment):
+    obj = {
+        'id': comment.id,
+        'comment': comment.comment,
+        'user': userToJson(comment.user),
+        'date': comment.submit_date.isoformat(),
+    }
+
+    return obj
