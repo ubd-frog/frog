@@ -492,7 +492,13 @@ class CommentView(MainView):
 
                 return JsonResponse(res)
             else:
-                comments = Comment.objects.all()
+                obj = getObjectsFromGuids([guid])[0]
+                if obj.AssetType == 1:
+                    model = 'image'
+                else:
+                    model = 'video'
+                contentType = ContentType.objects.get(app_label="frog", model=model)
+                comments = Comment.objects.filter(object_pk=obj.id, content_type=contentType)
                 return render(request, 'frog/comment_list.html', {'comments': comments})
 
     def post(self, request, obj_id=None):
@@ -523,6 +529,8 @@ class CommentView(MainView):
             c.content_object = obj
             c.site_id = 1
             c.save()
+            obj.comment_count = obj.comment_count + 1
+            obj.save()
 
             res.append({'id': c.id, 'comment': c.comment})
             res.isSuccess = True

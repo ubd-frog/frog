@@ -235,10 +235,13 @@ Frog.Viewer = new Class({
 
         this.keyboard.activate();
 
-        var data = JSON.parse(unescape(location.hash.split('#')[1]));
-        data.viewer = true;
-        location.hash = JSON.stringify(data);
-
+        var hash = location.hash.split('#')[1];
+        if (typeof hash !== 'undefined') {
+            var data = JSON.parse(unescape(hash));
+            data.viewer = true;
+            location.hash = JSON.stringify(data);
+        }
+        
         this.fireEvent('onShow', [this]);
         this.isOpen = true;
     },
@@ -253,9 +256,12 @@ Frog.Viewer = new Class({
 
         this.keyboard.relinquish();
 
-        var data = JSON.parse(unescape(location.hash.split('#')[1]));
-        delete data.viewer;
-        location.hash = JSON.stringify(data);
+        var hash = location.hash.split('#')[1];
+        if (typeof hash !== 'undefined') {
+            var data = JSON.parse(unescape(hash));
+            delete data.viewer;
+            location.hash = JSON.stringify(data);
+        }
 
         this.fireEvent('onHide', [this]);
         this.isOpen = false;

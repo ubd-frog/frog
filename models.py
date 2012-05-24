@@ -1,3 +1,5 @@
+import json
+
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
@@ -49,6 +51,7 @@ class Piece(models.Model):
     tags = models.ManyToManyField(Tag, blank=True)
     deleted = models.BooleanField(default=False)
     hash = models.CharField(max_length=40, blank=True)
+    comment_count = models.IntegerField(default=0)
 
     class Meta:
         abstract = True
@@ -69,6 +72,9 @@ class Piece(models.Model):
     def export(self):
         pass
 
+    def serialize(self):
+        return json.dumps(self.json())
+
     def json(self):
         obj = {
             'id': self.id,
@@ -87,6 +93,7 @@ class Piece(models.Model):
             'deleted': self.deleted,
             'tags': [tag.json() for tag in self.tags.all()],
             'thumbnail': self.thumbnail.url,
+            'comment_count': self.comment_count,
         }
 
         return obj

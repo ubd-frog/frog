@@ -125,7 +125,6 @@ class MainView(object):
         return HttpResponse()
 
     def render(self):
-        print self.context
         return render(self.request, self.template, self.context)
 
 

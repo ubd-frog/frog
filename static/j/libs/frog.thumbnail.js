@@ -4,22 +4,17 @@ Frog.Thumbnail = new Class({
     Implements: [Events, Options],
     Padding: 14,//(8 + 2 + 4) * 2, // 8 for the div padding and 2 for the img padding
     options: {
-        image: Frog.getPixel(),
-        video: null,
-        tags: [],
-        artist: null,
-        title: '',
         imageID: 0,
-        guid: "",
         onClick: function(){},
         onSelect: function(){},
         onLoad: function(){}
     },
-    initialize: function(id, width, height, options) {
+    initialize: function(id, object, options) {
         this.setOptions(options);
         this.id = id;
-        this.width = width;
-        this.height = height;
+        this.object = object;
+        this.width = object.width;
+        this.height = object.height;
         this.loaded = false;
         this.guid = this.options.guid;
 
@@ -29,7 +24,7 @@ Frog.Thumbnail = new Class({
         this.selected = false;
 
         this.build();
-        this.options.tags.each(function(tag) {
+        this.object.tags.each(function(tag) {
             this.addTag(tag);
         }, this);
         if (this.options.artist !== null) {
@@ -83,9 +78,19 @@ Frog.Thumbnail = new Class({
         this.tagList = new Element('div').inject(tags);
 
         var bot = new Element('div').inject(this.element);
-        this.title = new Element('div', {'text': this.options.title}).inject(bot);
+        this.title = new Element('div', {'text': this.object.title}).inject(bot);
         var artistDiv = new Element('div', {'text': 'Artist: '}).inject(bot);
         this.artist = new Element('a', {'href': "javascript:void(0);", 'class': 'frog-tag'}).inject(artistDiv);
+        var commentLink = new Element('div', {
+            'class': 'frog-comment-bubble',
+            text: this.object.comment_count,
+            events: {
+                click: function(e) {
+                    e.stop();
+                    Frog.Comments.get(self.object.guid);
+                }
+            }
+        }).inject(bot);
     },
     toElement: function() {
         return this.element;
@@ -146,7 +151,7 @@ Frog.Thumbnail = new Class({
         if (this.loaded) {
             return true;
         }
-        this.img.src = this.options.image;
+        this.img.src = this.object.thumbnail;
         this.loaded = true;
     }
 })

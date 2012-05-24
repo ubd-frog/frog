@@ -127,13 +127,9 @@ Frog.Gallery = new Class({
                     }
                     res.values.each(function(o) {
                         self.objects.push(o);
-                        var t = new Frog.Thumbnail(self.objects.length - 1, o.width, o.height, {
-                            title: o.title,
+                        var t = new Frog.Thumbnail(self.objects.length - 1, o, {
                             artist: o.author.first + ' ' + o.author.last,
-                            tags: o.tags,
-                            image: o.thumbnail,
-                            imageID: o.id,
-                            guid: o.guid
+                            imageID: o.id
                         });
                         self.thumbnails.push(t);
                         t.setSize(self.tileSize);

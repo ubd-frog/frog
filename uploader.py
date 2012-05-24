@@ -34,7 +34,7 @@ class Uploader(object):
                 if path:
                     foreignPath = path[0].replace("'", "\"")
                 else:
-                    foreignPath = "%s/%s"% (uniqueID(), filename)
+                    foreignPath = filename
 
                 galleries = request.POST.get('galleries', '1').split(',');
                 

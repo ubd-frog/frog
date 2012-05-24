@@ -1,58 +1,59 @@
 <!doctype html>
-<!-- paulirish.com/2008/conditional-stylesheets-vs-css-hacks-answer-neither/ -->
-<!--[if lt IE 7]> <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="en"> <![endif]-->
-<!--[if IE 7]>    <html class="no-js lt-ie9 lt-ie8" lang="en"> <![endif]-->
-<!--[if IE 8]>    <html class="no-js lt-ie9" lang="en"> <![endif]-->
-<!-- Consider adding a manifest.appcache: h5bp.com/d/Offline -->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en"> <!--<![endif]-->
-<head>
-  <meta charset="utf-8">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
 
-  <!-- Use the .htaccess and remove these lines to avoid edge case issues.
-       More info: h5bp.com/i/378 -->
-  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <title>{{object.title}}</title>
+        <meta name="description" content="">
 
-  <title>C%3A</title>
-  <meta name="description" content="">
+        <!-- Place favicon.ico and apple-touch-icon.png in the root directory: mathiasbynens.be/notes/touch-icons -->
 
-  <!-- Mobile viewport optimized: h5bp.com/viewport -->
-  <meta name="viewport" content="width=device-width">
+        <link rel="stylesheet" href="{{MEDIA_URL}}frog/c/ext-all-gray.css">
+        <link rel="stylesheet" href="{{MEDIA_URL}}frog/c/style.css">
+        <!-- <link rel="stylesheet" href="{{MEDIA_URL}}c/meio.aucomplete.css"> -->
 
-  <!-- Place favicon.ico and apple-touch-icon.png in the root directory: mathiasbynens.be/notes/touch-icons -->
+        <script src="{{MEDIA_URL}}frog/j/libs/modernizr-2.5.3.min.js"></script>
+        <script src="{{MEDIA_URL}}frog/j/ext-all.js"></script>
+        <script src="{{MEDIA_URL}}frog/j/mootoolsCore.js"></script>
 
-  <link rel="stylesheet" href="{{STATIC_URL}}c/style.css">
+        <script>
+            window.addEvent('domready', function() {
+                var viewer = new Frog.Viewer();
+                viewer.addEvent('hide', function() {
+                    location.href = '/frog/gallery/1';
+                });
+                var img = JSON.parse('{{object.serialize|safe}}');
+                viewer.setImages([img]);
+                viewer.fitToWindow();
+                viewer.show();
+            });
+        </script>
+    </head>
+    <body>
+        <div id="upload">
+            <!-- <div id='upload_drop'>Drag Files Here</div> -->
+            <div id='upload_files'</div>
+        </div>
+        <div id="main">
+            
+        </div>
+        <!-- JavaScript at the bottom for fast page loading -->
+        <script src="{{MEDIA_URL}}frog/j/mootoolsMore.js"></script>
 
-  <!-- More ideas for your <head> here: h5bp.com/d/head-Tips -->
+        <script src="{{MEDIA_URL}}frog/j/libs/plupload.js"></script>
+        <script src="{{MEDIA_URL}}frog/j/libs/plupload.html5.js"></script>
+        <script src="{{MEDIA_URL}}frog/j/libs/Meio.Autocomplete.min.js"></script>
+        <script src="{{MEDIA_URL}}frog/j/libs/sylvester.js"></script>
 
-  <!-- All JavaScript at the bottom, except this Modernizr build.
-       Modernizr enables HTML5 elements & feature detects for optimal performance.
-       Create your own custom Modernizr build: www.modernizr.com/download/ -->
-  <script src="{{STATIC_URL}}j/libs/modernizr-2.5.3.min.js"></script>
-</head>
-<body>
-  <!-- Prompt IE 6 users to install Chrome Frame. Remove this if you support IE 6.
-       chromium.org/developers/how-tos/chrome-frame-getting-started -->
-  <!--[if lt IE 7]><p class=chromeframe>Your browser is <em>ancient!</em> <a href="http://browsehappy.com/">Upgrade to a different browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">install Google Chrome Frame</a> to experience this site.</p><![endif]-->
-  <header>
+        <!-- scripts concatenated and minified via build script -->
+        <script src="{{MEDIA_URL}}frog/j/libs/frog.js"></script>
+        <script src="{{MEDIA_URL}}frog/j/libs/frog.thumbnail.js"></script>
+        <script src="{{MEDIA_URL}}frog/j/libs/frog.viewer.js"></script>
+        <script src="{{MEDIA_URL}}frog/j/libs/frog.queryBuilder.js"></script>
+        <script src="{{MEDIA_URL}}frog/j/libs/frog.gallery.js"></script>
 
-  </header>
-  <div role="main">
-    <img src='{{object.image.url}}' width="1024" />
-  </div>
-  <footer>
-
-  </footer>
-
-
-  <!-- JavaScript at the bottom for fast page loading -->
-
-  <!-- Grab Google CDN's jQuery, with a protocol relative URL; fall back to local if offline -->
-  <script src="{{STATIC_URL}}j/mootoolsCore.js"></script>
-  <script src="{{STATIC_URL}}j/mootoolsMore.js"></script>
-
-  <!-- scripts concatenated and minified via build script -->
-  <script src="{{STATIC_URL}}j/plugins.js"></script>
-  <script src="{{STATIC_URL}}j/script.js"></script>
-  <!-- end scripts -->
-</body>
+        <script src="{{MEDIA_URL}}frog/j/plugins.js"></script>
+        <script src="{{MEDIA_URL}}frog/j/script.js"></script>
+        <!-- end scripts -->
+    </body>
 </html>

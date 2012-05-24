@@ -141,4 +141,90 @@ Which UI to use?
     })
     Frog.Tags = new Frog.TagManager();
 
+    Frog.CommentManager = new Class({
+        initialize: function() {
+            Ext.require(['*']);
+            var self = this;
+            this.container = new Element('div', {
+                id: 'frog_comments_container',
+                events: {
+                    click: function(e) {
+                        if (e.target === this) {
+                            self.close();
+                        }
+                    }
+                }
+            }).inject(document.body);
+            this.element = new Element('div', {id: 'frog_comments_block'}).inject(this.container);
+            this.container.hide();
+            this.saveButton = null;
+            this.guid = '';
+            this.request = new Request.HTML({
+                url: '/frog/comment/',
+                evalScripts: true,
+                noCache: true,
+                onSuccess: function(tree, elements, html) {
+                    this.container.show();
+                    var expression = /[-a-zA-Z0-9@:%_\+.~#?&//=]{2,256}\.[a-z]{2,4}\b(\/[-a-zA-Z0-9@:%_\+.~#?&//=]*)?/gi;
+                    var regex = new RegExp(expression);
+                    var matches = html.match(regex);
+                    if (matches) {
+                        for (var i=0;i<matches.length;i++) {
+                            var link = matches[i];
+                            var a = '<a href="' + link + '" target="_blank">' + link + '</a>';
+                            html = html.replace(link, a);
+                        }
+                    }
+                    this.top.set('html', html);
+                }.bind(this)
+            });
+            this.top = new Element('div').inject(this.element);
+            var bot = new Element('div').inject(this.element);
+            this.fakeInput = new Element('input', {
+                'placeholder': 'Comment...',
+                events: {
+                    click: function(e) {
+                        e.stop();
+                        this.hide();
+                        self.input.show();
+                        self.input.focus();
+                        if (!self.saveButton) {
+                            self.saveButton = Ext.create('Ext.Button', {
+                                text: 'Save',
+                                renderTo: bot,
+                                handler: function() {
+                                    new Request.JSON({
+                                        url: '/frog/comment/'
+                                    }).POST({guid: self.guid, comment: self.input.value});
+                                    self.close();
+                                }
+                            });
+                            Ext.create('Ext.Button', {
+                                text: 'Cancel',
+                                renderTo: bot,
+                                handler: function() {
+                                    self.close();
+                                }
+                            })
+                        }
+                    }
+                }
+            }).inject(bot);
+            this.input = new Element('textarea').inject(bot);
+            this.input.hide();
+            
+        },
+        get: function(guid) {
+            this.guid = guid;
+            this.request.GET({guid: guid});
+        },
+        close: function() {
+            this.container.hide();
+            this.fakeInput.show();
+            this.input.value = "";
+            this.input.hide();
+        }
+    });
+    Frog.Comments = new Frog.CommentManager();
+
 })(window);
