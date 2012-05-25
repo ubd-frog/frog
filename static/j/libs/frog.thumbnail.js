@@ -16,7 +16,7 @@ Frog.Thumbnail = new Class({
         this.width = object.width;
         this.height = object.height;
         this.loaded = false;
-        this.guid = this.options.guid;
+        this.guid = this.object.guid;
 
         this.dimension = {};
 
@@ -87,7 +87,7 @@ Frog.Thumbnail = new Class({
             events: {
                 click: function(e) {
                     e.stop();
-                    Frog.Comments.get(self.object.guid);
+                    Frog.Comments.get(self.object.guid, self.id);
                 }
             }
         }).inject(bot);

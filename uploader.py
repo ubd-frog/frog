@@ -32,7 +32,7 @@ class Uploader(object):
 
                 path = request.POST.get('path', None)
                 if path:
-                    foreignPath = path[0].replace("'", "\"")
+                    foreignPath = path.replace("'", "\"")
                 else:
                     foreignPath = filename
 

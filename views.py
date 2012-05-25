@@ -17,6 +17,8 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from django.contrib.comments.models import Comment
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import render_to_string
 
 try:
     from haystack.query import SearchQuerySet
@@ -483,6 +485,7 @@ class CommentView(MainView):
             return JsonResponse(res)
 
         guid = request.GET.get('guid', None)
+        id = request.GET.get('id', 0)
         if guid:
             if request.GET.get('json', False):
                 for c in Comment.objects.all():
@@ -499,7 +502,7 @@ class CommentView(MainView):
                     model = 'video'
                 contentType = ContentType.objects.get(app_label="frog", model=model)
                 comments = Comment.objects.filter(object_pk=obj.id, content_type=contentType)
-                return render(request, 'frog/comment_list.html', {'comments': comments})
+                return render(request, 'frog/comment_list.html', {'comments': comments, 'guid': guid, 'id': id})
 
     def post(self, request, obj_id=None):
         guid = request.POST.get('guid', None)
@@ -532,6 +535,8 @@ class CommentView(MainView):
             obj.comment_count = obj.comment_count + 1
             obj.save()
 
+            self.email(c, obj)
+
             res.append({'id': c.id, 'comment': c.comment})
             res.isSuccess = True
         else:
@@ -540,7 +545,17 @@ class CommentView(MainView):
 
         return JsonResponse(res)
 
-
+    def email(self, comment, obj):
+        html = render_to_string('frog/comment_email.html', {
+            'comment': comment,
+            'object': obj,
+        })
+        subject, from_email, to = 'Comment from %s' % comment.user_name, comment.user_email, obj.author.email
+        text_content = 'This is an important message.'
+        html_content = html
+        msg = EmailMultiAlternatives(subject, text_content, from_email, [to])
+        msg.attach_alternative(html_content, "text/html")
+        msg.send()
 
 
 @login_required

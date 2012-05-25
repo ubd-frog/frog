@@ -43,6 +43,12 @@ Frog.Gallery = new Class({
             self._uploaderList();
             self.uploaderList.show();
         }, false);
+        Frog.Comments.addEvent('post', function(id) {
+            var commentEl = $(self.thumbnails[id]).getElements('.frog-comment-bubble')[0];
+            var count = commentEl.get('text').toInt();
+            commentEl.set('text', count + 1);
+
+        })
 
         // -- Instance objects
         this.controls = new Frog.Gallery.Controls(this.toolsElement, this.id);

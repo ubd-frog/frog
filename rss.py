@@ -7,7 +7,7 @@ from django.template.loader import render_to_string
 
 from frog.models import Gallery, RSSStorage, Image, Video
 
-from dev.settings import SITE_URL
+from settings import SITE_URL
 
 
 class Daily(Feed):
