@@ -1,8 +1,9 @@
 {% extends "frog/gallery.html" %}
 <script>
     {% block script %}
+    var viewer;
     window.addEvent('domready', function() {
-        var viewer = new Frog.Viewer();
+        viewer = new Frog.Viewer();
         viewer.addEvent('hide', function() {
             location.href = '/frog/gallery/1';
         });

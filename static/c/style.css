@@ -216,6 +216,9 @@ body {
     background: #202020;
     overflow-y: scroll;
 }
+.noscroll {
+    overflow: hidden;
+}
 body > div {
     font-family: Verdana;
     font-size: 11px;
@@ -520,7 +523,22 @@ li.frog-tag {
     top: 0;
     right: 0;
     height: 32px;
+    padding-right: 32px;
 }
+    #frog_viewer_controls div {
+        float: right;
+    }
+    #frog_viewer_controls .image-count {
+        right: 232px;
+        position: absolute;
+        top: 8px;
+        height: 24px;
+        background: #444;
+        border: 1px solid #666;
+        font-size: 17px;
+        font-weight: bold;
+        padding: 0 4px;
+    }
     #frog_viewer_controls > div:last-child {
         position: absolute;
         top: 0;
@@ -558,6 +576,10 @@ li.frog-tag {
             -webkit-border-radius: 0 4px 4px 0;
             -moz-border-radius: 0 4px 4px 0;
         }
+#frog_viewer .leanback-player-video {
+    margin: auto;
+    text-align: center;
+}
 #frog_viewer canvas.drag {
     cursor: crosshair;
 }

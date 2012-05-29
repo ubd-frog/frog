@@ -28,7 +28,7 @@ Frog.Gallery = new Class({
         this.isRequesting = false;
         this.uploader = null;
         this.requestData = {};
-        this.spinner = new Spinner(undefined, {message: "fetching images..."});
+        this.spinner = new Spinner(undefined, {message: "fetching images...", fxOptions: {duration: 0}});
 
         // -- Events
         window.addEvent('scroll', this._scroll.bind(this));
@@ -55,6 +55,12 @@ Frog.Gallery = new Class({
         this.controls.addEvent('remove', this.removeItems.bind(this))
         this._uploader();
         this.viewer = new Frog.Viewer();
+        this.viewer.addEvent('show', function() {
+            window.scrollTo(0,0);
+        }.bind(this));
+        this.viewer.addEvent('hide', function() {
+            window.scrollTo(0,this.y);
+        }.bind(this));
         this.keyboard = new Keyboard({
             active: true,
             events: {
@@ -113,7 +119,7 @@ Frog.Gallery = new Class({
             this.requestData.more = true;
         }
 
-        this.requestData.models = 'image';
+        //this.requestData.models = 'video';
         
         var self = this;
         new Request.JSON({
@@ -207,6 +213,8 @@ Frog.Gallery = new Class({
             var objects = Array.clone(this.objects);
             this.viewer.setImages(objects, id);
         }
+
+        this.y = window.getScroll().y;
         
         this.viewer.fitToWindow();
         this.viewer.show();

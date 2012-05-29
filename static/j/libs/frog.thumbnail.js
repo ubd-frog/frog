@@ -53,8 +53,9 @@ Frog.Thumbnail = new Class({
             width: '100%',
             height: 0
         }}).inject(top);
+        var linkType = (this.guid.charAt(0) === '1') ? 'image' : 'video';
         this.imgLink = new Element('a', {
-            href: '/frog/image/' + this.options.imageID,
+            href: '/frog/' + linkType + '/' + this.options.imageID,
             'class': 'frog-image-link',
             events: {
                 click: function(e) {

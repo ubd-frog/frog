@@ -17,14 +17,17 @@
         <script src="{{MEDIA_URL}}frog/j/mootoolsCore.js"></script>
 
         <script>
+            {% block script %}
             var t, thumbnails, g, DEBUG;
             window.addEvent('domready', function() {
                 g = new Frog.Gallery(undefined, {{object.id}});
                 g.request();
             });
+            {% endblock %}
         </script>
     </head>
     <body>
+        {% block content %}
         <div id="upload">
             <!-- <div id='upload_drop'>Drag Files Here</div> -->
             <div id='upload_files'</div>
@@ -32,6 +35,7 @@
         <div id="main">
             
         </div>
+        {% endblock %}
         <!-- JavaScript at the bottom for fast page loading -->
         <script src="{{MEDIA_URL}}frog/j/mootoolsMore.js"></script>
 

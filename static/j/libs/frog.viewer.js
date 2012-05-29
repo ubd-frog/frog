@@ -15,6 +15,8 @@ Frog.Viewer = new Class({
 
         this.element = new Element('div', {id: 'frog_viewer'}).inject(document.body);
         this.canvas = new Element('canvas', {width: window.getWidth(), height: window.getHeight()}).inject(this.element);
+        this.video = new Element('div', {'class': 'leanback-player-video', styles: {width: 800, height: 600}}).inject(this.element);
+        this.videoEl = new Element('video').inject(this.video);
 
         this.ctx = this.canvas.getContext('2d');
         this.image = new Image();
@@ -93,6 +95,8 @@ Frog.Viewer = new Class({
         this.bOriginal = new Element('li', {'class': 'frog-original'}).inject(buttons);
         this.bWindow = new Element('li', {'class': 'frog-window'}).inject(buttons);
         this.bDownload = new Element('li', {'class': 'frog-download'}).inject(buttons);
+
+        this.countLabel = new Element('div', {'class': 'image-count', 'text': '1/1'}).inject(controls);
 
         this.bPrev.addEvent('click', this.prev.bind(this));
         this.bNext.addEvent('click', this.next.bind(this));
@@ -199,11 +203,40 @@ Frog.Viewer = new Class({
         this.render();
     },
     setImage: function(img) {
+        this.video.hide();
+        this.canvas.show();
         this.clear();
+        this.videoEl.empty();
         this.image.src = img;
         if (this.image.complete) {
             this._loadCallback();
         }
+    },
+    setVideo: function(vid) {
+        this.canvas.hide();
+        this.video.show();
+        this.videoEl.empty();
+
+        var padTop = window.getHeight() / 2 - vid.height / 2;
+        this.video.setStyle('padding-top', padTop);
+
+        this.videoEl.width = vid.width;
+        this.videoEl.height = vid.height;
+        this.videoEl.setProperties({
+            //poster: vid.thumbnail,
+            //preload: "metadata",
+            controls: 'controls',
+            autoplay: 'autoplay'
+        });
+
+        var src = new Element('source', {
+            src: vid.video,
+            type: 'video/mp4; codecs="avc1.42E01E, mp4a.40.2"'
+            //type: 'video/webm; codecs="vp8, vorbis"'
+        }).inject(this.videoEl);
+        this.videoEl.play();
+
+        //LBP.setup();
     },
     setImages: function(images, id) {
         id = id || 0;
@@ -213,7 +246,16 @@ Frog.Viewer = new Class({
     setIndex: function(idx) {
         idx = idx.toInt();
         this.current = idx;
-        this.setImage(this.objects[idx].image);
+        var obj = this.objects[idx];
+        if (obj.guid.charAt(0) === '1') {
+            this.videoEl.pause();
+            this.setImage(obj.image);
+        }
+        else {
+            this.setVideo(obj);
+        }
+        
+        this.countLabel.set('text', (idx + 1) + '/' + this.objects.length);
     },
     _loadCallback: function() {
         this.xform = this.main = $M([
@@ -226,12 +268,12 @@ Frog.Viewer = new Class({
     },
     show: function() {
         this.element.show();
-        
+
         this.canvas.addEvent('mousedown', this.events.down);
         window.addEvent('mouseup', this.events.up);
         window.addEvent('mousemove', this.events.move);
         window.addEvent('mousewheel', this.events.zoom);
-        window.addEvent('resize', this.events.resize);
+        document.body.addClass('noscroll');
 
         this.keyboard.activate();
 
@@ -252,7 +294,7 @@ Frog.Viewer = new Class({
         window.removeEvent('mouseup', this.events.up);
         window.removeEvent('mousemove', this.events.move);
         window.removeEvent('mousewheel', this.events.zoom);
-        window.removeEvent('resize', this.events.resize);
+        document.body.removeClass('noscroll');
 
         this.keyboard.relinquish();
 
@@ -262,6 +304,8 @@ Frog.Viewer = new Class({
             delete data.viewer;
             location.hash = JSON.stringify(data);
         }
+
+        this.videoEl.pause();
 
         this.fireEvent('onHide', [this]);
         this.isOpen = false;

@@ -63,7 +63,6 @@ class GalleryView(MainView):
     @LoginRequired
     def post(self, request):
         title = request.POST.get('title', 'New Gallery' + str(Gallery.objects.all().values_list('id', flat=True)[0] + 1))
-        #parent = request.POST.get('parent', 1)
         g, created = Gallery.objects.get_or_create(title=title)
 
         res = Result()
@@ -109,10 +108,12 @@ class GalleryView(MainView):
     def filter(self, request, obj_id):
         self._processRequest(request, obj_id)
         
-        tags = json.loads(request.GET.get('filters', '[]'))
+        tags = json.loads(request.GET.get('filters', '[[]]'))
         rng = request.GET.get('rng', None)
         more = request.GET.get('more', False)
         models = request.GET.get('models', 'image,video')
+
+        tags = filter(None, tags)
 
         models = [ContentType.objects.get(app_label='frog', model=x) for x in models.split(',')]
 
@@ -424,8 +425,9 @@ class TagView(MainView):
 
 
 class ImageView(MainView):
-    def __init__(self, *args):
-        super(ImageView, self).__init__(Image)
+    def __init__(self, model=None):
+        model = model or Image
+        super(ImageView, self).__init__(model)
 
     @LoginRequired
     def post(self, request, obj_id):
@@ -550,7 +552,7 @@ class CommentView(MainView):
             'comment': comment,
             'object': obj,
         })
-        subject, from_email, to = 'Comment from %s' % comment.user_name, comment.user_email, obj.author.email
+        subject, from_email, to = 'Comment from %s' % comment.user_name, '%s (%s)' % (comment.user_name, comment.user_email), obj.author.email
         text_content = 'This is an important message.'
         html_content = html
         msg = EmailMultiAlternatives(subject, text_content, from_email, [to])
