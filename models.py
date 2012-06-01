@@ -14,7 +14,7 @@ gSmallSize = 600
 gThumbSize = 256
 
 class Tag(models.Model):
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, unique=True)
     parent = models.ForeignKey('self', blank=True, null=True)
     artist = models.BooleanField(default=False)
 
@@ -114,6 +114,8 @@ class Image(Piece):
         '''
         
         self.source = hashPath.replace('\\', '/').replace(MEDIA_ROOT, '')
+        galleries = galleries or []
+        tags = tags or []
         
         workImage = pilImage.open(MEDIA_ROOT + self.source.name)
         formats = [
@@ -136,6 +138,10 @@ class Image(Piece):
 
         artistTag = Tag.objects.get_or_create(name=self.author.first_name + ' ' + self.author.last_name)[0]
         self.tags.add(artistTag)
+
+        for tagName in tags:
+            tag = Tag.objects.get_or_create(name=tagName)[0]
+            self.tags.add(tag)
 
         if not self.guid:
             self.guid = self.getGuid().guid

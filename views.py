@@ -174,7 +174,7 @@ class GalleryView(MainView):
                             if not HAYSTACK:
                                 logger.debug('search From LIKE')
                                 o |= Q(title__icontains=item)
-                    if HAYSTACK:
+                    if HAYSTACK and searchQuery != "":
                         searchIDs = self._search(searchQuery.strip())
                         logger.debug('searchFrom haystack:' + str(searchIDs))
                         o |= Q(id__in=searchIDs)

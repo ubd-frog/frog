@@ -403,8 +403,12 @@ li.frog-tag {
             color: #fff;
         }
 #frog_builder {
+    position: fixed;
     width: 100%;
+    margin-top: 28px;
     overflow: auto;
+    background: #202020;
+    z-index: 2000;
 }
 #frog_builder input {
     width: 240px;
@@ -417,6 +421,7 @@ li.frog-tag {
 #gallery {
     width: 100%;
     min-height: 800px;
+    padding-top: 68px;
     overflow: auto;
 }
 #upload {
@@ -447,6 +452,12 @@ li.frog-tag {
         width: 80%;
         margin: 100px auto;
     }
+#frog_tools {
+    position: fixed;
+    width: 100%;
+    height: 28px;
+    z-index: 2000;
+}
 .frog-tools {
     width: 100%;
     height: 28px;
@@ -511,6 +522,7 @@ li.frog-tag {
     width: 100%;
     height: 100%;
     background: #000;
+    z-index: 2001;
     -webkit-touch-callout: none;
     -webkit-user-select: none;
     -khtml-user-select: none;
@@ -580,8 +592,8 @@ li.frog-tag {
     margin: auto;
     text-align: center;
 }
-#frog_viewer canvas.drag {
-    cursor: crosshair;
+#frog_viewer canvas {
+    cursor: move;
 }
 .frog-prev { background: url('../i/viewerControls.png') left top no-repeat; }
 .frog-next { background: url('../i/viewerControls.png') left -20px no-repeat; }
