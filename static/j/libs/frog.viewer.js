@@ -200,7 +200,7 @@ Frog.Viewer = new Class({
         this.canvas.width = window.getWidth();
         this.canvas.height = window.getHeight();
 
-        this.render();
+        this.center();
     },
     setImage: function(img) {
         this.video.hide();
@@ -273,6 +273,7 @@ Frog.Viewer = new Class({
         window.addEvent('mouseup', this.events.up);
         window.addEvent('mousemove', this.events.move);
         window.addEvent('mousewheel', this.events.zoom);
+        window.addEvent('resize', this.events.resize);
         document.body.addClass('noscroll');
 
         this.keyboard.activate();

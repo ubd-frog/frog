@@ -28,7 +28,7 @@ except ImportError:
 
 from models import Gallery, Image, Video, Tag
 
-from common import MainView, Result, JsonResponse, getObjectsFromGuids, commentToJson
+from common import MainView, Result, JsonResponse, getObjectsFromGuids, commentToJson, userToJson
 from uploader import uploader
 
 from sendFile import send_file, send_zipfile
@@ -44,9 +44,6 @@ LoginRequired = method_decorator(login_required)
 class GalleryView(MainView):
     def __init__(self):
         super(GalleryView, self).__init__(Gallery)
-
-    def index1(self, request):
-        return render(request, 'frog/index.html', {})
 
     @LoginRequired
     def get(self, request, obj_id=None):
@@ -120,11 +117,16 @@ class GalleryView(MainView):
         return self._filter(tags=tags, rng=rng, models=models, more=more)
 
     def _filter(self, tags=None, models=(Image, Video), rng=None, more=False):
-        ''' filter on
-        search, tags, models
-        accept range in #:#
-        return dict
-        '''
+        """
+        Filters Piece objects from self based on filters, search, and range
+
+        tags -- list, List of tag IDs to filter
+        models -- list, List of model classes to filter on
+        rng -- string, Range of objects to return. i.e. 0:100
+        more -- bool, Returns more of the same filtered set of images based on session range
+
+        return list, Objects filtered
+        """
 
         NOW = time.clock()
 
@@ -150,35 +152,43 @@ class GalleryView(MainView):
 
         logger.info(self.request.session['frog_range'])
 
+        ## -- Gat all IDs for each model
         for m in models:
             lastIndex = m.model_class().objects.all().values_list('id', flat=True)[0]
             if more:
+                ## -- This is a request for more results
                 self.request.session.setdefault('last_%s_id' % m.model, lastIndex + 1)
             else:
                 self.request.session['last_%s_id' % m.model] = lastIndex + 1
 
             offset = lastIndex - self.request.session['last_%s_id' % m.model] + 1
             
+            ## -- Start with objects within range
             idDict[m.model] = m.model_class().objects.filter(gallery=self.object, id__lt=self.request.session['last_%s_id' % m.model])
             logger.debug(m.model + '_initial_query: %f' % (time.clock() - NOW))
 
             if tags:
                 searchQuery = ""
-                for bucket in tags:#[t for t in tags if isinstance(t, int) or isinstance(t, long)]:
+                for bucket in tags:
                     o = Q()
                     for item in bucket:
+                        ## -- filter by tag
                         if isinstance(item, int) or isinstance(item, long):
                             o |= Q(tags__id=item)
+                        ## -- add to search string
                         else:
                             searchQuery += item + ' '
                             if not HAYSTACK:
+                                ## -- use a basic search
                                 logger.debug('search From LIKE')
                                 o |= Q(title__icontains=item)
                     if HAYSTACK and searchQuery != "":
+                        ## -- once all tags have been filtered, filter by search
                         searchIDs = self._search(searchQuery.strip())
                         logger.debug('searchFrom haystack:' + str(searchIDs))
                         o |= Q(id__in=searchIDs)
 
+                    ## -- apply the filters
                     idDict[m.model] = idDict[m.model].filter(o)
 
                 logger.debug(m.model + '_added_buckets(%i): %f' % (len(tags), time.clock() - NOW))
@@ -186,24 +196,29 @@ class GalleryView(MainView):
                 # all
                 pass
             
+            ## -- Get all ids of filtered objects, this will be a very fast query
             idDict[m.model] = idDict[m.model].values_list('id', flat=True)
             logger.debug(m.model + '_queried_ids: %f' % (time.clock() - NOW))
 
             res.message = str(s) + ':' + str(e)
             
+            ## -- perform the main query to retrieve the objects we want
             objDict[m.model] = m.model_class().objects.filter(id__in=idDict[m.model]).select_related('author').prefetch_related('tags')
             if not rng:
                 objDict[m.model] = objDict[m.model][:gRange]
             objDict[m.model] = list(objDict[m.model])
             logger.debug(m.model + '_queried_obj: %f' % (time.clock() - NOW))
         
+        ## -- combine and sort all objects by date
         objects = self._sortObjects(**objDict) if len(models) > 1 else objDict.values()[0]
         objects = objects[s:e]
         logger.debug('sorted: %f' % (time.clock() - NOW))
 
+        ## -- serialize objects
         for i in objects:
             for m in models:
                 if isinstance(i, m.model_class()):
+                    ## -- set the last ID per model for future lookups
                     self.request.session['last_%s_id' % m.model] = i.id
             res.append(i.json())
         logger.debug('serialized: %f' % (time.clock() - NOW))
@@ -225,6 +240,7 @@ class GalleryView(MainView):
         return JsonResponse(res)
 
     def _sortObjects(self, **args):
+        """ Sort and combine objects """
         o = []
         
         for m in args.values():
@@ -236,6 +252,7 @@ class GalleryView(MainView):
         return o
 
     def _sortByCreated(self, a,b):
+        """ Sort function for object by created date """
         if a.created < b.created:
             return 1
         elif a.created > b.created:
@@ -249,6 +266,7 @@ class GalleryView(MainView):
                 return 0
 
     def _search(self, query):
+        """ Performs a search query and returns the object ids """
         return [o.object.id for o in SearchQuerySet().auto_query(query)]
 
 
@@ -615,6 +633,29 @@ def frogLogout(request):
     logout(request)
 
     return HttpResponseRedirect('/frog')
+
+@login_required
+def switchArtist(request):
+    artist = request.POST.get('artist', None)
+    guids = request.POST.get('guids', '').split(',')
+    res = Result()
+    if artist:
+        first, last = artist.lower().split(' ')
+        artist = User.objects.get_or_create(first_name=first, last_name=last, defaults={
+            'username': first[0] + last,
+            'email': first[0] + last,
+        })[0]
+        objects = getObjectsFromGuids(guids)
+        for n in objects:
+            n.author = artist
+
+        res.isSuccess = True
+        res.append(userToJson(artist))
+    else:
+        res.isError = True
+        res.message = "No artist provided"
+
+    return JsonResponse(res)
 
 
 gallery = GalleryView()

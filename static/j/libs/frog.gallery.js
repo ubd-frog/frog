@@ -18,7 +18,7 @@ Frog.Gallery = new Class({
 
         // -- Members
         this.tilesPerRow = 6;
-        this.tileSize = (window.getWidth() - 2) / this.tilesPerRow;
+        this.tileSize = Math.floor((window.getWidth() - 2) / this.tilesPerRow);
         this.objects = [];
         this.thumbnails = [];
         this.y = 0;
@@ -59,6 +59,7 @@ Frog.Gallery = new Class({
             window.scrollTo(0,0);
         }.bind(this));
         this.viewer.addEvent('hide', function() {
+            this.resize();
             window.scrollTo(0,this.y);
         }.bind(this));
         this.keyboard = new Keyboard({
@@ -155,10 +156,11 @@ Frog.Gallery = new Class({
         }).GET(this.requestData);
     },
     resize: function() {
-        this.tileSize = (window.getWidth() - 2) / this.tilesPerRow;
+        this.tileSize = Math.floor((window.getWidth() - 2) / this.tilesPerRow);
         this.thumbnails.each(function(t) {
             t.setSize(this.tileSize);
-        }, this)
+        }, this);
+        this._getScreen();
     },
     historyEvent: function(e) {
         var key = (typeOf(e) === 'string') ? e : e.newURL;
@@ -227,7 +229,7 @@ Frog.Gallery = new Class({
                 browse_button: 'frogBrowseButton',
                 drop_element: 'upload',
                 container: 'upload',
-                max_file_size: '100mb',
+                max_file_size: '500mb',
                 url: '/frog/',
                 headers: {"X-CSRFToken": Cookie.read('csrftoken')},
                 multipart_params: {

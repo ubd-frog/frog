@@ -1,0 +1,9 @@
+[
+    {
+        "model": "frog.gallery",
+        "pk": 1,
+        "fields": {
+            "title": "Main"
+        }
+    }
+]

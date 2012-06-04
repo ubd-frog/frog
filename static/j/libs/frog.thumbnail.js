@@ -24,12 +24,13 @@ Frog.Thumbnail = new Class({
         this.selected = false;
 
         this.build();
-        this.object.tags.each(function(tag) {
-            this.addTag(tag);
-        }, this);
+        
         if (this.options.artist !== null) {
             this.setArtist(this.options.artist);
         }
+        this.object.tags.each(function(tag) {
+            this.addTag(tag);
+        }, this);
     },
     build: function() {
         var self = this;
@@ -75,7 +76,7 @@ Frog.Thumbnail = new Class({
             }
         }).inject(this.imgLink);
 
-        var tags = new Element('div', {'class': 'tag-hover'})//.inject(this.element);
+        var tags = new Element('div', {'class': 'tag-hover'});//.inject(this.element);
         this.tagList = new Element('div').inject(tags);
 
         var bot = new Element('div').inject(this.element);
@@ -129,6 +130,9 @@ Frog.Thumbnail = new Class({
     addTag: function(id) {
         if (typeOf(id.id) !== 'undefined') {
             id = id.id;
+        }
+        if (id.toString() === this.artist.dataset.frog_tag_id) {
+            return;
         }
         if (this.tagList.getElements('a').length > 0) {
             this.tagList.innerHTML += ', ';

@@ -99,6 +99,7 @@ Frog.QueryBuilder = new Class({
         
     },
     addTag: function(bucket, tag_id) {
+        this.data = [[]];
         if (!this.data[bucket]) {
             this.addBucket();
         }

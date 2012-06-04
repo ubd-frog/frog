@@ -1,10 +1,14 @@
 import json
+import Queue
+import subprocess
 
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
 
-from settings import MEDIA_ROOT
+from settings import MEDIA_ROOT, FFMPEG
+
+from videoThread import VideoThread
 
 from path import path as Path
 from PIL import Image as pilImage
@@ -12,6 +16,10 @@ from PIL import Image as pilImage
 gMaxSize = 2560
 gSmallSize = 600
 gThumbSize = 256
+
+gQueue = Queue.Queue()
+gVideoThread = VideoThread(gQueue)
+gVideoThread.start()
 
 class Tag(models.Model):
     name = models.CharField(max_length=255, unique=True)
@@ -169,7 +177,53 @@ class Video(Piece):
         - Rename to guid.ext
         - Save thumbnail, video_thumbnail, and MP4 versions.  If the source is already h264, then only transcode the thumbnails
         '''
-        pass
+
+        self.source = hashPath.replace('\\', '/').replace(MEDIA_ROOT, '')
+        galleries = galleries or []
+        tags = tags or []
+
+        ## -- Get info
+        cmd = '%s -i "%s"' % (FFMPEG, hashPath.replace('/', '\\'))
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        infoString = proc.stdout.readlines()
+        width = 100
+        height = 100
+        for n in infoString:
+            n = n.strip()
+            if n.startswith('Stream'):
+                dim = n.split(',')[2].strip()
+                width, height = dim.split('x')
+                width = width.split(' ')[0]
+                height = height.split(' ')[0]
+                break
+        self.width = width
+        self.height = height
+
+        ## -- Save thumbnail and put into queue
+        thumbnail = Path(hashPath.parent.replace('/', '\\')) / "_%s.jpg" % hashVal
+        cmd = '%s -i "%s" -ss 1 -vframes 1 "%s"' % (FFMPEG, hashPath.replace('/', '\\'), thumbnail)
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        proc.communicate()
+
+        self.thumbnail = thumbnail.replace('\\', '/').replace(MEDIA_ROOT, '')
+
+        for gal in galleries:
+            g = Gallery.objects.get(pk=int(gal))
+            g.videos.add(self)
+
+        artistTag = Tag.objects.get_or_create(name=self.author.first_name + ' ' + self.author.last_name)[0]
+        self.tags.add(artistTag)
+
+        for tagName in tags:
+            tag = Tag.objects.get_or_create(name=tagName)[0]
+            self.tags.add(tag)
+
+        if not self.guid:
+            self.guid = self.getGuid().guid
+
+        self.save()
+
+        gQueue.put(self)
 
     def json(self):
         obj = super(Video, self).json()

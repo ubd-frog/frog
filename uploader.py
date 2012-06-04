@@ -1,6 +1,7 @@
 from pprint import pprint
 import shutil
 import hashlib
+import traceback
 try:
     import ujson as json
 except ImportError:
@@ -36,7 +37,8 @@ class Uploader(object):
                 else:
                     foreignPath = filename
 
-                galleries = request.POST.get('galleries', '1').split(',');
+                galleries = request.POST.get('galleries', '1').split(',')
+                tags = request.POST.get('tags', '1').split(',')
                 
                 uniqueName = Piece.getUniqueID(foreignPath, request.user)
                 
@@ -44,6 +46,8 @@ class Uploader(object):
                     model = Image
                 else:
                     model = Video
+
+                print model
 
                 if request.user.is_anonymous():
                     user = User.objects.get(username=request.POST.get('user', 'noauthor'))
@@ -71,13 +75,14 @@ class Uploader(object):
                 obj.hash = hashVal
                 obj.foreign_path = foreignPath
                 obj.title = objPath.namebase
-                obj.export(hashVal, hashPath, galleries=galleries)
+                obj.export(hashVal, hashPath, tags=tags, galleries=galleries)
 
                 res.append(obj.json())
 
-                for f in request.FILES.itervalues():
-                    dest = objPath.parent / f.name
-                    self.handle_uploaded_file(dest, f)
+                for key,f in request.FILES.iteritems():
+                    if key != 'file':
+                        dest = objPath.parent / f.name
+                        self.handle_uploaded_file(dest, f)
 
                 res.isSuccess = True
             except Exception, e:
