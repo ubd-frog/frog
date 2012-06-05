@@ -26,7 +26,7 @@ try:
 except ImportError:
     HAYSTACK = False
 
-from models import Gallery, Image, Video, Tag
+from models import Gallery, Image, Video, Tag, Piece
 
 from common import MainView, Result, JsonResponse, getObjectsFromGuids, commentToJson, userToJson
 from uploader import uploader
@@ -36,7 +36,7 @@ from sendFile import send_file, send_zipfile
 from settings import MEDIA_ROOT
 
 
-gRange = 300
+gRange = 30
 logger = logging.getLogger('dev.frog')
 LoginRequired = method_decorator(login_required)
 
@@ -656,6 +656,27 @@ def switchArtist(request):
         res.message = "No artist provided"
 
     return JsonResponse(res)
+
+def isUnique(request):
+    path = request.GET.get('path', None)
+    res = Result()
+    if path:
+        uniqueID = Piece.getUniqueID(path, request.user)
+
+        if Image.objects.filter(unique_id=uniqueID):
+            res.append(False)
+        elif Video.objects.filter(unique_id=uniqueID):
+            res.append(False)
+        else:
+            res.append(True)
+
+        res.isSuccess = True
+    else:
+        res.isError = True
+        res.message = "No path provided"
+
+    return JsonResponse(res)
+
 
 
 gallery = GalleryView()

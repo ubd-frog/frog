@@ -11,7 +11,7 @@ from django.http import HttpResponse, Http404
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.models import User
 
-from models import Piece, Image, Video
+from models import Piece, Image, Video, Gallery
 from common import JsonResponse, Result, uniqueID, getHashForFile
 
 from settings import MEDIA_ROOT
@@ -47,8 +47,6 @@ class Uploader(object):
                 else:
                     model = Video
 
-                print model
-
                 if request.user.is_anonymous():
                     user = User.objects.get(username=request.POST.get('user', 'noauthor'))
                 else:
@@ -59,6 +57,10 @@ class Uploader(object):
                 hashVal = getHashForFile(f);
 
                 if hashVal == obj.hash:
+                    for gal in galleries:
+                        g = Gallery.objects.get(pk=int(gal))
+                        obj.gallery_set.add(g)
+                        #g.images.add(self)
                     res.isSuccess = True
                     res.message = "Files were the same"
 

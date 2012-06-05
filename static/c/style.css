@@ -219,6 +219,9 @@ body {
 .noscroll {
     overflow: hidden;
 }
+.x-mask {
+    background: #000;
+}
 body > div {
     font-family: Verdana;
     font-size: 11px;
@@ -452,6 +455,9 @@ li.frog-tag {
     #upload_files {
         width: 80%;
         margin: 100px auto;
+    }
+    #upload_files .red {
+        color: #900;
     }
 #frog_tools {
     position: fixed;

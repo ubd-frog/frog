@@ -1,6 +1,6 @@
 from django.conf.urls import patterns, include, url
 
-from views import gallery, tag, image, video, comment, downloadView, index, frogLogin, frogLogout, switchArtist
+from views import gallery, tag, image, video, comment, downloadView, index, frogLogin, frogLogout, switchArtist, isUnique
 from rss import Daily, Weekly
 from uploader import uploader
 
@@ -33,6 +33,7 @@ urlpatterns = patterns('',
     url(r'^logout$', frogLogout),
 
     url(r'^switchartist$', switchArtist),
+    url(r'^isunique$', isUnique),
 
     url(r'^$', index),
 )

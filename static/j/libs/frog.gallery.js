@@ -17,12 +17,12 @@ Frog.Gallery = new Class({
         var uploaderElement = $('upload');
 
         // -- Members
-        this.tilesPerRow = 6;
+        this.tilesPerRow = 5;
         this.tileSize = Math.floor((window.getWidth() - 2) / this.tilesPerRow);
         this.objects = [];
         this.thumbnails = [];
         this.y = 0;
-        this.timer = this._scrollTimer.periodical(300, this);
+        this.timer = this._scrollTimer.periodical(30, this);
         this.dirty = true;
         this.requestValue = {};
         this.isRequesting = false;
@@ -256,13 +256,19 @@ Frog.Gallery = new Class({
                 }
                 var ul = $('upload_list');
                 files.each(function(f) {
-                    self.uploaderList.store.add({
-                        id: f.id,
-                        file: f.name,
-                        size: f.size,
-                        percent: 0
-                    });
-                })
+                    new Request.JSON({
+                        url: '/frog/isunique',
+                        onSuccess: function(res) {
+                            self.uploaderList.store.add({
+                                id: f.id,
+                                file: f.name,
+                                size: f.size,
+                                percent: 0,
+                                unique: res.value
+                            });
+                        }
+                    }).GET({path:f.name})
+                });
             });
 
             uploader.bind('UploadProgress', function(up, file) {
@@ -292,7 +298,8 @@ Frog.Gallery = new Class({
                 {name: 'id'},
                 {name: 'file'},
                 {name: 'size', type: 'int'},
-                {name: 'percent', type: 'int'}
+                {name: 'percent', type: 'int'},
+                {name: 'unique', type: 'bool'}
             ]
         });
         var grid = DEBUG = Ext.create('Ext.grid.Panel', {
@@ -322,7 +329,11 @@ Frog.Gallery = new Class({
             title: 'Files to Upload',
             renderTo: 'upload_files',
             viewConfig: {
-                stripeRows: true
+                stripeRows: true,
+                getRowClass: function(record) {
+                    var c = record.get('unique');
+                    return (c) ? '' : 'red';
+                }
             }
         });
 
@@ -502,20 +513,23 @@ Frog.Gallery.Controls = new Class({
             icon: '/static/i/feed.png',
             handler: function() {
                 var win = Ext.create('widget.window', {
+                    title: 'RSS Feeds',
                     closable: true,
                     closeAction: 'hide',
                     resizable: false,
                     modal: true,
                     width: 300,
-                    height: 150,
-                    layou1t: 'border',
+                    height: 200,
                     bodyStyle: 'padding: 5px;'
                 });
                 win.show();
                 var fp = Ext.create('Ext.FormPanel', {
-                    title: 'RSS Feeds',
                     defaultType: 'radio',
                     items: [{
+                        xtype: 'label',
+                        text: "Select a feed frequency you'd like to subscribe to and the images will be available through Outlook"
+                    },
+                    {
                         boxLabel: 'Daily',
                         name: 'rss_int',
                         inputValue: 'daily'
