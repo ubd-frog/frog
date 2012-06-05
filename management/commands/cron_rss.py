@@ -31,6 +31,9 @@ class Command(BaseCommand):
             images = g.images.values_list('id', flat=True).filter(created__range=(prevDay, thisDay))
             videos = g.videos.values_list('id', flat=True).filter(created__range=(prevDay, thisDay))
 
+            if not images and not videos:
+                continue
+
             obj = {
                 'image': list(images),
                 'video': list(videos),
