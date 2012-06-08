@@ -661,7 +661,13 @@ def isUnique(request):
     path = request.GET.get('path', None)
     res = Result()
     if path:
-        uniqueID = Piece.getUniqueID(path, request.user)
+        if request.user.is_anonymous():
+            username = request.GET.get('user', 'noauthor')
+            user = User.objects.get(username=username)
+        else:
+            user = request.user
+        
+        uniqueID = Piece.getUniqueID(path, user)
 
         if Image.objects.filter(unique_id=uniqueID):
             res.append(False)

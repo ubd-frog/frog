@@ -38,7 +38,7 @@ class Uploader(object):
                     foreignPath = filename
 
                 galleries = request.POST.get('galleries', '1').split(',')
-                tags = request.POST.get('tags', '1').split(',')
+                tags = filter(None, request.POST.get('tags', '').split(','))
                 
                 uniqueName = Piece.getUniqueID(foreignPath, request.user)
                 
