@@ -767,3 +767,27 @@ li.frog-tag {
     font-size: 10px;
     color: #797979;
 }
+
+/*Frog Shelf*/
+#frog_shelf {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    height: 53px;
+    border-top: #202020;
+    padding: 2px;
+}
+#frog_shelf_thumbnails {
+    height: 48px;
+}
+#frog_shelf img {
+    margin: 0 4px;
+}
+#frog_shelf_trigger {
+    position: absolute;
+    top: 0;
+    left: -28px;
+    width: 28px;
+    height: 53px;
+    background: url('../i/shelfIcon.png') top left no-repeat;
+}

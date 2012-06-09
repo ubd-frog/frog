@@ -39,18 +39,23 @@ class Uploader(object):
 
                 galleries = request.POST.get('galleries', '1').split(',')
                 tags = filter(None, request.POST.get('tags', '').split(','))
+
+                username = request.POST.get('user', False)
+                if username:
+                    user = User.objects.get(username=username)
+                else:
+                    if request.user.is_anonymous():
+                        username = 'noauthor'
+                        user = User.objects.get(username=username)
+                    else:
+                        user = request.user
                 
-                uniqueName = Piece.getUniqueID(foreignPath, request.user)
+                uniqueName = Piece.getUniqueID(foreignPath, user)
                 
                 if f.content_type.startswith('image'):
                     model = Image
                 else:
                     model = Video
-
-                if request.user.is_anonymous():
-                    user = User.objects.get(username=request.POST.get('user', 'noauthor'))
-                else:
-                    user = request.user
 
                 obj, created = model.objects.get_or_create(unique_id=uniqueName, defaults={'author': user})
                 guid = obj.getGuid()

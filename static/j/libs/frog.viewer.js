@@ -38,9 +38,14 @@ Frog.Viewer = new Class({
                     e.stop(); this.hide(); 
                 }.bind(this)
             }
-        })
+        });
 
         this.build();
+        this.shelf = new Frog.Viewer.Shelf();
+        this.shelf.inject(this.element);
+        this.shelf.addEvent('click', function(idx, obj) {
+            this.setIndex(idx);
+        }.bind(this));
     },
     toElement: function() {
         return this.element;
@@ -56,6 +61,7 @@ Frog.Viewer = new Class({
             this.origin.x = e.client.x;
             this.origin.y = e.client.y;
             this.canvas.addClass('drag');
+            this.shelf.hide();
         }
     },
     move: function(e) {
@@ -111,7 +117,7 @@ Frog.Viewer = new Class({
             events: {
                 click: this.hide.bind(this)
             }
-        }).inject(controls)
+        }).inject(controls);
     },
     clear: function() {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -242,6 +248,7 @@ Frog.Viewer = new Class({
         id = id || 0;
         this.objects = images;
         this.setIndex(id.toInt());
+        this.shelf.populate(this.objects);
     },
     setIndex: function(idx) {
         idx = idx.toInt();
@@ -310,5 +317,56 @@ Frog.Viewer = new Class({
 
         this.fireEvent('onHide', [this]);
         this.isOpen = false;
+    }
+});
+
+Frog.Viewer.Shelf = new Class({
+    Implements: Events,
+    initialize: function() {
+        var self = this;
+        this.shelf = new Element('div', {id: 'frog_shelf'});
+        this.shelfContainer = new Element('div', {id: 'frog_shelf_thumbnails'}).inject(this.shelf);
+        
+        var shelfTrigger = new Element('div', {
+            id: 'frog_shelf_trigger',
+            events: {
+                mouseover: function(e) {
+                    e.stop();
+                    self.show();
+                }
+            }
+        }).inject(this.shelf);
+
+        this.shelf.setStyle('right', window.getWidth() * -1);
+    },
+    inject: function(el) {
+        this.shelf.inject(el);
+    },
+    populate: function(objects) {
+        var self = this;
+        this.shelfContainer.empty();
+        // -- Populate with thumbnails
+        var limit = 15;
+        if (objects.length < limit) {
+            objects.each(function(item, idx) {
+                new Element('img', {
+                    src: item.thumbnail,
+                    height: 48,
+                    events: {
+                        click: function(e) {
+                            e.stop();
+                            self.fireEvent('onClick', [idx, item]);
+                        }
+                    }
+                }).inject(self.shelfContainer);
+            })
+        }
+        this.shelf.firstChild.setStyle('width', window.getWidth());
+    },
+    show: function() {
+        this.shelf.tween('right', 0);
+    },
+    hide: function() {
+        this.shelf.tween('right', window.getWidth() * -1);
     }
 })

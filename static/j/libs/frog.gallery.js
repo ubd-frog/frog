@@ -203,13 +203,16 @@ Frog.Gallery = new Class({
         var objects = [];
         if (selection.length) {
             this.thumbnails[id].setSelected(true);
-            objects.push(this.objects[id]);
-            selection.each(function(item) {
+            selection = $$('.thumbnail.selected');
+            selection.each(function(item, selID) {
                 var idx = item.dataset.frog_tn_id;
+                if (idx === id) {
+                    id = selID;
+                }
                 objects.push(this.objects[idx]);
             }, this);
             objects = objects.unique();
-            this.viewer.setImages(objects);
+            this.viewer.setImages(objects, id);
         }
         else {
             var objects = Array.clone(this.objects);
