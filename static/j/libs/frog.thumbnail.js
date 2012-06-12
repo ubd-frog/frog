@@ -45,10 +45,14 @@ Frog.Thumbnail = new Class({
             }
         });
         if (Browser.ie) {
-
+            this.element.setProperty('dataset-frog_tn_id', this.id);
+            this.element.setProperty('dataset-frog_guid', this.guid);
         }
-        this.element.dataset.frog_tn_id = this.id;
-        this.element.dataset.frog_guid = this.guid;
+        else {
+            this.element.dataset.frog_tn_id = this.id;
+            this.element.dataset.frog_guid = this.guid;    
+        }
+        
         var top = new Element('div').inject(this.element);
         this.spacer = new Element('div', {styles: {
             width: '100%',
@@ -100,7 +104,12 @@ Frog.Thumbnail = new Class({
     setArtist: function(artist) {
         var id = Frog.Tags.get(artist);
         this.artist.set('text', artist.capitalize());
-        this.artist.dataset.frog_tag_id = id;
+        if (Browser.ie) {
+            this.artist.setProperty('dataset-frog_tag_id', id);
+        }
+        else {
+            this.artist.dataset.frog_tag_id = id;
+        }
     },
     setSize: function(size) {
         var dim = Frog.util.fitToRect(size - this.Padding, size - this.Padding, this.width, this.height);
@@ -131,7 +140,8 @@ Frog.Thumbnail = new Class({
         if (typeOf(id.id) !== 'undefined') {
             id = id.id;
         }
-        if (id.toString() === this.artist.dataset.frog_tag_id) {
+        var artistTagId = (Browser.ie) ? this.artist.getProperty('dataset-frog_tag_id') : this.artist.dataset.frog_tag_id;
+        if (id.toString() === artistTagId) {
             return;
         }
         if (this.tagList.getElements('a').length > 0) {
@@ -139,7 +149,13 @@ Frog.Thumbnail = new Class({
         }
         var tag = Frog.Tags.get(id);
         var a = new Element('a', {'href': 'javascript:void(0);', text: tag.capitalize(), 'class': 'frog-tag'}).inject(this.tagList);
-        a.dataset.frog_tag_id = id;
+        if (Browser.ie) {
+            a.setProperty('dataset-frog_tag_id', id);
+        }
+        else {
+            a.dataset.frog_tag_id = id;
+        }
+        
         this.tags.push(id);
     },
     removeTag: function(tag) {

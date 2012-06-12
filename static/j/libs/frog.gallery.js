@@ -199,13 +199,13 @@ Frog.Gallery = new Class({
     viewImages: function(e, el) {
         e.stop();
         var selection = $$('.thumbnail.selected');
-        var id = el.parentNode.parentNode.dataset.frog_tn_id;
+        var id = (Browser.ie) ? el.parentNode.parentNode.getProperty('dataset-frog_tn_id') : el.parentNode.parentNode.dataset.frog_tn_id;
         var objects = [];
         if (selection.length) {
             this.thumbnails[id].setSelected(true);
             selection = $$('.thumbnail.selected');
             selection.each(function(item, selID) {
-                var idx = item.dataset.frog_tn_id;
+                var idx = (Browser.ie) ? item.getProperty('dataset-frog_tn_id') : item.dataset.frog_tn_id;
                 if (idx === id) {
                     id = selID;
                 }
