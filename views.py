@@ -267,6 +267,7 @@ class GalleryView(MainView):
 
     def _search(self, query):
         """ Performs a search query and returns the object ids """
+        query = query.strip()
         return [o.object.id for o in SearchQuerySet().auto_query(query)]
 
 
