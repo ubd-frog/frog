@@ -170,26 +170,36 @@ class GalleryView(MainView):
             if tags:
                 searchQuery = ""
                 for bucket in tags:
-                    o = Q()
+                    o = None
                     for item in bucket:
                         ## -- filter by tag
                         if isinstance(item, int) or isinstance(item, long):
+                            if not o:
+                                o = Q()
                             o |= Q(tags__id=item)
                         ## -- add to search string
                         else:
                             searchQuery += item + ' '
                             if not HAYSTACK:
+                                if not o:
+                                    o = Q()
                                 ## -- use a basic search
                                 logger.debug('search From LIKE')
                                 o |= Q(title__icontains=item)
                     if HAYSTACK and searchQuery != "":
                         ## -- once all tags have been filtered, filter by search
                         searchIDs = self._search(searchQuery.strip())
-                        logger.debug('searchFrom haystack:' + str(searchIDs))
-                        o |= Q(id__in=searchIDs)
+                        if searchIDs:
+                            if not o:
+                                o = Q()
+                            logger.debug('searchFrom haystack:' + str(searchIDs))
+                            o |= Q(id__in=searchIDs)
 
-                    ## -- apply the filters
-                    idDict[m.model] = idDict[m.model].filter(o)
+                    if o:
+                        ## -- apply the filters
+                        idDict[m.model] = idDict[m.model].filter(o)
+                    else:
+                        idDict[m.model] = idDict[m.model].none()
 
                 logger.debug(m.model + '_added_buckets(%i): %f' % (len(tags), time.clock() - NOW))
             else:
@@ -197,7 +207,7 @@ class GalleryView(MainView):
                 pass
             
             ## -- Get all ids of filtered objects, this will be a very fast query
-            idDict[m.model] = idDict[m.model].values_list('id', flat=True)
+            idDict[m.model] = list(idDict[m.model].values_list('id', flat=True))
             logger.debug(m.model + '_queried_ids: %f' % (time.clock() - NOW))
 
             res.message = str(s) + ':' + str(e)
@@ -208,6 +218,7 @@ class GalleryView(MainView):
                 objDict[m.model] = objDict[m.model][:gRange]
             objDict[m.model] = list(objDict[m.model])
             logger.debug(m.model + '_queried_obj: %f' % (time.clock() - NOW))
+        
         
         ## -- combine and sort all objects by date
         objects = self._sortObjects(**objDict) if len(models) > 1 else objDict.values()[0]
