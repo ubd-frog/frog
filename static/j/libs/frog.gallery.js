@@ -116,7 +116,7 @@ Frog.Gallery = new Class({
         
         var self = this;
         new Request.JSON({
-            url: '/frog/gallery/1/filter',
+            url: '/frog/gallery/' + this.id + '/filter',
             onRequest: function() {
                 self.isRequesting = true;
                 self.spinner.show();
