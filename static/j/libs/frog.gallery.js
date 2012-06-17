@@ -17,7 +17,7 @@ Frog.Gallery = new Class({
         var uploaderElement = $('upload');
 
         // -- Members
-        this.tilesPerRow = 5;
+        this.tilesPerRow = Frog.Prefs.tile_count;
         this.tileSize = Math.floor((window.getWidth() - 2) / this.tilesPerRow);
         this.objects = [];
         this.thumbnails = [];
@@ -94,12 +94,6 @@ Frog.Gallery = new Class({
             val = id;
         }
         this.builder.addTag(0, val);
-        // var data = {
-        //     filters: [
-        //         [val]
-        //     ]
-        // };
-        // location.hash = JSON.stringify(data);
     },
     setFilters: function(obj) {
         var data = {};
@@ -119,8 +113,6 @@ Frog.Gallery = new Class({
         if (append) {
             this.requestData.more = true;
         }
-
-        //this.requestData.models = 'video';
         
         var self = this;
         new Request.JSON({
@@ -511,7 +503,7 @@ Frog.Gallery.Controls = new Class({
             icon: '/static/i/photos.png',
             menu: m
         });
-
+        this.toolbar.add('-')
         this.bRSS = this.toolbar.add({
             icon: '/static/i/feed.png',
             handler: function() {
@@ -559,11 +551,75 @@ Frog.Gallery.Controls = new Class({
                 win.add(fp)
             }
         });
-        // this.bHelp = this.toolbar.add({
-        //     icon: '/static/i/help.png',
-        // });
-        // this.bPreferences = this.toolbar.add({
-        //     icon: '/static/i/cog.png',
-        // });
+        this.bHelp = this.toolbar.add({
+            icon: '/static/i/help.png',
+        });
+        var prefMenu = this.getPrefMenu();
+        this.bPreferences = this.toolbar.add({
+            icon: '/static/i/cog.png',
+            menu: prefMenu
+        });
+    },
+    getPrefMenu: function() {
+        var colorMenu = Ext.create('Ext.menu.ColorPicker', {
+            height: 24,
+            handler: function(cm, color){
+                Frog.Prefs.set('backgroundColor', color);
+            }
+        });
+        colorMenu.picker.colors = ['000000', '424242', '999999'];
+        var tileSizeHandler = function(item, checked) {
+            var size = item.value;
+            Frog.Prefs.set('tile_count', size);
+        }
+        var batchSize = Ext.create('Ext.form.field.Number', {
+            value: Frog.Prefs.batch_size,
+            minValue: 0,
+            maxValue: 500
+        });
+        batchSize.on('change', function(field, val) { 
+            Frog.Prefs.set('batch_size', val);
+        })
+        var menu = Ext.create('Ext.menu.Menu', {
+            items: [
+                {
+                    text: 'Viewer Background',
+                    menu: colorMenu
+                },
+                {
+                    text: 'Thumbnail Size',
+                    menu: [
+                        {
+                            text: 'Large (6)',
+                            value: 6,
+                            checked: Frog.Prefs.tile_count === 6,
+                            group: 'theme',
+                            checkHandler: tileSizeHandler
+                        }, {
+                            text: 'Medium (9)',
+                            value: 9,
+                            checked: Frog.Prefs.tile_count === 9,
+                            group: 'theme',
+                            checkHandler: tileSizeHandler
+                        }, {
+                            text: 'Small (12)',
+                            value: 12,
+                            checked: Frog.Prefs.tile_count === 12,
+                            group: 'theme',
+                            checkHandler: tileSizeHandler
+                        }
+                    ]
+                },
+                {
+                    text: 'Item Request Size',
+                    menu: [
+                        batchSize
+                    ]
+                }
+                
+            ]
+        });
+
+        return menu;
     }
 })

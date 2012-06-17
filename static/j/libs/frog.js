@@ -53,6 +53,32 @@ Which UI to use?
             return {width: width * scale, height: height * scale};
         }
     }
+    Frog.Prefs = {
+        init: function() {
+            new Request.JSON({
+                url: '/frog/pref/',
+                async: false,
+                noCache: true,
+                onSuccess: function(res) {
+                    Object.append(this, res.value);
+                }.bind(this)
+            }).GET();
+        },
+        set: function(key, value, callback) {
+            new Request.JSON({
+                url: '/frog/pref/',
+                noCache: true,
+                onSuccess: function(res) {
+                    Object.append(this, res.value);
+                    if (callback) {
+                        callback();
+                    }
+                }.bind(this)
+            }).POST({key: key, val: value});
+        }
+    };
+    Frog.Prefs.init();
+
     Frog.TagManager = new Class({
         initialize: function() {
             this.tags = {};

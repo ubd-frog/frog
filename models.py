@@ -258,6 +258,22 @@ class Gallery(models.Model):
         return obj
 
 
+class UserPref(models.Model):
+    user = models.ForeignKey(User, related_name='frog_prefs')
+    backgroundColor = models.CharField(max_length=6, default='000000')
+    tile_count = models.PositiveSmallIntegerField(default=6)
+    batch_size = models.PositiveSmallIntegerField(default=300)
+
+    def json(self):
+        obj = {
+            'backgroundColor': self.backgroundColor,
+            'tile_count': self.tile_count,
+            'batch_size': self.batch_size,
+        }
+
+        return obj
+
+
 class Guid(object):
     AssetTypes = {
         1: 1152921504606846976L,

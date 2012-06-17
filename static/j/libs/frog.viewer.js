@@ -206,6 +206,8 @@ Frog.Viewer = new Class({
         this.canvas.width = window.getWidth();
         this.canvas.height = window.getHeight();
 
+        this.shelf.hide();
+
         this.center();
     },
     setImage: function(img) {
@@ -291,9 +293,13 @@ Frog.Viewer = new Class({
             data.viewer = true;
             location.hash = JSON.stringify(data);
         }
+
+        this.element.setStyle('background-color', '#' + Frog.Prefs.backgroundColor);
+        
         
         this.fireEvent('onShow', [this]);
         this.isOpen = true;
+        this.resize();
     },
     hide: function() {
         this.element.hide();
@@ -317,6 +323,7 @@ Frog.Viewer = new Class({
 
         this.fireEvent('onHide', [this]);
         this.isOpen = false;
+        this.resize();
     }
 });
 
@@ -348,6 +355,7 @@ Frog.Viewer.Shelf = new Class({
         // -- Populate with thumbnails
         var limit = 15;
         if (objects.length < limit) {
+            this.shelf.show();
             objects.each(function(item, idx) {
                 new Element('img', {
                     src: item.thumbnail,
@@ -361,6 +369,9 @@ Frog.Viewer.Shelf = new Class({
                 }).inject(self.shelfContainer);
             })
         }
+        else {
+            this.shelf.hide();
+        }
         this.shelf.firstChild.setStyle('width', window.getWidth());
     },
     show: function() {
@@ -368,5 +379,8 @@ Frog.Viewer.Shelf = new Class({
     },
     hide: function() {
         this.shelf.tween('right', window.getWidth() * -1);
+    },
+    toElement: function() {
+        return this.shelf;
     }
 })

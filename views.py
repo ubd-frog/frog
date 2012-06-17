@@ -26,7 +26,7 @@ try:
 except ImportError:
     HAYSTACK = False
 
-from models import Gallery, Image, Video, Tag, Piece
+from models import Gallery, Image, Video, Tag, Piece, UserPref
 
 from common import MainView, Result, JsonResponse, getObjectsFromGuids, commentToJson, userToJson
 from uploader import uploader
@@ -138,6 +138,8 @@ class GalleryView(MainView):
 
         logger.debug('init: %f' % (time.clock() - NOW))
 
+        Prefs = UserPref.objects.get(user=self.user)
+        gRange = Prefs.batch_size
         self.request.session.setdefault('frog_range', '0:%i' % gRange)
 
         if rng:
@@ -491,6 +493,39 @@ class VideoView(ImageView):
         super(VideoView, self).__init__(Video)
 
 
+class UserPrefView(MainView):
+    def __init__(self):
+        super(UserPrefView, self).__init__(UserPref)
+
+    def get(self, request):
+        res = Result()
+        obj = self.model.objects.get_or_create(user=request.user)[0]
+        res.append(obj.json())
+        res.isSuccess = True
+
+        return JsonResponse(res)
+
+    def post(self, request):
+        key = request.POST.get('key', None)
+        val = request.POST.get('val', None)
+        res = Result()
+        if key and val:
+            obj = self.model.objects.get_or_create(user=request.user)[0]
+            if hasattr(obj, key):
+                setattr(obj, key, val)
+                obj.save()
+                res.append(obj.json())
+                res.isSuccess = True
+            else:
+                res.isError = True
+                res.message = 'Key "%s" does not exists' % key
+        else:
+            res.isError = True
+            res.message = 'No key and value provided'
+
+        return JsonResponse(res)
+
+
 class CommentView(MainView):
     def __init__(self):
         super(CommentView, self).__init__(Comment)
@@ -701,4 +736,5 @@ gallery = GalleryView()
 tag = TagView()
 image = ImageView()
 video = VideoView()
+pref = UserPrefView()
 comment = CommentView()
