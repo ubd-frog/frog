@@ -553,6 +553,49 @@ Frog.Gallery.Controls = new Class({
         });
         this.bHelp = this.toolbar.add({
             icon: '/static/i/help.png',
+            handler: function() {
+                var win = Ext.create('widget.window', {
+                    title: 'Ask for Help',
+                    icon: '/static/i/help.png',
+                    closable: true,
+                    closeAction: 'hide',
+                    resizable: false,
+                    modal: true,
+                    width: 400,
+                    bodyPadding: 10,
+                    bodyStyle: 'padding: 5px; background: transparent;'
+                });
+                win.show();
+                var fp = Ext.create('Ext.FormPanel', {
+                    items: [{
+                        xtype: 'label',
+                        text: "Have a question, problem or suggestion?"
+                    },
+                    {
+                        xtype     : 'textareafield',
+                        grow      : true,
+                        name      : 'message',
+                        anchor    : '100%'
+                    }],
+                    buttons: [{
+                        text: 'Send',
+                        handler: function() {
+                            var data = fp.getForm().getValues();
+                            new Request({
+                                url: '/frog/help/',
+                                headers: {"X-CSRFToken": Cookie.read('csrftoken')}
+                            }).POST(data);
+                            win.close();
+                        }
+                    },{
+                        text: 'Cancel',
+                        handler: function() {
+                            win.close();
+                        }
+                    }]
+                });
+                win.add(fp)
+            }
         });
         var prefMenu = this.getPrefMenu();
         this.bPreferences = this.toolbar.add({

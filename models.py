@@ -8,7 +8,7 @@ from django.core.exceptions import ObjectDoesNotExist
 
 from settings import MEDIA_ROOT, FFMPEG
 
-from videoThread import VideoThread
+from videoThread import VideoThread, JsonQueue
 
 from path import path as Path
 from PIL import Image as pilImage
@@ -20,6 +20,12 @@ gThumbSize = 256
 gQueue = Queue.Queue()
 gVideoThread = VideoThread(gQueue)
 gVideoThread.start()
+gJsonQueue = JsonQueue()
+
+## -- Queue any remaining videos that did not finish prior to restart
+for guid in [o['id'] for o in gJsonQueue.data['queued']]:
+    gQueue.put(Video.objects.get(pk=guid))
+
 
 class Tag(models.Model):
     name = models.CharField(max_length=255, unique=True)
@@ -99,6 +105,7 @@ class Piece(models.Model):
             'height': self.height,
             'guid': self.guid,
             'deleted': self.deleted,
+            'hash': self.hash,
             'tags': [tag.json() for tag in self.tags.all()],
             'thumbnail': self.thumbnail.url,
             'comment_count': self.comment_count,
@@ -223,6 +230,7 @@ class Video(Piece):
 
         self.save()
 
+        gJsonQueue.append(self.json())
         gQueue.put(self)
 
     def json(self):

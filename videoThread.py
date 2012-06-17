@@ -1,4 +1,5 @@
 
+import json
 import time
 import subprocess
 import shutil
@@ -10,10 +11,48 @@ from path import path as Path
 
 TIMEOUT = 1
 
+
+class JsonQueue(object):
+    def __init__(self):
+        self.f = Path(__file__).parent / 'video.json'
+        self.data = None
+        self._get()
+
+    def _get(self):
+        self.data = json.loads(self.f.text())
+
+    def _set(self):
+        self.f.write_text(json.dumps(self.data, indent=4))
+
+    def pop(self):
+        self._get()
+        if self.data['queued']:
+            obj = self.data['queued'].pop(0)
+            self._set()
+
+            return obj
+
+        return None
+
+    def append(self, obj):
+        self._get()
+        self.data['queued'].append(obj)
+        self._set()
+
+    def setBuilding(self, key, value):
+        self._get()
+        self.data['building'][key] = value
+        self._set()
+
+    def complete(self, obj):
+        self._get()
+        self.data['completed'].append(obj)
+        self._set()
+
 class VideoThread(Thread):
     def __init__(self, queue, *args, **kwargs):
         super(VideoThread, self).__init__(*args, **kwargs)
-
+        self.json = JsonQueue()
         self.queue = queue
         self.daemon = True
 
@@ -22,6 +61,7 @@ class VideoThread(Thread):
             if self.queue.qsize():
                 isH264 = False
                 item = self.queue.get()
+                self.json.pop()
                 infile = "%s%s" % (MEDIA_ROOT, item.source.name)
                 cmd = '%s -i "%s"' % (FFMPEG, infile)
                 sourcePath = Path(MEDIA_ROOT) / item.source.name
@@ -50,5 +90,6 @@ class VideoThread(Thread):
                     item.video = outfile.replace('\\', '/').replace(MEDIA_ROOT, '')
 
                 item.save()
+                self.json.append(item.json())
 
                 time.sleep(TIMEOUT)

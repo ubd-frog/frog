@@ -1,6 +1,6 @@
 from django.conf.urls import patterns, include, url
 
-from views import gallery, tag, image, video, comment, downloadView, index, pref, frogLogin, frogLogout, switchArtist, isUnique
+from views import gallery, tag, image, video, comment, downloadView, index, pref, frogLogin, frogLogout, switchArtist, isUnique, helpMe
 from rss import Daily, Weekly
 from uploader import uploader
 
@@ -27,6 +27,8 @@ urlpatterns = patterns('',
     url(r'^comment/(?P<obj_id>\d+)$', comment.view),
 
     url(r'^download$', downloadView),
+
+    url(r'^help/', helpMe),
 
     url(r'^rss/(?P<obj_id>\d+)/daily$', Daily()),
     url(r'^rss/(?P<obj_id>\d+)/weekly$', Weekly()),

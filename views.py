@@ -17,7 +17,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from django.contrib.comments.models import Comment
-from django.core.mail import EmailMultiAlternatives
+from django.core.mail import EmailMultiAlternatives, send_mail
 from django.template.loader import render_to_string
 
 try:
@@ -33,7 +33,7 @@ from uploader import uploader
 
 from sendFile import send_file, send_zipfile
 
-from settings import MEDIA_ROOT
+from settings import MEDIA_ROOT, MANAGERS
 
 
 gRange = 30
@@ -703,6 +703,13 @@ def switchArtist(request):
         res.message = "No artist provided"
 
     return JsonResponse(res)
+
+@login_required
+def helpMe(request):
+    msg = request.POST.get('message')
+    send_mail('Frog Help', msg, request.user.email, MANAGERS)
+
+    return HttpResponse()
 
 def isUnique(request):
     path = request.GET.get('path', None)
