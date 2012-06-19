@@ -17,6 +17,7 @@
         <script src="{{MEDIA_URL}}frog/j/mootoolsCore.js"></script>
 
         <script>
+            window.FrogStaticRoot = '{{MEDIA_URL}}';
             {% block script %}
             var t, thumbnails, g, DEBUG;
             window.addEvent('domready', function() {

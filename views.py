@@ -156,7 +156,11 @@ class GalleryView(MainView):
 
         ## -- Gat all IDs for each model
         for m in models:
-            lastIndex = m.model_class().objects.all().values_list('id', flat=True)[0]
+            indexes = m.model_class().objects.all().values_list('id', flat=True)
+            if not indexes:
+                continue
+
+            lastIndex = indexes[0]
             if more:
                 ## -- This is a request for more results
                 self.request.session.setdefault('last_%s_id' % m.model, lastIndex + 1)

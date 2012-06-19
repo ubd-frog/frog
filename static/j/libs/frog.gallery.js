@@ -401,11 +401,11 @@ Frog.Gallery.Controls = new Class({
         this.bUpload = this.toolbar.add({
             id: 'frogBrowseButton',
             text: 'Upload',
-            icon: '/static/i/add.png'
+            icon: FrogStaticRoot + '/frog/i/add.png'
         });
         this.bEditTags = this.toolbar.add({
             text: 'Edit Tags',
-            icon: '/static/i/tag_orange.png',
+            icon: FrogStaticRoot + '/frog/i/tag_orange.png',
             handler: function() {
                 var guids = [];
                 $$('.selected').each(function(item) {
@@ -413,7 +413,7 @@ Frog.Gallery.Controls = new Class({
                 });
                 var win = Ext.create('widget.window', {
                     title: 'Edit Tags',
-                    icon: '/static/i/tag_orange.png',
+                    icon: FrogStaticRoot + '/frog/i/tag_orange.png',
                     closable: true,
                     resizable: false,
                     modal: true,
@@ -466,7 +466,7 @@ Frog.Gallery.Controls = new Class({
         });
         this.mRemove = Ext.create('Ext.menu.Item', {
             text: 'Remove Selected',
-            icon: '/static/i/cross.png',
+            icon: FrogStaticRoot + '/frog/i/cross.png',
             handler: function() {
                 var ids = [];
                 $$('.selected').each(function(item) {
@@ -480,7 +480,7 @@ Frog.Gallery.Controls = new Class({
         // });
         this.mDownload = Ext.create('Ext.menu.Item', {
             text: 'Download Sources',
-            icon: '/static/i/compress.png',
+            icon: FrogStaticRoot + '/frog/i/compress.png',
             handler: function() {
                 var selected = $$('.thumbnail.selected');
                 guids = [];
@@ -500,15 +500,16 @@ Frog.Gallery.Controls = new Class({
         
         this.toolbar.add({
             text: 'Manage',
-            icon: '/static/i/photos.png',
+            icon: FrogStaticRoot + '/frog/i/photos.png',
             menu: m
         });
         this.toolbar.add('-')
         this.bRSS = this.toolbar.add({
-            icon: '/static/i/feed.png',
+            icon: FrogStaticRoot + '/frog/i/feed.png',
             handler: function() {
                 var win = Ext.create('widget.window', {
                     title: 'RSS Feeds',
+                    icon: FrogStaticRoot + '/frog/i/feed.png',
                     closable: true,
                     closeAction: 'hide',
                     resizable: false,
@@ -552,11 +553,11 @@ Frog.Gallery.Controls = new Class({
             }
         });
         this.bHelp = this.toolbar.add({
-            icon: '/static/i/help.png',
+            icon: FrogStaticRoot + '/frog/i/help.png',
             handler: function() {
                 var win = Ext.create('widget.window', {
                     title: 'Ask for Help',
-                    icon: '/static/i/help.png',
+                    icon: FrogStaticRoot + '/frog/i/help.png',
                     closable: true,
                     closeAction: 'hide',
                     resizable: false,
@@ -599,7 +600,7 @@ Frog.Gallery.Controls = new Class({
         });
         var prefMenu = this.getPrefMenu();
         this.bPreferences = this.toolbar.add({
-            icon: '/static/i/cog.png',
+            icon: FrogStaticRoot + '/frog/i/cog.png',
             menu: prefMenu
         });
     },
