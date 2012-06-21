@@ -711,7 +711,8 @@ def switchArtist(request):
 @login_required
 def helpMe(request):
     msg = request.POST.get('message')
-    send_mail('Frog Help', msg, request.user.email, MANAGERS)
+    toAddr = [m[1] for m in MANAGERS]
+    send_mail('Frog Help', msg, request.user.email, toAddr)
 
     return HttpResponse()
 
