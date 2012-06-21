@@ -6,16 +6,16 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
 
-from settings import MEDIA_ROOT, FFMPEG
+from settings import MEDIA_ROOT, FFMPEG, IMAGE_SIZE_CAP, IMAGE_SMALL_SIZE, THUMB_SIZE
 
 from videoThread import VideoThread, JsonQueue
 
 from path import path as Path
 from PIL import Image as pilImage
 
-gMaxSize = 2560
-gSmallSize = 600
-gThumbSize = 256
+gMaxSize = IMAGE_SIZE_CAP
+gSmallSize = IMAGE_SMALL_SIZE
+gThumbSize = THUMB_SIZE
 
 gQueue = Queue.Queue()
 gVideoThread = VideoThread(gQueue)
@@ -151,7 +151,7 @@ class Image(Piece):
             g = Gallery.objects.get(pk=int(gal))
             g.images.add(self)
 
-        artistTag = Tag.objects.get_or_create(name=self.author.first_name + ' ' + self.author.last_name)[0]
+        artistTag = Tag.objects.get_or_create(name=self.author.first_name + ' ' + self.author.last_name, defaults={'artist': True})[0]
         self.tags.add(artistTag)
 
         for tagName in tags:

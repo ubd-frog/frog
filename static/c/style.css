@@ -424,7 +424,6 @@ li.frog-tag {
 /*Main Elements*/
 #gallery {
     width: 100%;
-    min-height: 800px;
     padding-top: 68px;
     overflow: auto;
 }

@@ -125,13 +125,15 @@ Frog.Viewer = new Class({
     render: function() {
         this.clear();
         
-        this.ctx.drawImage(
-            this.image, 
-            this.xform.elements[2][0],
-            this.xform.elements[2][1],
-            this.xform.elements[0][0],
-            this.xform.elements[1][1]
-        );
+        try {
+            this.ctx.drawImage(
+                this.image, 
+                this.xform.elements[2][0],
+                this.xform.elements[2][1],
+                this.xform.elements[0][0],
+                this.xform.elements[1][1]
+            );
+        } catch (e) {}
     },
     center: function(scale) {
         scale = scale || 1.0;

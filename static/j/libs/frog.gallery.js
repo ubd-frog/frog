@@ -57,8 +57,10 @@ Frog.Gallery = new Class({
         this.viewer = new Frog.Viewer();
         this.viewer.addEvent('show', function() {
             window.scrollTo(0,0);
+            self.container.setStyle('height', 0)
         }.bind(this));
         this.viewer.addEvent('hide', function() {
+            self.container.setStyle('height', 'auto')
             this.resize();
             window.scrollTo(0,this.y);
         }.bind(this));
@@ -446,7 +448,12 @@ Frog.Gallery.Controls = new Class({
                             
                             new Request.JSON({
                                 url: '/frog/tag/manage',
-                                headers: {"X-CSRFToken": Cookie.read('csrftoken')}
+                                headers: {"X-CSRFToken": Cookie.read('csrftoken')},
+                                onSuccess: function() {
+                                    add.each(function(tag) {
+                                        Frog.Tags.get(tag);
+                                    });
+                                }
                             }).POST({
                                 add: add.join(','),
                                 rem: rem.join(','),
