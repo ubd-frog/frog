@@ -38,11 +38,6 @@ Frog.Gallery = new Class({
             self.filter(el.dataset.frog_tag_id);
         });
         this.container.addEvent('click:relay(a.frog-image-link)', this.viewImages.bind(this));
-        this.container.addEventListener('dragenter', function() {
-            uploaderElement.show();
-            self._uploaderList();
-            self.uploaderList.show();
-        }, false);
         Frog.Comments.addEvent('post', function(id) {
             var commentEl = $(self.thumbnails[id]).getElements('.frog-comment-bubble')[0];
             var count = commentEl.get('text').toInt();
@@ -53,7 +48,8 @@ Frog.Gallery = new Class({
         // -- Instance objects
         this.controls = new Frog.Gallery.Controls(this.toolsElement, this.id);
         this.controls.addEvent('remove', this.removeItems.bind(this))
-        this._uploader();
+        this.uploader = new Frog.Uploader(this.id);
+        this.uploader.addEvent('complete', this.request.bind(this));
         this.viewer = new Frog.Viewer();
         this.viewer.addEvent('show', function() {
             window.scrollTo(0,0);
@@ -218,143 +214,6 @@ Frog.Gallery = new Class({
         this.viewer.fitToWindow();
         this.viewer.show();
     },
-    _uploader: function() {
-        var self = this;
-        if (typeOf(this.uploader) === 'null') {
-            var uploader = new plupload.Uploader({
-                runtimes: 'html5',
-                browse_button: 'frogBrowseButton',
-                drop_element: 'upload',
-                container: 'upload',
-                max_file_size: '500mb',
-                url: '/frog/',
-                headers: {"X-CSRFToken": Cookie.read('csrftoken')},
-                multipart_params: {
-                    'galleries': this.id.toString()
-                },
-                filters: [
-                    {title: "Image files", extensions: "jpg,png"},
-                    {title: "Video files", extensions: "mp4,avi,mov"}
-                ]
-            });
-
-            uploader.bind('Init', function(up, files) {
-
-            });
-
-            uploader.init();
-
-            uploader.bind('FilesAdded', function(up, files) {
-                var uploaderElement = $('upload');
-                if (!uploaderElement.isVisible()) {
-                    uploaderElement.show();
-                    self._uploaderList();
-                    self.uploaderList.show();
-                }
-                var ul = $('upload_list');
-                files.each(function(f) {
-                    new Request.JSON({
-                        url: '/frog/isunique',
-                        onSuccess: function(res) {
-                            self.uploaderList.store.add({
-                                id: f.id,
-                                file: f.name,
-                                size: f.size,
-                                percent: 0,
-                                unique: res.value
-                            });
-                        }
-                    }).GET({path:f.name})
-                });
-            });
-
-            uploader.bind('UploadProgress', function(up, file) {
-                self.uploaderList.store.getById(file.id).set('percent', file.percent);
-            });
-
-            uploader.bind('UploadComplete', function(up, files) {
-                $('upload').hide();
-                self.uploaderList.store.removeAll();
-                self.uploaderList.hide();
-                self.request();
-            });
-
-            this.uploader = uploader;
-        }
-
-        return this.uploader;
-    },
-    _uploaderList: function() {
-        var self = this;
-        if (this.uploaderList) {
-            return this.uploaderList;
-        }
-        Ext.require(['*']);
-        var store = Ext.create('Ext.data.ArrayStore', {
-            fields: [
-                {name: 'id'},
-                {name: 'file'},
-                {name: 'size', type: 'int'},
-                {name: 'percent', type: 'int'},
-                {name: 'unique', type: 'bool'}
-            ]
-        });
-        var grid = DEBUG = Ext.create('Ext.grid.Panel', {
-            store: store,
-            columns: [
-                {
-                    text     : 'File',
-                    flex     : 6,
-                    sortable : false,
-                    dataIndex: 'file'
-                },
-                {
-                    text     : 'Size',
-                    flex     : 1,
-                    sortable : false,
-                    dataIndex: 'size'
-                },
-                {
-                    text     : '%',
-                    flex     : 1,
-                    sortable : false,
-                    dataIndex: 'percent'
-                }
-            ],
-            height: 350,
-            width: '100%',
-            title: 'Files to Upload',
-            renderTo: 'upload_files',
-            viewConfig: {
-                stripeRows: true,
-                getRowClass: function(record) {
-                    var c = record.get('unique');
-                    return (c) ? '' : 'red';
-                }
-            }
-        });
-
-        var uploadButton = Ext.create('Ext.Button', {
-            text: 'Upload Files',
-            renderTo: 'upload_files',
-            scale: 'large',
-            handler: function() {
-                self.uploader.start();
-            }
-        });
-        var uploadButton = Ext.create('Ext.Button', {
-            text: 'Cancel',
-            renderTo: 'upload_files',
-            scale: 'large',
-            handler: function() {
-                $('upload').hide();
-                self.uploaderList.store.removeAll();
-                self.uploaderList.hide();
-            }
-        });
-
-        this.uploaderList = grid;
-    },
     _getScreen: function() {
         var s, e, t, row, endRow;
 
@@ -497,12 +356,66 @@ Frog.Gallery.Controls = new Class({
                 location.href = '/frog/download?guids=' + guids.join(',');
             }
         });
-        // this.mSwitchArtist = Ext.create('Ext.menu.Item', {
-        //     text: 'Switch Artist'
-        // });
+        this.mSwitchArtist = Ext.create('Ext.menu.Item', {
+            text: 'Switch Artist',
+            handler: function() {
+                var win = Ext.create('widget.window', {
+                    title: 'RSS Feeds',
+                    icon: FrogStaticRoot + '/frog/i/feed.png',
+                    closable: true,
+                    closeAction: 'hide',
+                    resizable: false,
+                    modal: true,
+                    width: 300,
+                    height: 200,
+                    bodyStyle: 'padding: 5px;'
+                });
+                win.show();
+                var input = new Element('input', {placeholder: "Search"});
+                var fp = Ext.create('Ext.FormPanel', {
+                    items: [{
+                        xtype: 'label',
+                        text: "Have a question, problem or suggestion?"
+                    }, {
+                        xtype: 'textfield',
+                        id: 'frog_switch_artist'
+                    }],
+                    buttons: [{
+                        text: 'Send',
+                        handler: function() {
+                            self.switchArtistCallback(input.value);
+                            win.close();
+                        }
+                    },{
+                        text: 'Cancel',
+                        handler: function() {
+                            win.close();
+                        }
+                    }]
+                });
+                win.add(fp);
+                var input = $('frog_switch_artist-inputEl');
+                new Meio.Autocomplete(input, '/frog/artistlookup', {
+                    requestOptions: {
+                        headers: {"X-CSRFToken": Cookie.read('csrftoken')},
+                    },
+                    filter: {
+                        path: 'name',
+                        formatItem: function(text, data) {
+                            if (data.id === 0) {
+                                return '<span class="search"></span>' + data.name
+                            }
+                            else {
+                                return '<span></span>' + data.name
+                            }
+                        }
+                    }
+                });
+            }
+        });
         
         var m = Ext.create('Ext.menu.Menu', {
-            items: [this.mRemove, this.mDownload]
+            items: [this.mRemove, this.mDownload, '-', this.mSwitchArtist]
         });
         
         this.toolbar.add({
@@ -672,5 +585,26 @@ Frog.Gallery.Controls = new Class({
         });
 
         return menu;
+    },
+    switchArtistCallback: function(name) {
+        var selected = $$('.thumbnail.selected');
+        guids = [];
+        selected.each(function(item) {
+            guids.push(item.dataset.frog_guid);
+        });
+        new Request.JSON({
+            url: '/frog/switchartist',
+            headers: {"X-CSRFToken": Cookie.read('csrftoken')},
+            async: false,
+            onSuccess: function(res) {
+                if (res.isSuccess) {
+                    selected.each(function(el) {
+                        var tag = el.getElement('.frog-tag');
+                        tag.set('text', res.value.name.capitalize());
+                        tag.dataset.frog_tag_id = res.value.tag;
+                    })
+                }
+            }
+        }).POST({'artist': name.toLowerCase(), guids: guids.join(',')})
     }
 })

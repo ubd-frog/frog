@@ -427,7 +427,7 @@ li.frog-tag {
     padding-top: 68px;
     overflow: auto;
 }
-#upload {
+#frog_upload {
     display: none;
     position: absolute;
     top: 0;
@@ -437,7 +437,7 @@ li.frog-tag {
     background: rgba(0,0,0,0.5);
     z-index: 2000;
 }
-    #upload_drop {
+    #frog_upload_drop {
         width: 80%;
         height: 160px;
         margin: 160px auto 0;
@@ -451,11 +451,11 @@ li.frog-tag {
         -webkit-border-radius: 12px;
         -moz-border-radius: 12px;
     }
-    #upload_files {
+    #frog_upload_files {
         width: 80%;
         margin: 100px auto;
     }
-    #upload_files .red {
+    #frog_upload_files .red {
         color: #900;
     }
 #frog_tools {

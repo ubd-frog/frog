@@ -15,6 +15,7 @@ from django.db import connection
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 from django.utils.decorators import method_decorator
 from django.contrib.comments.models import Comment
 from django.core.mail import EmailMultiAlternatives, send_mail
@@ -33,7 +34,7 @@ from uploader import uploader
 
 from sendFile import send_file, send_zipfile
 
-from settings import MEDIA_ROOT, MANAGERS
+from settings import MEDIA_ROOT, MANAGERS, DOMAIN
 
 
 gRange = 30
@@ -692,21 +693,33 @@ def switchArtist(request):
     res = Result()
     if artist:
         first, last = artist.lower().split(' ')
-        artist = User.objects.get_or_create(first_name=first, last_name=last, defaults={
-            'username': first[0] + last,
-            'email': first[0] + last,
+        author = User.objects.get_or_create(first_name=first, last_name=last, defaults={
+            'username': '%s%s' % (first[0], last),
+            'email': '%s%s@%s' % (first[0], last, DOMAIN),
         })[0]
         objects = getObjectsFromGuids(guids)
         for n in objects:
-            n.author = artist
+            n.author = author
+            n.tagArtist()
 
         res.isSuccess = True
-        res.append(userToJson(artist))
+        res.append(userToJson(author))
+        res.value['tag'] = Tag.objects.get(name=artist.lower()).id
     else:
         res.isError = True
         res.message = "No artist provided"
 
     return JsonResponse(res)
+
+@login_required
+def artistLookup(request):
+    res = Result()
+    query = request.GET.get('q', False)
+    if query:
+        for n in User.objects.filter(first_name__icontains=query.lower()):
+            res.append(userToJson(n))
+
+    return JsonResponse(res.values)
 
 @login_required
 def helpMe(request):

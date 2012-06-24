@@ -105,6 +105,18 @@ Which UI to use?
             var self = this;
             if (typeOf(arg) === 'number') {
                 value = this.tags[arg];
+                if (!value) {
+                    new Request.JSON({
+                        url: '/frog/tag/' + arg,
+                        async: false,
+                        onSuccess: function(res) {
+                            if (res.isSuccess) {
+                                value = res.value.name;
+                                self.tags[value] = res.value.name;
+                            }
+                        }
+                    }).GET({json:true});
+                }
             }
             else {
                 arg = arg.toLowerCase();
