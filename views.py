@@ -60,8 +60,12 @@ class GalleryView(MainView):
 
     @LoginRequired
     def post(self, request):
+        """ Create a Gallery """
         title = request.POST.get('title', 'New Gallery' + str(Gallery.objects.all().values_list('id', flat=True)[0] + 1))
+        description = request.POST.get('description', '')
         g, created = Gallery.objects.get_or_create(title=title)
+        g.description = description
+        g.save()
 
         res = Result()
         res.isSuccess = True
@@ -72,6 +76,7 @@ class GalleryView(MainView):
 
     @LoginRequired
     def put(self, request, obj_id=None):
+        """ Adds Image and Video objects to Gallery based on GUIDs """
         guids = self.PUT.get('guids', '').split(',')
         objects = getObjectsFromGuids(guids)
 
@@ -88,6 +93,7 @@ class GalleryView(MainView):
 
     @LoginRequired
     def delete(self, request, obj_id=None):
+        """ Removes Image/Video objects from Gallery """
         guids = self.DELETE.get('guids', '').split(',')
         objects = getObjectsFromGuids(guids)
 
@@ -104,6 +110,10 @@ class GalleryView(MainView):
 
     @LoginRequired
     def filter(self, request, obj_id):
+        """
+        Filters Gallery for the requested Image/Video objects.  Returns a Result object with 
+        serialized objects
+        """
         self._processRequest(request, obj_id)
         
         tags = json.loads(request.GET.get('filters', '[[]]'))
@@ -351,6 +361,14 @@ class TagView(MainView):
 
     @LoginRequired
     def search(self, request):
+        """
+        Search for Tag pbjects and returns a Result object with a list of searialize Tag
+        objects.
+
+        -- search: bool, Append a "Search for" tag
+        -- zero: bool, Exclude Tags with no items
+        -- artist: bool, Exclude artist tags
+        """
         q = request.GET.get('q', '')
         includeSearch = request.GET.get('search', False)
         nonZero = request.GET.get('zero', False)
@@ -431,6 +449,7 @@ class TagView(MainView):
             return JsonResponse(res)
 
     def _manageTags(self, tagList, guids, add=True):
+        """ Adds or Removed Guids from Tags """
         objects = getObjectsFromGuids(guids)
         tags = []
         for tag in tagList:
@@ -446,19 +465,20 @@ class TagView(MainView):
             return self._removeTags(tags, objects)
 
     def _addTags(self, tags, objects):
+        """ Adds tags to objects """
         for t in tags:
             for o in objects:
                 o.tags.add(t)
 
         return True
 
-    def _removeTags(selfl, tags, objects):
+    def _removeTags(self, tags, objects):
+        """ Removes tags from objects """
         for t in tags:
             for o in objects:
                 o.tags.remove(t)
 
         return True
-
 
 
 class ImageView(MainView):
@@ -741,10 +761,12 @@ def isUnique(request):
         
         uniqueID = Piece.getUniqueID(path, user)
 
-        if Image.objects.filter(unique_id=uniqueID):
-            res.append(False)
-        elif Video.objects.filter(unique_id=uniqueID):
-            res.append(False)
+        img = Image.objects.filter(unique_id=uniqueID)
+        vid = Video.objects.filter(unique_id=uniqueID)
+        if img:
+            res.append(img[0].json())
+        elif vid:
+            res.append(vid[0].json())
         else:
             res.append(True)
 

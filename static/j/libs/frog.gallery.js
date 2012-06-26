@@ -49,7 +49,9 @@ Frog.Gallery = new Class({
         this.controls = new Frog.Gallery.Controls(this.toolsElement, this.id);
         this.controls.addEvent('remove', this.removeItems.bind(this))
         this.uploader = new Frog.Uploader(this.id);
-        this.uploader.addEvent('complete', this.request.bind(this));
+        this.uploader.addEvent('complete', function() {
+            this.request();
+        }.bind(this));
         this.viewer = new Frog.Viewer();
         this.viewer.addEvent('show', function() {
             window.scrollTo(0,0);
@@ -257,8 +259,42 @@ Frog.Gallery.Controls = new Class({
         var self = this;
         this.id = id;
         Ext.require(['*']);
+
+        // -- Models
+        Ext.define('Gallery', {
+            extend: 'Ext.data.Model',
+            fields: [
+                {name: 'id'},
+                {name: 'title'},
+                {name: 'image_count', type: 'int'},
+                {name: 'video_count', type: 'int'},
+                {name: 'owner'},
+                {name: 'description'}
+            ]
+        });
+
+        this.galleryStore = Ext.create('Ext.data.Store', {
+            autoLoad: true,
+            autoSync: true,
+            model: 'Gallery',
+            proxy: {
+                type: 'ajax',
+                url: '/frog/gallery',
+                reader: {
+                    type: 'json',
+                    root: 'values'
+                }
+            }
+        });
+
         this.toolbar = Ext.create('Ext.toolbar.Toolbar');
         this.toolbar.render(el);
+        var navMenu = Ext.create('Ext.menu.Menu');
+        this.bNav = this.toolbar.add({
+            text: 'Navigation',
+            menu: navMenu
+        });
+        navMenu.add(this.getNavMenu());
         this.bUpload = this.toolbar.add({
             id: 'frogBrowseButton',
             text: 'Upload',
@@ -341,9 +377,103 @@ Frog.Gallery.Controls = new Class({
                 self.fireEvent('onRemove', [ids])
             }
         });
-        // this.mCopy = Ext.create('Ext.menu.Item', {
-        //     text: 'Copy to gallery'
-        // });
+        this.mCopy = Ext.create('Ext.menu.Item', {
+            text: 'Copy to Gallery',
+            icon: FrogStaticRoot + '/frog/i/page_white_copy.png',
+            handler: function() {
+                var win = Ext.create('widget.window', {
+                    title: 'Copy to Gallery',
+                    icon: FrogStaticRoot + '/frog/i/page_white_copy.png',
+                    closable: true,
+                    closeAction: 'hide',
+                    resizable: false,
+                    modal: true,
+                    width: 600,
+                    height: 300,
+                    bodyStyle: 'padding: 5px;'
+                });
+                win.show();
+
+                var fp = Ext.create('Ext.FormPanel', {
+                    items: [{
+                        xtype: 'label',
+                        text: "Copy images to a new Gallery:"
+                    }, {
+                        xtype:'fieldset',
+                        title: 'New Gallery',
+                        items: [
+                            {
+                                fieldLabel: 'Title',
+                                xtype: 'textfield',
+                                name: 'title'
+
+                            }, {
+                                fieldLabel: 'Description',
+                                xtype: 'textfield',
+                                name: 'description'
+                            }
+                        ]
+                    }, {
+                        xtype: 'label',
+                        text: 'Or choose an existing one:'
+                    }, {
+                        xtype:'fieldset',
+                        title: 'Existing Gallery',
+                        items: [
+                            {
+                                xtype: 'combobox',
+                                editable: false,
+                                store: self.galleryStore,
+                                displayField: 'title',
+                                valueField: 'id',
+                                id: 'frog_gallery_id'
+                            }
+                        ]
+                    }],
+                    buttons: [{
+                        text: 'Send',
+                        handler: function() {
+                            var data = fp.getForm().getValues();
+                            data.id = data['frog_gallery_id-inputEl'];
+                            if (data.title !== "") {
+                                new Request.JSON({
+                                    url: '/frog/gallery',
+                                    async: false,
+                                    onSuccess: function(res) {
+                                        data.id = res.value.id;
+                                    }
+                                }).POST({title: data.title, description: data.description});
+                            }
+                            var selected = $$('.thumbnail.selected');
+                            guids = [];
+                            selected.each(function(item) {
+                                guids.push(item.dataset.frog_guid);
+                            });
+                            new Request.JSON({
+                                url: '/frog/gallery/' + data.id,
+                                emulation: false,
+                                async: false,
+                                onSuccess: function(res) {
+                                    self.galleryStore.sync();
+                                    Ext.MessageBox.confirm('Confirm', 'Would you like to visit this gallery now?', function(res) {
+                                        if (res === 'yes') {
+                                            window.location = '/frog/gallery/' + data.id;
+                                        }
+                                    });
+                                }
+                            }).PUT({guids: guids.join(',')});
+                            win.close();
+                        }
+                    },{
+                        text: 'Cancel',
+                        handler: function() {
+                            win.close();
+                        }
+                    }]
+                });
+                win.add(fp);
+            }
+        });
         this.mDownload = Ext.create('Ext.menu.Item', {
             text: 'Download Sources',
             icon: FrogStaticRoot + '/frog/i/compress.png',
@@ -360,24 +490,25 @@ Frog.Gallery.Controls = new Class({
             text: 'Switch Artist',
             handler: function() {
                 var win = Ext.create('widget.window', {
-                    title: 'RSS Feeds',
-                    icon: FrogStaticRoot + '/frog/i/feed.png',
+                    title: 'Switch Artist',
                     closable: true,
                     closeAction: 'hide',
                     resizable: false,
                     modal: true,
-                    width: 300,
+                    width: 400,
                     height: 200,
                     bodyStyle: 'padding: 5px;'
                 });
                 win.show();
                 var input = new Element('input', {placeholder: "Search"});
+
                 var fp = Ext.create('Ext.FormPanel', {
                     items: [{
                         xtype: 'label',
-                        text: "Have a question, problem or suggestion?"
+                        text: "Start typing the name of an artist or if this is a new artist, type in the first and last name and click Send"
                     }, {
                         xtype: 'textfield',
+                        fieldLabel: 'Artist Name',
                         id: 'frog_switch_artist'
                     }],
                     buttons: [{
@@ -411,11 +542,12 @@ Frog.Gallery.Controls = new Class({
                         }
                     }
                 });
+                input.focus();
             }
         });
         
         var m = Ext.create('Ext.menu.Menu', {
-            items: [this.mRemove, this.mDownload, '-', this.mSwitchArtist]
+            items: [this.mRemove, this.mCopy, this.mDownload, '-', this.mSwitchArtist]
         });
         
         this.toolbar.add({
@@ -434,7 +566,7 @@ Frog.Gallery.Controls = new Class({
                     closeAction: 'hide',
                     resizable: false,
                     modal: true,
-                    width: 300,
+                    width: 400,
                     height: 200,
                     bodyStyle: 'padding: 5px;'
                 });
@@ -606,5 +738,47 @@ Frog.Gallery.Controls = new Class({
                 }
             }
         }).POST({'artist': name.toLowerCase(), guids: guids.join(',')})
+    },
+    getNavMenu: function(menu) {
+        var grid = Ext.create('Ext.grid.Panel', {
+            //renderTo: menu,
+            width: 600,
+            height: 300,
+            frame: true,
+            title: 'Galleries',
+            store: this.galleryStore,
+            iconCls: 'icon-user',
+            columns: [{
+                text: 'Title',
+                flex: 2,
+                sortable: true,
+                dataIndex: 'title'
+            }, {
+                text: 'Images',
+                flex: 1,
+                sortable: true,
+                dataIndex: 'image_count',
+                field: {
+                    xtype: 'textfield'
+                }
+            }, {
+                text: 'Videos',
+                flex: 1,
+                sortable: true,
+                dataIndex: 'video_count',
+                field: {
+                    xtype: 'textfield'
+                }
+            }, {
+                text: 'Description',
+                flex: 2,
+                dataIndex: 'description'
+            }]
+        });
+        grid.on('itemClick', function(view, rec, item) {
+            location.href = '/frog/gallery/' + rec.data.id;
+        });
+
+        return grid;
     }
 })

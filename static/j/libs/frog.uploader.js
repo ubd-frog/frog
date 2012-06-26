@@ -34,13 +34,18 @@ Frog.Uploader = new Class({
                 new Request.JSON({
                     url: '/frog/isunique',
                     onSuccess: function(res) {
-                        self.uploaderList.store.add({
+                        obj = {
                             id: f.id,
                             file: f.name,
                             size: f.size,
                             percent: 0,
-                            unique: res.value
-                        });
+                            unique: res.value === true,
+                            date: ""
+                        }
+                        if (!obj.isUnique) {
+                            obj.date = new Date(res.value.created)
+                        }
+                        var item = self.uploaderList.store.add(obj);
                     }
                 }).GET({path:f.name})
             });
@@ -81,7 +86,8 @@ Frog.Uploader = new Class({
                 {name: 'file'},
                 {name: 'size', type: 'int'},
                 {name: 'percent', type: 'int'},
-                {name: 'unique', type: 'bool'}
+                {name: 'unique', type: 'bool'},
+                {name: 'date', type: 'date'}
             ]
         });
         var grid = Ext.create('Ext.grid.Panel', {
@@ -100,10 +106,35 @@ Frog.Uploader = new Class({
                     dataIndex: 'size'
                 },
                 {
+                    text: 'Created',
+                    flex: 2,
+                    sortable: false,
+                    dataIndex: 'date',
+                    xtype: 'datecolumn',
+                    format:'Y-m-d'
+                },
+                {
                     text     : '%',
                     flex     : 1,
                     sortable : false,
                     dataIndex: 'percent'
+                },
+                {
+                    xtype: 'actioncolumn',
+                    flex: 1,
+                    sortable: false,
+                    items: [
+                        {
+                            text: 'remove',
+                            icon: '/static/frog/i/delete.png',
+                            handler: function(grid, rowIndex, colIndex) {
+                                var rec = store.getAt(rowIndex);
+                                var file = self.uploader.getFile(rec.get('id'));
+                                self.uploader.removeFile(file);
+                                store.remove([rec]);
+                            }
+                        }
+                    ]
                 }
             ],
             height: 350,

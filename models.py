@@ -255,6 +255,8 @@ class Gallery(models.Model):
     images = models.ManyToManyField(Image, blank=True, null=True)
     videos = models.ManyToManyField(Video, blank=True, null=True)
     private = models.BooleanField(default=False)
+    owner = models.ForeignKey(User, default=1)
+    description = models.TextField(default="")
 
     class Meta:
         verbose_name_plural = "Galleries"
@@ -269,6 +271,8 @@ class Gallery(models.Model):
             'private': self.private,
             'image_count': self.images.count(),
             'video_count': self.videos.count(),
+            'owner': {'id': self.owner.id, 'name': self.owner.get_full_name()},
+            'description': self.description
         }
 
         return obj

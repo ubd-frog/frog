@@ -222,6 +222,9 @@ body {
 .x-mask {
     background: #000;
 }
+.x-panel-body-default {
+    background: transparent;
+}
 body > div {
     font-family: Verdana;
     font-size: 11px;
