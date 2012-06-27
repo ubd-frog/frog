@@ -225,6 +225,13 @@ body {
 .x-panel-body-default {
     background: transparent;
 }
+.x-boundlist-item {
+    color: #000;
+}
+.x-boundlist-list-ct ul {
+    margin: 0;
+    padding: 0;
+}
 body > div {
     font-family: Verdana;
     font-size: 11px;

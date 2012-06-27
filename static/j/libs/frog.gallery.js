@@ -292,6 +292,7 @@ Frog.Gallery.Controls = new Class({
         var navMenu = Ext.create('Ext.menu.Menu');
         this.bNav = this.toolbar.add({
             text: 'Navigation',
+            icon: FrogStaticRoot + '/frog/i/compass.png',
             menu: navMenu
         });
         navMenu.add(this.getNavMenu());
