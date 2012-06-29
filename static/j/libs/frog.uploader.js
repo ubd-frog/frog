@@ -42,7 +42,7 @@ Frog.Uploader = new Class({
                             unique: res.value === true
                         }
                         if (obj.isUnique) {
-                            obj.date = new Date(Date.now());
+                            obj.date = new Date();
                         }
                         else {
                             obj.date = new Date(res.value.created);
@@ -55,6 +55,11 @@ Frog.Uploader = new Class({
 
         uploader.bind('UploadProgress', function(up, file) {
             self.uploaderList.store.getById(file.id).set('percent', file.percent);
+        });
+
+        uploader.bind('FileUploaded', function(up, file, res) {
+            var index = self.uploaderList.store.getById(file.id)
+            self.uploaderList.store.remove(index);
         });
 
         uploader.bind('UploadComplete', function(up, files) {
