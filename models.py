@@ -22,10 +22,6 @@ gVideoThread = VideoThread(gQueue)
 gVideoThread.start()
 gJsonQueue = JsonQueue()
 
-## -- Queue any remaining videos that did not finish prior to restart
-for guid in [o['id'] for o in gJsonQueue.data['queued']]:
-    gQueue.put(Video.objects.get(pk=guid))
-
 
 class Tag(models.Model):
     name = models.CharField(max_length=255, unique=True)
@@ -283,12 +279,16 @@ class UserPref(models.Model):
     backgroundColor = models.CharField(max_length=6, default='000000')
     tile_count = models.PositiveSmallIntegerField(default=6)
     batch_size = models.PositiveSmallIntegerField(default=300)
+    include_image = models.BooleanField(default=True)
+    include_video = models.BooleanField(default=True)
 
     def json(self):
         obj = {
             'backgroundColor': self.backgroundColor,
             'tile_count': self.tile_count,
             'batch_size': self.batch_size,
+            'include_image': self.include_image,
+            'include_video': self.include_video,
         }
 
         return obj
@@ -316,3 +316,8 @@ class RSSStorage(models.Model):
     interval = models.CharField(max_length=6)
     data = models.TextField()
     gallery = models.ForeignKey(Gallery, related_name='rss_storage')
+
+
+## -- Queue any remaining videos that did not finish prior to restart
+for guid in [o['id'] for o in gJsonQueue.data['queued']]:
+    gQueue.put(Video.objects.get(pk=guid))

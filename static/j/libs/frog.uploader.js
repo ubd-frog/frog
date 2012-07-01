@@ -41,8 +41,8 @@ Frog.Uploader = new Class({
                             percent: 0,
                             unique: res.value === true
                         }
-                        if (obj.isUnique) {
-                            obj.date = new Date();
+                        if (obj.unique) {
+                            obj.date = Date.now();
                         }
                         else {
                             obj.date = new Date(res.value.created);

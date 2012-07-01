@@ -81,6 +81,7 @@
         var options = {
             url: document.id('url').value,
             emulation: false,
+            noCache: true,
             onSuccess: function(res) {
                 try {
                     var data = JSON.parse(res);

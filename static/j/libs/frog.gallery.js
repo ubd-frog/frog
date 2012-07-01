@@ -47,7 +47,12 @@ Frog.Gallery = new Class({
 
         // -- Instance objects
         this.controls = new Frog.Gallery.Controls(this.toolsElement, this.id);
-        this.controls.addEvent('remove', this.removeItems.bind(this))
+        this.controls.addEvent('remove', this.removeItems.bind(this));
+        this.controls.addEvent('change', function() {
+            self.tilesPerRow = Frog.Prefs.tile_count;
+            self.tileSize = Math.floor((window.getWidth() - 2) / self.tilesPerRow);
+            self.request();
+        });
         this.uploader = new Frog.Uploader(this.id);
         this.uploader.addEvent('complete', function() {
             this.request();
@@ -113,10 +118,19 @@ Frog.Gallery = new Class({
         if (append) {
             this.requestData.more = true;
         }
+        this.requestData.models = [];
+        if (Frog.Prefs.include_image) {
+            this.requestData.models.push('image');
+        }
+        if (Frog.Prefs.include_video) {
+            this.requestData.models.push('video');
+        }
+        this.requestData.models = this.requestData.models.unique().join(',');
         
         var self = this;
         new Request.JSON({
             url: '/frog/gallery/' + this.id + '/filter',
+            noCache: true,
             onRequest: function() {
                 self.isRequesting = true;
                 self.spinner.show();
@@ -489,6 +503,7 @@ Frog.Gallery.Controls = new Class({
         });
         this.mSwitchArtist = Ext.create('Ext.menu.Item', {
             text: 'Switch Artist',
+            icon: FrogStaticRoot + '/frog/i/user_edit.png',
             handler: function() {
                 var win = Ext.create('widget.window', {
                     title: 'Switch Artist',
@@ -658,6 +673,7 @@ Frog.Gallery.Controls = new Class({
         });
     },
     getPrefMenu: function() {
+        var self = this;
         var colorMenu = Ext.create('Ext.menu.ColorPicker', {
             height: 24,
             handler: function(cm, color){
@@ -668,6 +684,8 @@ Frog.Gallery.Controls = new Class({
         var tileSizeHandler = function(item, checked) {
             var size = item.value;
             Frog.Prefs.set('tile_count', size);
+            item.parentMenu.hide();
+            self.fireEvent('onChange', [Frog.Prefs]);
         }
         var batchSize = Ext.create('Ext.form.field.Number', {
             value: Frog.Prefs.batch_size,
@@ -676,7 +694,9 @@ Frog.Gallery.Controls = new Class({
         });
         batchSize.on('change', function(field, val) { 
             Frog.Prefs.set('batch_size', val);
-        })
+            //self.fireEvent('onChange', [self]);
+        });
+
         var menu = Ext.create('Ext.menu.Menu', {
             items: [
                 {
@@ -712,6 +732,24 @@ Frog.Gallery.Controls = new Class({
                     menu: [
                         batchSize
                     ]
+                }, {
+                    xtype: 'menucheckitem',
+                    text: 'Include Images',
+                    checked: Frog.Prefs.include_image,
+                    checkHandler: function(item, checked) {
+                        Frog.Prefs.set('include_image', checked);
+                        item.parentMenu.hide();
+                        self.fireEvent('onChange', [Frog.Prefs]);
+                    }
+                }, {
+                    xtype: 'menucheckitem',
+                    text: 'Incude Video',
+                    checked: Frog.Prefs.include_video,
+                    checkHandler: function(item, checked) {
+                        Frog.Prefs.set('include_video', checked);
+                        item.parentMenu.hide();
+                        self.fireEvent('onChange', [Frog.Prefs]);
+                    }
                 }
                 
             ]

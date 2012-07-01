@@ -488,7 +488,7 @@ li.frog-tag {
 /*Autocomplete*/
 .ma-container{
     color: #000;
-    border: 1px solid #333;
+    border: 1px solid #666;
     background-color: #fff;
     position: absolute;
     visibility: hidden;
@@ -515,18 +515,20 @@ li.frog-tag {
     width: 100%;
     overflow: hidden;
     font-size: 15px;
+    color: #d2d2d2;
 }
 .ma-container .ma-hover{
-    color: #fff;
-    background-color: #921506 !important;
-}
-.ma-container .ma-odd{
-}
-.ma-container .ma-even{
-    background-color: #efefef;
+    color: #b8d364;
+    background-color: #666 !important;
 }
 .ma-loading{
     background-color: #fafba4;
+}
+.ma-even {
+    background-color: #202020;
+}
+.ma-odd {
+    background-color: #333;
 }
 
 /*Frog Viewer*/

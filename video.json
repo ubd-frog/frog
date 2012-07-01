@@ -1,5 +1,5 @@
 {
-    "queued": [],
-    "building": {},
-    "completed": []
+    "building": {}, 
+    "completed": [], 
+    "queued": []
 }

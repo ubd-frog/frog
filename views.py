@@ -120,6 +120,8 @@ class GalleryView(MainView):
         rng = request.GET.get('rng', None)
         more = request.GET.get('more', False)
         models = request.GET.get('models', 'image,video')
+        if models == '':
+            models = 'image,video'
 
         tags = filter(None, tags)
 
@@ -537,6 +539,13 @@ class UserPrefView(MainView):
         if key and val:
             obj = self.model.objects.get_or_create(user=request.user)[0]
             if hasattr(obj, key):
+                if val in ('true', 'false'):
+                    val = True if val == 'true' else False
+                else:
+                    try:
+                        val = int(val)
+                    except ValueError:
+                        pass
                 setattr(obj, key, val)
                 obj.save()
                 res.append(obj.json())
