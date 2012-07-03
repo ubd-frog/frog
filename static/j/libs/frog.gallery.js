@@ -218,17 +218,17 @@ Frog.Gallery = new Class({
                 objects.push(this.objects[idx]);
             }, this);
             objects = objects.unique();
+            this.viewer.show();
             this.viewer.setImages(objects, id);
         }
         else {
             var objects = Array.clone(this.objects);
+            this.viewer.show();
             this.viewer.setImages(objects, id);
+
         }
 
         this.y = window.getScroll().y;
-        
-        this.viewer.fitToWindow();
-        this.viewer.show();
     },
     _getScreen: function() {
         var s, e, t, row, endRow;

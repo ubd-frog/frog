@@ -37,7 +37,6 @@ from sendFile import send_file, send_zipfile
 from settings import MEDIA_ROOT, MANAGERS, DOMAIN
 
 
-gRange = 30
 logger = logging.getLogger('dev.frog')
 LoginRequired = method_decorator(login_required)
 
@@ -140,7 +139,7 @@ class GalleryView(MainView):
 
         return list, Objects filtered
         """
-
+        
         NOW = time.clock()
 
         res = Result()
@@ -221,9 +220,6 @@ class GalleryView(MainView):
                         idDict[m.model] = idDict[m.model].none()
 
                 logger.debug(m.model + '_added_buckets(%i): %f' % (len(tags), time.clock() - NOW))
-            else:
-                # all
-                pass
             
             ## -- Get all ids of filtered objects, this will be a very fast query
             idDict[m.model] = list(idDict[m.model].values_list('id', flat=True))
@@ -541,6 +537,8 @@ class UserPrefView(MainView):
             if hasattr(obj, key):
                 if val in ('true', 'false'):
                     val = True if val == 'true' else False
+                elif val == '000000':
+                    pass
                 else:
                     try:
                         val = int(val)
