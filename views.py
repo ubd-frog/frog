@@ -27,7 +27,7 @@ try:
 except ImportError:
     HAYSTACK = False
 
-from models import Gallery, Image, Video, Tag, Piece, UserPref
+from models import Gallery, Image, Video, Tag, Piece, UserPref, DefaultPrefs
 
 from common import MainView, Result, JsonResponse, getObjectsFromGuids, commentToJson, userToJson
 from uploader import uploader
@@ -150,8 +150,8 @@ class GalleryView(MainView):
 
         logger.debug('init: %f' % (time.clock() - NOW))
 
-        Prefs = UserPref.objects.get(user=self.user)
-        gRange = Prefs.batch_size
+        Prefs = json.loads(UserPref.objects.get(user=self.user).data)
+        gRange = Prefs['batchSize']
         self.request.session.setdefault('frog_range', '0:%i' % gRange)
 
         if rng:
@@ -522,7 +522,10 @@ class UserPrefView(MainView):
 
     def get(self, request):
         res = Result()
-        obj = self.model.objects.get_or_create(user=request.user)[0]
+        obj, created = self.model.objects.get_or_create(user=request.user)
+        if created:
+            obj.data = json.dumps(DefaultPrefs.copy())
+            obj.save()
         res.append(obj.json())
         res.isSuccess = True
 
@@ -533,24 +536,15 @@ class UserPrefView(MainView):
         val = request.POST.get('val', None)
         res = Result()
         if key and val:
-            obj = self.model.objects.get_or_create(user=request.user)[0]
-            if hasattr(obj, key):
-                if val in ('true', 'false'):
-                    val = True if val == 'true' else False
-                elif val == '000000':
-                    pass
-                else:
-                    try:
-                        val = int(val)
-                    except ValueError:
-                        pass
-                setattr(obj, key, val)
+            obj, created = self.model.objects.get_or_create(user=request.user)
+            if created:
+                obj.data = json.dumps(DefaultPrefs.copy())
                 obj.save()
-                res.append(obj.json())
-                res.isSuccess = True
-            else:
-                res.isError = True
-                res.message = 'Key "%s" does not exists' % key
+            val = json.loads(val)
+            obj.setKey(key, val)
+            obj.save()
+            res.append(obj.json())
+            res.isSuccess = True
         else:
             res.isError = True
             res.message = 'No key and value provided'

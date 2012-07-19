@@ -17,7 +17,7 @@ Frog.Gallery = new Class({
         var uploaderElement = $('upload');
 
         // -- Members
-        this.tilesPerRow = Frog.Prefs.tile_count;
+        this.tilesPerRow = Frog.Prefs.tileCount;
         this.tileSize = Math.floor((window.getWidth() - 2) / this.tilesPerRow);
         this.objects = [];
         this.thumbnails = [];
@@ -49,7 +49,7 @@ Frog.Gallery = new Class({
         this.controls = new Frog.Gallery.Controls(this.toolsElement, this.id);
         this.controls.addEvent('remove', this.removeItems.bind(this));
         this.controls.addEvent('change', function() {
-            self.tilesPerRow = Frog.Prefs.tile_count;
+            self.tilesPerRow = Frog.Prefs.tileCount;
             self.tileSize = Math.floor((window.getWidth() - 2) / self.tilesPerRow);
             self.request();
         });
@@ -80,10 +80,19 @@ Frog.Gallery = new Class({
             data = JSON.parse(location.hash.split('#')[1]);
             builderData = data.filters;
         }
+        var bucketHeight = 30;
         this.builder = new Frog.QueryBuilder({
             data: builderData,
             onChange: function(data) {
                 self.setFilters(data)
+            },
+            onAdd: function() {
+                var pad = self.container.getStyle('padding-top').toInt();
+                self.container.setStyle('padding-top', pad + bucketHeight);
+            },
+            onRemove: function() {
+                var pad = self.container.getStyle('padding-top').toInt();
+                self.container.setStyle('padding-top', pad - bucketHeight);
             }
         });
         $(this.builder).inject(this.container, 'before')
@@ -204,6 +213,7 @@ Frog.Gallery = new Class({
     },
     viewImages: function(e, el) {
         e.stop();
+        this.y = window.getScroll().y;
         var selection = $$('.thumbnail.selected');
         var id = (Browser.ie) ? el.parentNode.parentNode.getProperty('dataset-frog_tn_id') : el.parentNode.parentNode.dataset.frog_tn_id;
         var objects = [];
@@ -227,8 +237,6 @@ Frog.Gallery = new Class({
             this.viewer.setImages(objects, id);
 
         }
-
-        this.y = window.getScroll().y;
     },
     _getScreen: function() {
         var s, e, t, row, endRow;
@@ -677,13 +685,13 @@ Frog.Gallery.Controls = new Class({
         var colorMenu = Ext.create('Ext.menu.ColorPicker', {
             height: 24,
             handler: function(cm, color){
-                Frog.Prefs.set('backgroundColor', color);
+                Frog.Prefs.set('backgroundColor', JSON.stringify('#' + color));
             }
         });
         colorMenu.picker.colors = ['000000', '424242', '999999'];
         var tileSizeHandler = function(item, checked) {
             var size = item.value;
-            Frog.Prefs.set('tile_count', size);
+            Frog.Prefs.set('tileCount', size);
             item.parentMenu.hide();
             self.fireEvent('onChange', [Frog.Prefs]);
         }
@@ -693,8 +701,7 @@ Frog.Gallery.Controls = new Class({
             maxValue: 500
         });
         batchSize.on('change', function(field, val) { 
-            Frog.Prefs.set('batch_size', val);
-            //self.fireEvent('onChange', [self]);
+            Frog.Prefs.set('batchSize', val);
         });
 
         var menu = Ext.create('Ext.menu.Menu', {

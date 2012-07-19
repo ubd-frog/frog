@@ -60,7 +60,7 @@ Which UI to use?
                 async: false,
                 noCache: true,
                 onSuccess: function(res) {
-                    Object.append(this, res.value);
+                    Object.append(this, JSON.parse(res.value));
                 }.bind(this)
             }).GET();
         },
@@ -71,7 +71,7 @@ Which UI to use?
                 async: false,
                 headers: {"X-CSRFToken": Cookie.read('csrftoken')},
                 onSuccess: function(res) {
-                    Object.append(this, res.value);
+                    Object.append(this, JSON.parse(res.value));
                     if (callback) {
                         callback();
                     }

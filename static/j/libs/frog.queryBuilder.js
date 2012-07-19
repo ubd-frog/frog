@@ -12,6 +12,16 @@ Frog.QueryBuilder = new Class({
 
         var data = this.options.data || [[]];
         this.data = [];
+        this.buckets = [];
+        this.sortables = new Sortables($$('.frog-bucket'), {
+            clone: true,
+            revert: true,
+            opacity: 0.7
+        });
+        this.sortables.addEvent('complete', function(el) {
+            var bucket = el.parentNode;
+            this.buckets[0].addTag(el.dataset.frog_tag_id.toInt());
+        }.bind(this));
         data.each(function(bucket) {
             var clean = bucket.filter(function(item) { return item !== "" });
             self.data.push(clean);
@@ -26,23 +36,17 @@ Frog.QueryBuilder = new Class({
 
         this.data.each(function(bucket, idx) {
             dirty = true;
-            self.addBucket(true);
+            var bucketObject = self.addBucket(true);
             bucket.each(function(t) {
                 var name = (typeOf(t) === 'number') ? Frog.Tags.get(t) : t;
                 var tag = new Frog.Tag(t, name);
-                tag.addEvent('close', function(t) {
-                    $(t).destroy();
-                    if (t.id > 0) {
-                        self.data[idx].erase(t.id)
-                    }
-                    else {
-                        self.data[idx].erase(t.name)
-                    }
-                    self.change();
-                })
-                self.element.getChildren()[idx].grab($(tag), 'top');
-            })
-        })
+                bucketObject.addTag(tag);
+            });
+        });
+        if (this.data.length === 0) {
+            this.addBucket(true);
+            dirty = true;
+        }
 
         if (dirty) {
             this.change();
@@ -51,22 +55,95 @@ Frog.QueryBuilder = new Class({
     toElement: function() {
         return this.element;
     },
-    addBucket: function(silent) {
-        silent = (typeOf(silent) === 'undefined') ? false : silent;
-        if (!silent) {
-            this.data.push([]);
-        }
-        var ul = new Element('ul', {'class': 'frog-bucket'}).inject(this.element);
-        var self = this;
-        var idx = this.data.length - 1;
-        var li = new Element('li');
-        var input = new Element('input', {placeholder: "Search"}).inject(li);
-        input.addEvent('keyup', function(e) {
-            if (e.code === 13 && this.value !== "") {
-                self._selectCallback(idx, {id: 0, name: this.value}, this);
+    addBucket: function() {
+        var idx = this.buckets.length - 1;
+        var bucket = new Frog.Bucket(idx);
+        $(bucket).inject(this.element);
+        bucket.addEvent('change', this.change);
+        bucket.addEvent('empty', function(b) {
+            if (this.buckets.length > 1) {
+                $(b).destroy();
+                this.buckets.erase(b);
+                this.fireEvent('remove', [this, b]);
             }
-        })
-        var completer = new Meio.Autocomplete(input, '/frog/tag/search', {
+        }.bind(this));
+        // Ext.create('Ext.Button', {
+        //     text: 'add',
+        //     renderTo: bucket.li,
+        //     height: 22,
+        //     handler: this.addBucket.bind(this)
+        // });
+        
+        this.buckets.push(bucket);
+        this.sortables.addLists($(bucket));
+
+        this.fireEvent('add', this);
+        
+        return bucket;
+
+    },
+    addTag: function(bucket, tag_id) {
+        var tag = this.buckets[bucket].addTag(tag_id);
+        this.sortables.addItems($(tag));
+    },
+    _historyEvent: function(e) {
+        var key = (typeOf(e) === 'string') ? e : e.newURL;
+        var data = JSON.parse(unescape(key.split('#')[1]));
+        this.data = data.filters;
+    },
+    _change: function(e) {
+        var data = this.buckets.map(function(bucket) {
+            return bucket.data();
+        });
+        this.fireEvent('onChange', [data]);
+        this.sortables.addItems($$('.frog-tag'));
+    }
+});
+
+
+Frog.Bucket = new Class({
+    Implements: Events,
+    initialize: function(index) {
+        this.index = index;
+        this.element = new Element('ul', {'class': 'frog-bucket'});
+        this.li = new Element('li').inject(this.element);
+        this.input = new Element('input', {placeholder: "Search"}).inject(this.li);
+        this.tags = [];
+
+        this.events = {
+            keyUp: this.keyUpEvent.bind(this),
+            select: this.selectEvent.bind(this),
+            tagClose: this.tagCloseEvent.bind(this)
+        };
+
+        this.__build();
+    },
+    toElement: function() {
+        return this.element;
+    },
+    toString: function() {
+        return this.data().toString();
+    },
+    data: function() {
+        return this.tags.map(function(t) { return t.id; });
+    },
+    addTag: function(tag) {
+        if (typeOf(tag) === 'number') {
+            tag = new Frog.Tag(tag);
+        }
+        var tagIDs = this.tags.map(function(t) { return t.id; });
+        if (!tagIDs.contains(tag.id)) {
+            tag.addEvent('close', this.events.tagClose);
+            this.tags.push(tag);
+            this.element.grab($(tag), 'top');
+            this.fireEvent('onChange', [this.data]);
+        }
+
+        return tag;
+    },
+    __build: function() {
+        this.input.addEvent('keyup', this.events.keyUp);
+        new Meio.Autocomplete(this.input, '/frog/tag/search', {
             filter: {
                 path: 'name',
                 formatItem: function(text, data) {
@@ -86,121 +163,35 @@ Frog.QueryBuilder = new Class({
             requestOptions: {
                 headers: {"X-CSRFToken": Cookie.read('csrftoken')},
             },
-            onSelect: function(elements, value) {
-                if (value !== "") {
-                    self._selectCallback(idx, value, elements.field.node);
-                }
-            }
+            onSelect: this.events.select
         });
-        li.inject(ul);
-
     },
-    removeBucket: function(idx) {
-        
-    },
-    addTag: function(bucket, tag_id) {
-        this.data = [[]];
-        if (!this.data[bucket]) {
-            this.addBucket();
-        }
-        if (this.data[bucket].indexOf(tag_id) === -1) {
-            this.data[bucket].push(tag_id);
-            var tag = new Frog.Tag(tag_id);
-            tag.addEvent('close', function(t) {
-                $(t).destroy();
-                if (t.id > 0) {
-                    this.data[bucket].erase(t.id)
-                }
-                else {
-                    this.data[bucket].erase(t.name)
-                }
-                this.change();
-            }.bind(this))
-            this.element.getChildren()[bucket].grab($(tag), 'top');
-            this.change();
+    keyUpEvent: function(e) {
+        if (e.code === 13 && this.input.value !== "") {
+            this.events.select(undefined, {id: 0, name: this.input.value});
         }
     },
-    updateBuckets: function() {
-        var self = this;
-        this.data.each(function(bucket, idx) {
-            //dirty = true;
-            // self.addBucket(true);
-            var ul = self.element.getChildren()[idx];
-            ul.getElements('li.frog-tag').destroy();
-            bucket.each(function(t) {
-                var name = (typeOf(t) === 'number') ? Frog.Tags.get(t) : t;
-                var tag = new Frog.Tag(t, name);
-                tag.addEvent('close', function(t) {
-                    $(t).destroy();
-                    if (t.id > 0) {
-                        self.data[idx].erase(t.id)
-                    }
-                    else {
-                        self.data[idx].erase(t.name)
-                    }
-                    self.change();
-                })
-                ul.grab($(tag), 'top');
-            })
-        })
-    },
-    cleanBuckets: function() {
-        var uls = this.element.getElements('ul');
-        this.data.each(function(bucket, idx) {
-            var tags = uls[idx].getElements('li.frog-tag');
-            tagIds = tags.filter(function(tag) {
-                var id = tag.dataset.frog_tag_id;
-                if (!isNaN(parseInt(id))) {
-                    id = id.toInt();
-                }
-                
-                return (bucket.indexOf(id) == -1);
-            });
-            tagIds.each(function(item) {
-                item.destroy();
-            });
-        })
-    },
-    _selectCallback: function(idx, value, el) {
-        var tag, name;
-        var self = this;
-        // Reset filter on each add
-        this.data = [[]];
-        if (value.id > 0) {
-            self.data[idx].push(value.id);
-            name = value.name;
-            tag = new Frog.Tag(value.id, name);
-        }
-        else {
-            self.data[idx].push(el.value);
-            name = el.value;
-            tag = new Frog.Tag(name, name);
-        }
-        
-        tag.addEvent('close', function(t) {
-            $(t).destroy();
+    selectEvent: function(elements, value) {
+        if (value !== "") {
+            var tag, name;
             if (value.id > 0) {
-                self.data[idx].erase(t.id)
+                name = value.name;
+                tag = new Frog.Tag(value.id, name);
             }
             else {
-                self.data[idx].erase(t.name)
+                name = this.input.value;
+                tag = new Frog.Tag(name, name);
             }
-            self.change();
-        })
-        self.element.getChildren()[idx].grab($(tag), 'top');
-        el.value = "";
-        self.fireEvent('onChange', [self.data]);
-        self.change();
+            this.input.value = "";
+            this.addTag(tag);
+        }
     },
-    _historyEvent: function(e) {
-        var key = (typeOf(e) === 'string') ? e : e.newURL;
-        var data = JSON.parse(unescape(key.split('#')[1]));
-        this.data = data.filters;
-        this.cleanBuckets();
-        this.updateBuckets();
-    },
-    _change: function(e) {
-        this.cleanBuckets();
-        this.fireEvent('onChange', [this.data]);
+    tagCloseEvent: function(tag) {
+        $(tag).destroy();
+        this.tags.erase(tag);
+        if (this.tags.length === 0) {
+            this.fireEvent('onEmpty', [this]);
+        }
+        this.fireEvent('onChange');
     }
 })

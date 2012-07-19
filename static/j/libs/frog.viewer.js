@@ -296,7 +296,7 @@ Frog.Viewer = new Class({
             location.hash = JSON.stringify(data);
         }
 
-        this.element.setStyle('background-color', '#' + Frog.Prefs.backgroundColor);
+        this.element.setStyle('background-color', Frog.Prefs.backgroundColor);
         
         
         this.fireEvent('onShow', [this]);

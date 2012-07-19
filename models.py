@@ -22,6 +22,14 @@ gVideoThread = VideoThread(gQueue)
 gVideoThread.start()
 gJsonQueue = JsonQueue()
 
+DefaultPrefs = {
+    'backgroundColor': '000000',
+    'tileCount': 6,
+    'batchSize': 300,
+    'includeImage': True,
+    'includeVideo': True,
+}
+
 
 class Tag(models.Model):
     name = models.CharField(max_length=255, unique=True)
@@ -276,22 +284,26 @@ class Gallery(models.Model):
 
 class UserPref(models.Model):
     user = models.ForeignKey(User, related_name='frog_prefs')
-    backgroundColor = models.CharField(max_length=6, default='000000')
-    tile_count = models.PositiveSmallIntegerField(default=6)
-    batch_size = models.PositiveSmallIntegerField(default=300)
-    include_image = models.BooleanField(default=True)
-    include_video = models.BooleanField(default=True)
+    data = models.TextField(default='{}')
 
     def json(self):
-        obj = {
-            'backgroundColor': self.backgroundColor,
-            'tile_count': self.tile_count,
-            'batch_size': self.batch_size,
-            'include_image': self.include_image,
-            'include_video': self.include_video,
-        }
+        return self.data
 
-        return obj
+    def setKey(self, key, val):
+        data = json.loads(self.data)
+        keys = key.split('.')
+        keys.reverse()
+        name = data
+        while keys:
+            root = keys.pop()
+            name.setdefault(root, {})
+            if len(keys) == 0:
+                name[root] = val
+            else:
+                name = name[root]
+        self.data = json.dumps(data)
+        
+        self.save()
 
 
 class Guid(object):

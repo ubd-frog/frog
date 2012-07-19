@@ -420,9 +420,14 @@ li.frog-tag {
     position: fixed;
     width: 100%;
     margin-top: 28px;
-    overflow: auto;
-    background: #202020;
+    overflow: hidden;
+    border-bottom: 1px solid #333;
+    background: #101010;
     z-index: 2000;
+}
+#frog_builder .frog-bucket {
+    float: left;
+    width: 100%;
 }
 #frog_builder input {
     width: 240px;
