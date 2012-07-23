@@ -688,7 +688,7 @@ Frog.Gallery.Controls = new Class({
                 Frog.Prefs.set('backgroundColor', JSON.stringify('#' + color));
             }
         });
-        colorMenu.picker.colors = ['000000', '424242', '999999'];
+        colorMenu.picker.colors = ['000000', '424242', '999999', 'FFFFFF'];
         var tileSizeHandler = function(item, checked) {
             var size = item.value;
             Frog.Prefs.set('tileCount', size);
@@ -696,7 +696,7 @@ Frog.Gallery.Controls = new Class({
             self.fireEvent('onChange', [Frog.Prefs]);
         }
         var batchSize = Ext.create('Ext.form.field.Number', {
-            value: Frog.Prefs.batch_size,
+            value: Frog.Prefs.batchSize,
             minValue: 0,
             maxValue: 500
         });
@@ -716,19 +716,19 @@ Frog.Gallery.Controls = new Class({
                         {
                             text: 'Large (6)',
                             value: 6,
-                            checked: Frog.Prefs.tile_count === 6,
+                            checked: Frog.Prefs.tileCount === 6,
                             group: 'theme',
                             checkHandler: tileSizeHandler
                         }, {
                             text: 'Medium (9)',
                             value: 9,
-                            checked: Frog.Prefs.tile_count === 9,
+                            checked: Frog.Prefs.tileCount === 9,
                             group: 'theme',
                             checkHandler: tileSizeHandler
                         }, {
                             text: 'Small (12)',
                             value: 12,
-                            checked: Frog.Prefs.tile_count === 12,
+                            checked: Frog.Prefs.tileCount === 12,
                             group: 'theme',
                             checkHandler: tileSizeHandler
                         }

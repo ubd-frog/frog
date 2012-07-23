@@ -46,9 +46,9 @@ class GalleryView(MainView):
         super(GalleryView, self).__init__(Gallery)
 
     @LoginRequired
-    def get(self, request, obj_id=None):
+    def get(self, request, obj_id=None, requestData=None):
         if obj_id:
-            return super(GalleryView, self).get(request, obj_id)
+            return super(GalleryView, self).get(request, obj_id, requestData=requestData)
         else:
             res = Result()
             res.isSuccess = True
@@ -58,7 +58,7 @@ class GalleryView(MainView):
             return JsonResponse(res)
 
     @LoginRequired
-    def post(self, request):
+    def post(self, request, requestData=None):
         """ Create a Gallery """
         title = request.POST.get('title', 'New Gallery' + str(Gallery.objects.all().values_list('id', flat=True)[0] + 1))
         description = request.POST.get('description', '')
@@ -74,7 +74,7 @@ class GalleryView(MainView):
         return JsonResponse(res)
 
     @LoginRequired
-    def put(self, request, obj_id=None):
+    def put(self, request, obj_id=None, requestData=None):
         """ Adds Image and Video objects to Gallery based on GUIDs """
         guids = self.PUT.get('guids', '').split(',')
         objects = getObjectsFromGuids(guids)
@@ -91,16 +91,16 @@ class GalleryView(MainView):
         return JsonResponse(res)
 
     @LoginRequired
-    def delete(self, request, obj_id=None):
+    def delete(self, request, obj_id=None, requestData=None):
         """ Removes Image/Video objects from Gallery """
-        guids = self.DELETE.get('guids', '').split(',')
+        guids = requestData['DELETE'].get('guids', '').split(',')
         objects = getObjectsFromGuids(guids)
 
         for o in objects:
             if isinstance(o, Image):
-                self.object.images.remove(o)
+                requestData['object'].images.remove(o)
             elif isinstance(o, Video):
-                self.object.videos.remove(o)
+                requestData['object'].videos.remove(o)
 
         res = Result()
         res.isSuccess = True
@@ -113,7 +113,7 @@ class GalleryView(MainView):
         Filters Gallery for the requested Image/Video objects.  Returns a Result object with 
         serialized objects
         """
-        self._processRequest(request, obj_id)
+        requestData = self._processRequest(request, obj_id)
         
         tags = json.loads(request.GET.get('filters', '[[]]'))
         rng = request.GET.get('rng', None)
@@ -126,9 +126,9 @@ class GalleryView(MainView):
 
         models = [ContentType.objects.get(app_label='frog', model=x) for x in models.split(',')]
 
-        return self._filter(tags=tags, rng=rng, models=models, more=more)
+        return self._filter(requestData, tags=tags, rng=rng, models=models, more=more)
 
-    def _filter(self, tags=None, models=(Image, Video), rng=None, more=False):
+    def _filter(self, requestData, tags=None, models=(Image, Video), rng=None, more=False):
         """
         Filters Piece objects from self based on filters, search, and range
 
@@ -150,39 +150,44 @@ class GalleryView(MainView):
 
         logger.debug('init: %f' % (time.clock() - NOW))
 
-        Prefs = json.loads(UserPref.objects.get(user=self.user).data)
+        Prefs = json.loads(UserPref.objects.get(user=requestData['request'].user).data)
         gRange = Prefs['batchSize']
-        self.request.session.setdefault('frog_range', '0:%i' % gRange)
+        requestData['request'].session.setdefault('frog_range', '0:%i' % gRange)
 
         if rng:
             s, e = [int(x) for x in rng.split(':')]
         else:
             if more:
-                s = int(self.request.session.get('frog_range', '0:%i' % gRange).split(':')[1])
+                s = int(requestData['request'].session.get('frog_range', '0:%i' % gRange).split(':')[1])
                 e = s + gRange
                 s, e = 0, gRange
             else:
                 s, e = 0, gRange
 
-        logger.info(self.request.session['frog_range'])
-
         ## -- Gat all IDs for each model
         for m in models:
-            indexes = m.model_class().objects.all().values_list('id', flat=True)
+            indexes = list(m.model_class().objects.all().values_list('id', flat=True))
             if not indexes:
                 continue
 
             lastIndex = indexes[0]
             if more:
                 ## -- This is a request for more results
-                self.request.session.setdefault('last_%s_id' % m.model, lastIndex + 1)
+                #self.request.session.setdefault('last_%s_id' % m.model, lastIndex + 1)
+                #lastIDs.setdefault('last_%s_id' % m.model, lastIndex + 1)
+                idx = requestData['request'].session.get('last_%s_id' % m.model, lastIndex + 1)
+                lastIDs.setdefault('last_%s_id' % m.model, idx)
             else:
-                self.request.session['last_%s_id' % m.model] = lastIndex + 1
+                #self.request.session['last_%s_id' % m.model] = lastIndex + 1
+                lastIDs['last_%s_id' % m.model] = lastIndex + 1
 
-            offset = lastIndex - self.request.session['last_%s_id' % m.model] + 1
+            #offset = lastIndex - self.request.session['last_%s_id' % m.model] + 1
+            #offset = lastIndex - lastIDs['last_%s_id' % m.model] + 1
             
             ## -- Start with objects within range
-            idDict[m.model] = m.model_class().objects.filter(gallery=self.object, id__lt=self.request.session['last_%s_id' % m.model])
+            #idDict[m.model] = m.model_class().objects.filter(gallery=self.object, id__lt=self.request.session['last_%s_id' % m.model])
+            idDict[m.model] = m.model_class().objects.filter(gallery=requestData['object'], id__lt=lastIDs['last_%s_id' % m.model])
+            print requestData['object']
             logger.debug(m.model + '_initial_query: %f' % (time.clock() - NOW))
 
             if tags:
@@ -245,17 +250,22 @@ class GalleryView(MainView):
             for m in models:
                 if isinstance(i, m.model_class()):
                     ## -- set the last ID per model for future lookups
-                    self.request.session['last_%s_id' % m.model] = i.id
+                    #self.request.session['last_%s_id' % m.model] = i.id
+                    lastIDs['last_%s_id' % m.model] = i.id
             res.append(i.json())
         logger.debug('serialized: %f' % (time.clock() - NOW))
 
-        self.request.session['frog_range'] = ':'.join((str(s),str(e)))
+        requestData['request'].session['frog_range'] = ':'.join((str(s),str(e)))
 
         logger.debug('total: %f' % (time.clock() - NOW))
+        requestData['request'].session['last_image_id'] = lastIDs.get('last_image_id', 0)
+        requestData['request'].session['last_video_id'] = lastIDs.get('last_video_id', 0)
         data = {
             'count': len(objects),
-            'last_image_id': self.request.session.get('last_image_id', 0),
-            'last_video_id': self.request.session.get('last_video_id', 0),
+            #'last_image_id': self.request.session.get('last_image_id', 0),
+            'last_image_id': lastIDs.get('last_image_id', 0),
+            #'last_video_id': self.request.session.get('last_video_id', 0),
+            'last_video_id': lastIDs.get('last_video_id', 0),
             'queries': connection.queries,
         }
 
@@ -485,7 +495,7 @@ class ImageView(MainView):
         super(ImageView, self).__init__(model)
 
     @LoginRequired
-    def post(self, request, obj_id):
+    def post(self, request, obj_id, requestData=None):
         tags = request.POST.get('tags', '').split(',')
         res = Result()
         for tag in tags:
@@ -495,7 +505,7 @@ class ImageView(MainView):
                 t, created = Tag.objects.get_or_create(name=tag)
                 if created:
                     res.append(t.json())
-            self.object.tags.add(t)
+            requestData['object'].tags.add(t)
 
         res.isSuccess = True
 
@@ -503,11 +513,11 @@ class ImageView(MainView):
 
     @LoginRequired
     def delete(self, request, obj_id):
-        self.object.deleted = True
-        self.object.save()
+        requestData['object'].deleted = True
+        requestData['object'].save()
         res = Result()
         res.isSuccess = True
-        res.value = self.object.json()
+        res.value = requestData['object'].json()
         return JsonResponse(res)
 
 

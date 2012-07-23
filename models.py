@@ -287,7 +287,7 @@ class UserPref(models.Model):
     data = models.TextField(default='{}')
 
     def json(self):
-        return self.data
+        return json.loads(self.data)
 
     def setKey(self, key, val):
         data = json.loads(self.data)

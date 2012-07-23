@@ -53,30 +53,30 @@ class MainView(object):
         self.context = {}
 
     def _processRequest(self, request, obj_id=None):
+        obj = {'request': request, 'context': {}}
         try:
             self.id = int(obj_id)
+            obj['id'] = int(obj_id)
         except TypeError:
             pass
-        
-        self.request = request
-        self.GET = self.request.GET
-        self.POST = self.request.POST
+
         dataDict = {}
         for n in urlparse.parse_qsl(request.raw_post_data):
             dataDict[n[0]] = n[1]
-        self.DELETE = self.PUT = dataDict
-        self.user = request.user
-        self.object = None
+        obj['DELETE'] = obj['PUT'] = dataDict
+
         if obj_id:
-            self.object = self.model.objects.get(pk=obj_id)
-            self.context['object'] = self.object
-            self.context['obj'] = None if not self.object or isinstance(self.object, User) else json.dumps(self.object.json())
+            obj['object'] = self.model.objects.get(pk=obj_id)
+            obj['context']['object'] = obj['object']
+            obj['context']['obj'] = None if not obj['object'] or isinstance(obj['object'], User) else json.dumps(obj['object'].json())
             try:
-                self.context['title'] = self.object.name
+                obj['context']['title'] = obj['object'].name
             except AttributeError:
                 pass
         
-        self.context['ajax'] = request.is_ajax()
+        obj['context']['ajax'] = request.is_ajax()
+
+        return obj
     
     @csrf_exempt
     def index(self, request, *args, **kwargs):
@@ -95,7 +95,7 @@ class MainView(object):
 
     @csrf_exempt
     def view(self, request, obj_id=None):
-        self._processRequest(request, obj_id)
+        requestData = self._processRequest(request, obj_id)
 
         if request.method == 'GET':
             if request.GET.get('json', False):
@@ -104,16 +104,16 @@ class MainView(object):
                 res.append(self.object.json())
 
                 return JsonResponse(res)
-            return self.get(request, obj_id)
+            return self.get(request, obj_id, requestData=requestData)
         elif request.method == 'POST':
-            return self.post(request, obj_id)
+            return self.post(request, obj_id, requestData=requestData)
         elif request.method == 'PUT':
-            return self.put(request, obj_id)
+            return self.put(request, obj_id, requestData=requestData)
         elif request.method == 'DELETE':
-            return self.delete(request, obj_id)
+            return self.delete(request, obj_id, requestData=requestData)
     
     def get(self, request, *args, **kwargs):
-        return self.render()
+        return self.render(request, kwargs['requestData'])
     
     def post(self, request, *args, **kwargs):
         return HttpResponse()
@@ -124,8 +124,8 @@ class MainView(object):
     def delete(self, request, *args, **kwargs):
         return HttpResponse()
 
-    def render(self):
-        return render(self.request, self.template, self.context)
+    def render(self, request, context):
+        return render(request, self.template, context)
 
 
 class Result(object):
