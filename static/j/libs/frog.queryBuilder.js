@@ -27,6 +27,12 @@ Frog.QueryBuilder = new Class({
             self.data.push(clean);
         })
         this.element = new Element('div', {id: 'frog_builder'});
+        var frog = new Image();
+        frog.addClass('frog-logo');
+        frog.onload = function() {
+            this.element.grab(frog);
+        }.bind(this)
+        frog.src = FrogStaticRoot + '/frog/i/frog.png';
         this.change = this._change.bind(this);
         this.historyCallback = this._historyEvent.bind(this);
 

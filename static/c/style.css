@@ -435,6 +435,13 @@ li.frog-tag {
     font-size: 16px;
     margin: 4px;
 }
+#frog_builder .frog-logo {
+    position: absolute;
+    right: 10px;
+    top: 0;
+    width: 48px;
+    height: 48px;
+}
 
 /*Main Elements*/
 #gallery {
