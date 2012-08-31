@@ -667,18 +667,16 @@ def downloadView(request):
 
     if guids:
         objects = getObjectsFromGuids(guids)
-        if len(objects) == 1:
-            response = send_file(request, MEDIA_ROOT + objects[0].source.name)
-            response['Content-Disposition'] = 'attachment; filename=%s' % os.path.split(objects[0].foreign_path)[1]
-            return response
-        else:
-            fileList = {}
-            for n in objects:
-                fileList.setdefault(n.author.username, [])
-                fileList[n.author.username].append([MEDIA_ROOT + n.source.name, os.path.split(n.foreign_path)[1]])
+        fileList = {}
+        for n in objects:
+            files = n.getFiles()
+            fileList.setdefault(n.author.username, [])
+            for name, file_ in files.iteritems():
+                fileList[n.author.username].append([file_, name])
 
-            response = send_zipfile(request, fileList)
-            return response
+        response = send_zipfile(request, fileList)
+        
+        return response
 
 @csrf_exempt
 def index(request):

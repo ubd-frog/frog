@@ -7,6 +7,7 @@ Frog.Viewer = new Class({
         this.xform = Matrix.I(3);
         this.main = Matrix.I(3);
         this.scaleValue = 1.0;
+        this.axis = 'x';
 
         this.objects = [];
         this.current = 0;
@@ -68,6 +69,13 @@ Frog.Viewer = new Class({
         if (this.isMouseDown) {
             var x = e.client.x - this.origin.x;
             var y = e.client.y - this.origin.y;
+
+            if (e.shift && this.axis === 'x') {
+                y = 0;
+            }
+            if (e.shift && this.axis === 'y') {
+                x = 0;
+            }
 
             this.xform = Matrix.I(3).x(this.main);
             this.translate(x,y);
@@ -274,6 +282,7 @@ Frog.Viewer = new Class({
             [0,this.image.height,0],
             [0,0,1]
         ]);
+        this.axis = (this.image.width > this.image.height) ? 'x' : 'y';
         this.render();
         this.fitToWindow();
     },

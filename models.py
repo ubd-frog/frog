@@ -1,6 +1,7 @@
 import json
 import Queue
 import subprocess
+import re
 
 from django.db import models
 from django.contrib.auth.models import User
@@ -89,6 +90,27 @@ class Piece(models.Model):
 
     def export(self):
         pass
+
+    def getPath(self):
+        guid = self.getGuid()
+        
+        return Path(MEDIA_ROOT) / guid.guid[-2:] / guid.guid
+
+    def getFiles(self):
+        path = self.getPath()
+        allfiles = path.files()
+
+        thumb = Path(self.thumbnail.name).name.replace(self.hash, self.title)
+        source = Path(self.source.name).name.replace(self.hash, self.title)
+        files = {}
+        files[thumb] = MEDIA_ROOT + '/' + self.thumbnail.name
+        files[source] = MEDIA_ROOT + '/' + self.source.name
+        
+        for file_ in allfiles:
+            if not re.findall('([0-9A-Za-z]{40}\.\w+)', file_):
+                files[file_.name] = file_
+
+        return files
 
     def serialize(self):
         return json.dumps(self.json())

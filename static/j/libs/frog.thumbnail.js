@@ -127,7 +127,7 @@ Frog.Thumbnail = new Class({
         });
     },
     setSelected: function(sel) {
-        this.selected = (typeof sel === 'undefined') ? !this.selected : sel;
+        this.selected = (typeof sel === 'undefined') ? !this.element.hasClass('selected') : sel;
         if (this.selected) {
             this.element.addClass('selected');
         }
