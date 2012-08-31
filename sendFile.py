@@ -35,7 +35,7 @@ def send_zipfile(request, fileList):
     archive.close()
     wrapper = FixedFileWrapper(temp)
     response = HttpResponse(wrapper, content_type='application/zip')
-    response['Content-Disposition'] = 'attachment; filename=test.zip'
+    response['Content-Disposition'] = 'attachment; filename=FrogSources.zip'
     response['Content-Length'] = temp.tell()
     temp.seek(0)
     return response
