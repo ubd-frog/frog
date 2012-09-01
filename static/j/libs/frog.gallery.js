@@ -95,7 +95,8 @@ Frog.Gallery = new Class({
                 self.container.setStyle('padding-top', pad - bucketHeight);
             }
         });
-        $(this.builder).inject(this.container, 'before')
+        $(this.builder).inject(this.container, 'before');
+        //this.builder.sortables.addLists($$('.frog-bucket'));
     },
     clear: function() {
         this.objects = [];
@@ -408,7 +409,7 @@ Frog.Gallery.Controls = new Class({
                     title: 'Copy to Gallery',
                     icon: FrogStaticRoot + '/frog/i/page_white_copy.png',
                     closable: true,
-                    closeAction: 'hide',
+                    //closeAction: 'hide',
                     resizable: false,
                     modal: true,
                     width: 600,
@@ -773,17 +774,22 @@ Frog.Gallery.Controls = new Class({
         new Request.JSON({
             url: '/frog/switchartist',
             headers: {"X-CSRFToken": Cookie.read('csrftoken')},
-            async: false,
+            //async: false,
             onSuccess: function(res) {
                 if (res.isSuccess) {
                     selected.each(function(el) {
                         var tag = el.getElement('.frog-tag');
                         tag.set('text', res.value.name.capitalize());
                         tag.dataset.frog_tag_id = res.value.tag;
-                    })
+                    });
                 }
             }
-        }).POST({'artist': name.toLowerCase(), guids: guids.join(',')})
+        }).POST({'artist': name.toLowerCase(), guids: guids.join(',')});
+        selected.each(function(el) {
+            var tag = el.getElement('.frog-tag');
+            tag.set('text', name.capitalize());
+            tag.dataset.frog_tag_id = Frog.Tags.get(name.toLowerCase());
+        });
     },
     getNavMenu: function(menu) {
         var grid = Ext.create('Ext.grid.Panel', {

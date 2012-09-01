@@ -115,13 +115,15 @@ class Piece(models.Model):
     def serialize(self):
         return json.dumps(self.json())
 
-    def tagArtist(self):
+    def tagArtist(self, tag=None):
         ## -- First remove any artist tags
         for n in self.tags.filter(artist=True):
             self.tags.remove(n)
         self.save()
-        artistTag = Tag.objects.get_or_create(name=self.author.first_name.lower() + ' ' + self.author.last_name.lower(), defaults={'artist': True})[0]
-        self.tags.add(artistTag)
+        if tag is None:
+            tag = Tag.objects.get_or_create(name=self.author.first_name.lower() + ' ' + self.author.last_name.lower(), defaults={'artist': True})[0]
+        
+        self.tags.add(tag)
         self.save()
 
     def json(self):

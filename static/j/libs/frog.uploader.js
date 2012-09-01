@@ -71,10 +71,12 @@ Frog.Uploader = new Class({
 
         this.uploader = uploader;
 
-        document.body.addEventListener('dragenter', function() {
-            self.element.show();
-            self.setupUI();
-            self.uploaderList.show();
+        document.body.addEventListener('dragenter', function(e) {
+            if (!e.dataTransfer.types.contains('text/html')) {
+                self.element.show();
+                self.setupUI();
+                self.uploaderList.show();
+            }
         }, false);
     },
     toElement: function() {

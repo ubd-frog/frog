@@ -76,14 +76,14 @@ class GalleryView(MainView):
     @LoginRequired
     def put(self, request, obj_id=None, requestData=None):
         """ Adds Image and Video objects to Gallery based on GUIDs """
-        guids = self.PUT.get('guids', '').split(',')
+        guids = requestData['PUT'].get('guids', '').split(',')
         objects = getObjectsFromGuids(guids)
 
-        for o in objects:
-            if isinstance(o, Image):
-                self.object.images.add(o)
-            elif isinstance(o, Video):
-                self.object.videos.add(o)
+        images = filter(lambda x: isinstance(x, Image), objects)
+        videos = filter(lambda x: isinstance(x, Video), objects)
+
+        requestData['object'].images.add(*images)
+        requestData['object'].videos.add(*videos)
 
         res = Result()
         res.isSuccess = True
@@ -726,10 +726,11 @@ def switchArtist(request):
             'username': '%s%s' % (first[0], last),
             'email': '%s%s@%s' % (first[0], last, DOMAIN),
         })[0]
+        tag = Tag.objects.get_or_create(name=artist.lower(), defaults={'artist': True})[0]
         objects = getObjectsFromGuids(guids)
         for n in objects:
             n.author = author
-            n.tagArtist()
+            n.tagArtist(tag)
 
         res.isSuccess = True
         res.append(userToJson(author))
