@@ -61,7 +61,7 @@ class VideoThread(Thread):
             if self.queue.qsize():
                 isH264 = False
                 item = self.queue.get()
-                self.json.pop()
+                jsonobj = self.json.pop()
                 infile = "%s%s" % (MEDIA_ROOT, item.source.name)
                 cmd = '%s -i "%s"' % (FFMPEG, infile)
                 sourcePath = Path(MEDIA_ROOT) / item.source.name
@@ -90,6 +90,6 @@ class VideoThread(Thread):
                     item.video = outfile.replace('\\', '/').replace(MEDIA_ROOT, '')
 
                 item.save()
-                self.json.append(item.json())
+                self.json.complete(item.json())
 
                 time.sleep(TIMEOUT)
