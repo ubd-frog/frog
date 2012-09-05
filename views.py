@@ -52,7 +52,7 @@ class GalleryView(MainView):
         else:
             res = Result()
             res.isSuccess = True
-            for n in Gallery.objects.all():
+            for n in Gallery.objects.filter(Q(private=False) | Q(owner=request.user)):
                 res.append(n.json())
 
             return JsonResponse(res)
@@ -62,8 +62,11 @@ class GalleryView(MainView):
         """ Create a Gallery """
         title = request.POST.get('title', 'New Gallery' + str(Gallery.objects.all().values_list('id', flat=True)[0] + 1))
         description = request.POST.get('description', '')
+        private = json.loads(request.POST.get('private', 'false'))
         g, created = Gallery.objects.get_or_create(title=title)
         g.description = description
+        g.private = private
+        g.owner = request.user
         g.save()
 
         res = Result()
@@ -76,16 +79,24 @@ class GalleryView(MainView):
     @LoginRequired
     def put(self, request, obj_id=None, requestData=None):
         """ Adds Image and Video objects to Gallery based on GUIDs """
-        guids = requestData['PUT'].get('guids', '').split(',')
-        objects = getObjectsFromGuids(guids)
+        guids = filter(None, requestData['PUT'].get('guids', '').split(','))
+        private = requestData['PUT'].get('private', None)
+        
+        if guids:
+            objects = getObjectsFromGuids(guids)
 
-        images = filter(lambda x: isinstance(x, Image), objects)
-        videos = filter(lambda x: isinstance(x, Video), objects)
+            images = filter(lambda x: isinstance(x, Image), objects)
+            videos = filter(lambda x: isinstance(x, Video), objects)
 
-        requestData['object'].images.add(*images)
-        requestData['object'].videos.add(*videos)
+            requestData['object'].images.add(*images)
+            requestData['object'].videos.add(*videos)
+        
+        if private is not None:
+            requestData['object'].private = json.loads(private)
+            requestData['object'].save()
 
         res = Result()
+        res.append(requestData['object'].json())
         res.isSuccess = True
 
         return JsonResponse(res)

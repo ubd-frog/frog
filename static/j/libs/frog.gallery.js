@@ -2,7 +2,7 @@
 
 Frog.Gallery = new Class({
     Implements: [Events, Options],
-    options: {},
+    options: {private: false},
     initialize: function(el, id, options) {
         var self = this;
         this.setOptions(options);
@@ -53,6 +53,10 @@ Frog.Gallery = new Class({
             self.tileSize = Math.floor((window.getWidth() - 2) / self.tilesPerRow);
             self.request();
         });
+        if (options.private) {
+            this.controls.addPrivateMenu();
+        }
+
         this.uploader = new Frog.Uploader(this.id);
         this.uploader.addEvent('complete', function() {
             this.request();
@@ -292,7 +296,8 @@ Frog.Gallery.Controls = new Class({
                 {name: 'image_count', type: 'int'},
                 {name: 'video_count', type: 'int'},
                 {name: 'owner'},
-                {name: 'description'}
+                {name: 'description'},
+                {name: 'private'}
             ]
         });
 
@@ -435,6 +440,10 @@ Frog.Gallery.Controls = new Class({
                                 fieldLabel: 'Description',
                                 xtype: 'textfield',
                                 name: 'description'
+                            }, {
+                                fieldLabel: 'Private?',
+                                xtype: 'checkbox',
+                                name: 'private'
                             }
                         ]
                     }, {
@@ -460,13 +469,14 @@ Frog.Gallery.Controls = new Class({
                             var data = fp.getForm().getValues();
                             data.id = data['frog_gallery_id-inputEl'];
                             if (data.title !== "") {
+                                var private = (data.private === 'on') ? true : false;
                                 new Request.JSON({
                                     url: '/frog/gallery',
                                     async: false,
                                     onSuccess: function(res) {
                                         data.id = res.value.id;
                                     }
-                                }).POST({title: data.title, description: data.description});
+                                }).POST({title: data.title, description: data.description, private: private});
                             }
                             var selected = $$('.thumbnail.selected');
                             guids = [];
@@ -571,14 +581,14 @@ Frog.Gallery.Controls = new Class({
             }
         });
         
-        var m = Ext.create('Ext.menu.Menu', {
+        this.menu = Ext.create('Ext.menu.Menu', {
             items: [this.mRemove, this.mCopy, this.mDownload, '-', this.mSwitchArtist]
         });
         
         this.toolbar.add({
             text: 'Manage',
             icon: FrogStaticRoot + '/frog/i/photos.png',
-            menu: m
+            menu: this.menu
         });
         this.toolbar.add('-')
         this.bRSS = this.toolbar.add({
@@ -679,6 +689,24 @@ Frog.Gallery.Controls = new Class({
         this.bPreferences = this.toolbar.add({
             icon: FrogStaticRoot + '/frog/i/cog.png',
             menu: prefMenu
+        });
+    },
+    addPrivateMenu: function() {
+        var id = this.id;
+        this.menu.add({
+            text: 'Make public',
+            icon: FrogStaticRoot + '/frog/i/page_white_copy.png',
+            handler: function() {
+                Ext.MessageBox.confirm('Confirm', 'Are you sure you want to make this public?', function(res) {
+                    if (res === 'yes') {
+                        new Request.JSON({
+                            url: '/frog/gallery/' + id,
+                            emulation: false,
+                            headers: {"X-CSRFToken": Cookie.read('csrftoken')}
+                        }).PUT({private: false})
+                    }
+                });
+            }
         });
     },
     getPrefMenu: function() {

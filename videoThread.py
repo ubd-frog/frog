@@ -61,19 +61,19 @@ class VideoThread(Thread):
             if self.queue.qsize():
                 isH264 = False
                 item = self.queue.get()
-                jsonobj = self.json.pop()
+                self.json.pop()
                 infile = "%s%s" % (MEDIA_ROOT, item.source.name)
                 cmd = '%s -i "%s"' % (FFMPEG, infile)
-                sourcePath = Path(MEDIA_ROOT) / item.source.name
+                sourcepath = Path(MEDIA_ROOT) / item.source.name
                 proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
                 infoString = proc.stdout.readlines()
                 for n in infoString:
                     n = n.strip()
                     if n.startswith('Stream'):
                         if n.find('h264'):
-                            videoPath = sourcePath.parent / '_%s.mp4' % item.hash
-                            shutil.copy(sourcePath, videoPath)
-                            item.video = videoPath.replace('\\', '/').replace(MEDIA_ROOT, '')
+                            videopath = sourcepath.parent / '_%s.mp4' % item.hash
+                            shutil.copy(sourcepath, videopath)
+                            item.video = videopath.replace('\\', '/').replace(MEDIA_ROOT, '')
                             isH264 = True
                             break
 
