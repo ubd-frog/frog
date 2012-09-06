@@ -223,7 +223,7 @@ Frog.Viewer = new Class({
     setImage: function(img) {
         this.video.hide();
         this.canvas.show();
-        this.clear();
+        //this.clear();
         this.videoEl.empty();
         this.image.src = img;
         if (this.image.complete) {
