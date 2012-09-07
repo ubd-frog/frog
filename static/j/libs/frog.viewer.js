@@ -288,6 +288,7 @@ Frog.Viewer = new Class({
     },
     show: function() {
         this.element.show();
+        this.clear();
 
         this.canvas.addEvent('mousedown', this.events.down);
         window.addEvent('mouseup', this.events.up);
