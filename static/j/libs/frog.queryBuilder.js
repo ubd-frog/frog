@@ -13,15 +13,27 @@ Frog.QueryBuilder = new Class({
         var data = this.options.data || [[]];
         this.data = [];
         this.buckets = [];
-        this.sortables = new Sortables($$('.frog-bucket'), {
-            clone: true,
-            revert: true,
-            opacity: 0.7
-        });
-        this.sortables.addEvent('complete', function(el) {
-            var bucket = el.parentNode;
-            this.buckets[0].addTag(el.dataset.frog_tag_id.toInt());
-        }.bind(this));
+        this.sourcebucket = null;
+        // this.sortables = new Sortables($$('.frog-bucket'), {
+        //     clone: true,
+        //     revert: true,
+        //     opacity: 0.7
+        // });
+        // this.sortables.addEvent('start', function(el) {
+        //     this.sourcebucket = el.parentNode;
+        // }.bind(this));
+        // this.sortables.addEvent('complete', function(el) {
+        //     var bucket = el.parentNode;
+        //     var id = el.dataset.frog_tag_id.toInt();
+        //     if (typeOf(id) === 'null') {
+        //         id = new Frog.Tag(el.dataset.frog_tag_id, el.dataset.frog_tag_id);
+        //     }
+        //     if (bucket !== this.sourcebucket) {
+        //         this.sourcebucket
+        //     }
+
+        //     this.buckets[0].addTag(id);
+        // }.bind(this));
         data.each(function(bucket) {
             var clean = bucket.filter(function(item) { return item !== "" });
             self.data.push(clean);
@@ -62,7 +74,7 @@ Frog.QueryBuilder = new Class({
         return this.element;
     },
     addBucket: function() {
-        var idx = this.buckets.length - 1;
+        var idx = this.buckets.length;
         var bucket = new Frog.Bucket(idx);
         $(bucket).inject(this.element);
         bucket.addEvent('change', this.change);
@@ -81,7 +93,7 @@ Frog.QueryBuilder = new Class({
         // });
         
         this.buckets.push(bucket);
-        this.sortables.addLists($(bucket));
+        //this.sortables.addLists($(bucket));
 
         this.fireEvent('add', this);
         
@@ -90,7 +102,7 @@ Frog.QueryBuilder = new Class({
     },
     addTag: function(bucket, tag_id) {
         var tag = this.buckets[bucket].addTag(tag_id);
-        this.sortables.addItems($(tag));
+        //this.sortables.addItems($(tag));
     },
     _historyEvent: function(e) {
         var key = (typeOf(e) === 'string') ? e : e.newURL;
@@ -102,7 +114,7 @@ Frog.QueryBuilder = new Class({
             return bucket.data();
         });
         this.fireEvent('onChange', [data]);
-        this.sortables.addItems($$('.frog-tag'));
+        //this.sortables.addItems($$('.frog-tag'));
     }
 });
 
@@ -112,6 +124,7 @@ Frog.Bucket = new Class({
     initialize: function(index) {
         this.index = index;
         this.element = new Element('ul', {'class': 'frog-bucket'});
+        this.element.dataset['frog_bucket_id'] = this.index;
         this.li = new Element('li').inject(this.element);
         this.input = new Element('input', {placeholder: "Search"}).inject(this.li);
         this.tags = [];

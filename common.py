@@ -11,12 +11,12 @@ try:
 except ImportError:
     import json
 
-from django.http import HttpResponse
+from django.http import HttpResponse, Http404
 from django.shortcuts import render
-
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.models import User
 from django.views.decorators.csrf import csrf_exempt
+from django.core.exceptions import ObjectDoesNotExist
 
 from settings import MEDIA_URL
 
@@ -77,26 +77,41 @@ class MainView(object):
         obj['context']['ajax'] = request.is_ajax()
 
         return obj
+
+    def _getData(self, request):
+        dataDict = {}
+        for n in urlparse.parse_qsl(request.raw_post_data):
+            dataDict[n[0]] = n[1]
+        
+        return dataDict
+
+    def _getObject(self, id):
+        try:
+            obj = self.model.objects.get(pk=id)
+
+            return obj
+        except ObjectDoesNotExist:
+            raise Http404
     
     @csrf_exempt
     def index(self, request, *args, **kwargs):
         if kwargs.has_key('obj_id'):
             return self.view(request, kwargs['obj_id'])
         else:
-            self._processRequest(request)
+            #self._processRequest(request)
             if request.method == 'GET':
                 return self.get(request)
             elif request.method == 'POST':
                 return self.post(request)
             elif request.method == 'PUT':
+                setattr(request, 'PUT', self._getData(request))
                 return self.put(request)
             elif request.method == 'DELETE':
+                setattr(request, 'DELETE', self._getData(request))
                 return self.delete(request)
 
     @csrf_exempt
     def view(self, request, obj_id=None):
-        requestData = self._processRequest(request, obj_id)
-
         if request.method == 'GET':
             if request.GET.get('json', False):
                 res = Result()
@@ -104,16 +119,19 @@ class MainView(object):
                 res.append(self.object.json())
 
                 return JsonResponse(res)
-            return self.get(request, obj_id, requestData=requestData)
+            return self.get(request, obj_id)
         elif request.method == 'POST':
-            return self.post(request, obj_id, requestData=requestData)
+            return self.post(request, obj_id)
         elif request.method == 'PUT':
-            return self.put(request, obj_id, requestData=requestData)
+            setattr(request, 'PUT', self._getData(request))
+            return self.put(request, obj_id)
         elif request.method == 'DELETE':
-            return self.delete(request, obj_id, requestData=requestData)
+            setattr(request, 'DELETE', self._getData(request))
+            return self.delete(request, obj_id)
     
     def get(self, request, *args, **kwargs):
-        return self.render(request, kwargs['requestData'])
+        obj = self._getObject(args[0])
+        return self.render(request, {'object': obj})
     
     def post(self, request, *args, **kwargs):
         return HttpResponse()

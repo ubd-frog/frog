@@ -123,7 +123,7 @@ Which UI to use?
                 arg = arg.toLowerCase();
                 var idx = Object.values(this.tags).indexOf(arg);
                 if (idx >= 0) {
-                    value = Object.keys(this.tags)[idx];
+                    value = Object.keys(this.tags)[idx].toInt();
                 }
                 else {
                     new Request.JSON({
@@ -132,7 +132,7 @@ Which UI to use?
                         headers: {"X-CSRFToken": Cookie.read('csrftoken')},
                         onSuccess: function(res) {
                             if (res.isSuccess) {
-                                value = res.value.id;
+                                value = res.value.id.toInt();
                                 self.tags[value] = res.value.name;
                             }
                         }

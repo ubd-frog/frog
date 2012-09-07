@@ -46,9 +46,9 @@ class GalleryView(MainView):
         super(GalleryView, self).__init__(Gallery)
 
     @LoginRequired
-    def get(self, request, obj_id=None, requestData=None):
+    def get(self, request, obj_id=None):
         if obj_id:
-            return super(GalleryView, self).get(request, obj_id, requestData=requestData)
+            return super(GalleryView, self).get(request, obj_id)
         else:
             res = Result()
             res.isSuccess = True
@@ -58,7 +58,7 @@ class GalleryView(MainView):
             return JsonResponse(res)
 
     @LoginRequired
-    def post(self, request, requestData=None):
+    def post(self, request):
         """ Create a Gallery """
         title = request.POST.get('title', 'New Gallery' + str(Gallery.objects.all().values_list('id', flat=True)[0] + 1))
         description = request.POST.get('description', '')
@@ -77,10 +77,11 @@ class GalleryView(MainView):
         return JsonResponse(res)
 
     @LoginRequired
-    def put(self, request, obj_id=None, requestData=None):
+    def put(self, request, obj_id=None):
         """ Adds Image and Video objects to Gallery based on GUIDs """
-        guids = filter(None, requestData['PUT'].get('guids', '').split(','))
-        private = requestData['PUT'].get('private', None)
+        guids = filter(None, request.PUT.get('guids', '').split(','))
+        private = request.PUT.get('private', None)
+        object_ = self._getObject(obj_id)
         
         if guids:
             objects = getObjectsFromGuids(guids)
@@ -88,30 +89,30 @@ class GalleryView(MainView):
             images = filter(lambda x: isinstance(x, Image), objects)
             videos = filter(lambda x: isinstance(x, Video), objects)
 
-            requestData['object'].images.add(*images)
-            requestData['object'].videos.add(*videos)
+            object_.images.add(*images)
+            object_.videos.add(*videos)
         
         if private is not None:
-            requestData['object'].private = json.loads(private)
-            requestData['object'].save()
+            object_.private = json.loads(private)
+            object_.save()
 
         res = Result()
-        res.append(requestData['object'].json())
+        res.append(object_.json())
         res.isSuccess = True
 
         return JsonResponse(res)
 
     @LoginRequired
-    def delete(self, request, obj_id=None, requestData=None):
+    def delete(self, request, obj_id=None):
         """ Removes Image/Video objects from Gallery """
-        guids = requestData['DELETE'].get('guids', '').split(',')
+        guids = request.DELETE.get('guids', '').split(',')
         objects = getObjectsFromGuids(guids)
 
         for o in objects:
             if isinstance(o, Image):
-                requestData['object'].images.remove(o)
+                object_.images.remove(o)
             elif isinstance(o, Video):
-                requestData['object'].videos.remove(o)
+                object_.videos.remove(o)
 
         res = Result()
         res.isSuccess = True
@@ -124,7 +125,6 @@ class GalleryView(MainView):
         Filters Gallery for the requested Image/Video objects.  Returns a Result object with 
         serialized objects
         """
-        requestData = self._processRequest(request, obj_id)
         
         tags = json.loads(request.GET.get('filters', '[[]]'))
         rng = request.GET.get('rng', None)
@@ -137,9 +137,9 @@ class GalleryView(MainView):
 
         models = [ContentType.objects.get(app_label='frog', model=x) for x in models.split(',')]
 
-        return self._filter(requestData, tags=tags, rng=rng, models=models, more=more)
+        return self._filter(request, self._getObject(obj_id), tags=tags, rng=rng, models=models, more=more)
 
-    def _filter(self, requestData, tags=None, models=(Image, Video), rng=None, more=False):
+    def _filter(self, request, object_, tags=None, models=(Image, Video), rng=None, more=False):
         """
         Filters Piece objects from self based on filters, search, and range
 
@@ -158,18 +158,19 @@ class GalleryView(MainView):
         idDict = {}
         objDict = {}
         lastIDs = {}
+        data = {}
 
         logger.debug('init: %f' % (time.clock() - NOW))
 
-        Prefs = json.loads(UserPref.objects.get(user=requestData['request'].user).data)
+        Prefs = json.loads(UserPref.objects.get(user=request.user).data)
         gRange = Prefs['batchSize']
-        requestData['request'].session.setdefault('frog_range', '0:%i' % gRange)
+        request.session.setdefault('frog_range', '0:%i' % gRange)
 
         if rng:
             s, e = [int(x) for x in rng.split(':')]
         else:
             if more:
-                s = int(requestData['request'].session.get('frog_range', '0:%i' % gRange).split(':')[1])
+                s = int(request.session.get('frog_range', '0:%i' % gRange).split(':')[1])
                 e = s + gRange
                 s, e = 0, gRange
             else:
@@ -184,21 +185,13 @@ class GalleryView(MainView):
             lastIndex = indexes[0]
             if more:
                 ## -- This is a request for more results
-                #self.request.session.setdefault('last_%s_id' % m.model, lastIndex + 1)
-                #lastIDs.setdefault('last_%s_id' % m.model, lastIndex + 1)
-                idx = requestData['request'].session.get('last_%s_id' % m.model, lastIndex + 1)
+                idx = request.session.get('last_%s_id' % m.model, lastIndex + 1)
                 lastIDs.setdefault('last_%s_id' % m.model, idx)
             else:
-                #self.request.session['last_%s_id' % m.model] = lastIndex + 1
                 lastIDs['last_%s_id' % m.model] = lastIndex + 1
-
-            #offset = lastIndex - self.request.session['last_%s_id' % m.model] + 1
-            #offset = lastIndex - lastIDs['last_%s_id' % m.model] + 1
             
             ## -- Start with objects within range
-            #idDict[m.model] = m.model_class().objects.filter(gallery=self.object, id__lt=self.request.session['last_%s_id' % m.model])
-            idDict[m.model] = m.model_class().objects.filter(gallery=requestData['object'], id__lt=lastIDs['last_%s_id' % m.model])
-            print requestData['object']
+            idDict[m.model] = m.model_class().objects.filter(gallery=object_, id__lt=lastIDs['last_%s_id' % m.model])
             logger.debug(m.model + '_initial_query: %f' % (time.clock() - NOW))
 
             if tags:
@@ -261,24 +254,19 @@ class GalleryView(MainView):
             for m in models:
                 if isinstance(i, m.model_class()):
                     ## -- set the last ID per model for future lookups
-                    #self.request.session['last_%s_id' % m.model] = i.id
                     lastIDs['last_%s_id' % m.model] = i.id
+                    data['last_%s_id' % m.model] = i.id
             res.append(i.json())
         logger.debug('serialized: %f' % (time.clock() - NOW))
 
-        requestData['request'].session['frog_range'] = ':'.join((str(s),str(e)))
+        request.session['frog_range'] = ':'.join((str(s),str(e)))
 
         logger.debug('total: %f' % (time.clock() - NOW))
-        requestData['request'].session['last_image_id'] = lastIDs.get('last_image_id', 0)
-        requestData['request'].session['last_video_id'] = lastIDs.get('last_video_id', 0)
-        data = {
-            'count': len(objects),
-            #'last_image_id': self.request.session.get('last_image_id', 0),
-            'last_image_id': lastIDs.get('last_image_id', 0),
-            #'last_video_id': self.request.session.get('last_video_id', 0),
-            'last_video_id': lastIDs.get('last_video_id', 0),
-            'queries': connection.queries,
-        }
+        request.session['last_image_id'] = lastIDs.get('last_image_id', 0)
+        request.session['last_video_id'] = lastIDs.get('last_video_id', 0)
+        
+        data['count'] = len(objects)
+        data['queries'] = connection.queries
 
         res.value = data
 
@@ -298,7 +286,7 @@ class GalleryView(MainView):
 
         return o
 
-    def _sortByCreated(self, a,b):
+    def _sortByCreated(self, a, b):
         """ Sort function for object by created date """
         if a.created < b.created:
             return 1
@@ -358,8 +346,8 @@ class TagView(MainView):
 
     @LoginRequired
     def put(self, request, obj_id=None):
-        tagList = filter(None, request.POST.get('tags', '').split(','))
-        guids = request.POST.get('guids', '').split(',')
+        tagList = filter(None, request.PUT.get('tags', '').split(','))
+        guids = request.PUT.get('guids', '').split(',')
         res = Result()
         res.isSuccess = True
 
@@ -506,7 +494,7 @@ class ImageView(MainView):
         super(ImageView, self).__init__(model)
 
     @LoginRequired
-    def post(self, request, obj_id, requestData=None):
+    def post(self, request, obj_id):
         tags = request.POST.get('tags', '').split(',')
         res = Result()
         for tag in tags:
@@ -516,7 +504,7 @@ class ImageView(MainView):
                 t, created = Tag.objects.get_or_create(name=tag)
                 if created:
                     res.append(t.json())
-            requestData['object'].tags.add(t)
+            object_.tags.add(t)
 
         res.isSuccess = True
 
@@ -524,11 +512,12 @@ class ImageView(MainView):
 
     @LoginRequired
     def delete(self, request, obj_id):
-        requestData['object'].deleted = True
-        requestData['object'].save()
+        object_ = self._getObject(obj_id)
+        object_.deleted = True
+        object_.save()
         res = Result()
         res.isSuccess = True
-        res.value = requestData['object'].json()
+        res.value = object_.json()
         return JsonResponse(res)
 
 
