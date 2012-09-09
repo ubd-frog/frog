@@ -18,7 +18,7 @@ Frog.Uploader = new Class({
             },
             filters: [
                 {title: "Image files", extensions: "jpg,png"},
-                {title: "Video files", extensions: "mp4,avi,mov"}
+                {title: "Video files", extensions: "mp4,avi,mov,wmv"}
             ]
         });
 

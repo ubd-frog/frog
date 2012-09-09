@@ -107,6 +107,7 @@ class GalleryView(MainView):
         """ Removes Image/Video objects from Gallery """
         guids = request.DELETE.get('guids', '').split(',')
         objects = getObjectsFromGuids(guids)
+        object_ = self._getObject(obj_id)
 
         for o in objects:
             if isinstance(o, Image):
@@ -495,6 +496,7 @@ class ImageView(MainView):
 
     @LoginRequired
     def post(self, request, obj_id):
+        object_ = self._getObject(obj_id)
         tags = request.POST.get('tags', '').split(',')
         res = Result()
         for tag in tags:

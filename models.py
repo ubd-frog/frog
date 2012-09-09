@@ -9,7 +9,7 @@ from django.core.exceptions import ObjectDoesNotExist
 
 from settings import MEDIA_ROOT, FFMPEG, IMAGE_SIZE_CAP, IMAGE_SMALL_SIZE, THUMB_SIZE
 
-from videoThread import VideoThread, JsonQueue
+from videoThread import VideoThread, JsonQueue, parseInfo
 
 from path import path as Path
 from PIL import Image as pilImage
@@ -229,18 +229,10 @@ class Video(Piece):
         cmd = '%s -i "%s"' % (FFMPEG, hashPath.replace('/', '\\'))
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         infoString = proc.stdout.readlines()
-        width = 100
-        height = 100
-        for n in infoString:
-            n = n.strip()
-            if n.startswith('Stream'):
-                dim = n.split(',')[2].strip()
-                width, height = dim.split('x')
-                width = width.split(' ')[0]
-                height = height.split(' ')[0]
-                break
-        self.width = width
-        self.height = height
+        videodata = parseInfo(infoString)
+        
+        self.width = int(videodata['video'][0]['width'])
+        self.height = int(videodata['video'][0]['height'])
 
         ## -- Save thumbnail and put into queue
         thumbnail = Path(hashPath.parent.replace('/', '\\')) / "_%s.jpg" % hashVal
