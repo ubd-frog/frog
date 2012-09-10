@@ -47,6 +47,7 @@ class JsonQueue(object):
 
     def complete(self, obj):
         self._get()
+        self.data['building'] = {}
         self.data['completed'].append(obj)
         self._set()
 
@@ -62,10 +63,17 @@ class VideoThread(Thread):
             if self.queue.qsize():
                 isH264 = False
                 item = self.queue.get()
+
+                item.video = 'frog/i/processing.mp4'
+                item.save()
+                
                 self.json.pop()
                 infile = "%s%s" % (MEDIA_ROOT, item.source.name)
                 cmd = '%s -i "%s"' % (FFMPEG, infile)
                 sourcepath = Path(MEDIA_ROOT) / item.source.name
+
+                self.json.setBuilding(item.title, 'Getting video information')
+
                 proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
                 infoString = proc.stdout.readlines()
                 videodata = parseInfo(infoString)
@@ -75,8 +83,11 @@ class VideoThread(Thread):
                 scrubstr = "%02d:%02d:%02d" % (h, m, s)
                 scrub = videodata['duration'] <= scrubstr
 
+                outfile = sourcepath.parent / ("_%s.mp4" % item.hash)
+
                 if not isH264 or scrub:
-                    outfile = sourcepath.parent / ("_%s.mp4" % item.hash)
+                    self.json.setBuilding(item.title, 'Converting to MP4')
+                    
                     cmds = '{exe} -i "{infile}" {args} "{outfile}"'.format(
                         exe=FFMPEG,
                         infile=infile,
@@ -86,7 +97,9 @@ class VideoThread(Thread):
                     proc = subprocess.Popen(cmds, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
                     proc.communicate()
 
-                    item.video = outfile.replace('\\', '/').replace(MEDIA_ROOT, '')
+                item.video = outfile.replace('\\', '/').replace(MEDIA_ROOT, '')
+
+                self.json.setBuilding(item.title, 'Saving asset')
 
                 item.save()
                 self.json.complete(item.json())

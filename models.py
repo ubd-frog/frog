@@ -256,6 +256,9 @@ class Video(Piece):
         if not self.guid:
             self.guid = self.getGuid().guid
 
+        ## -- Set the temp video while processing
+        self.video = 'frog/i/queued.mp4'
+
         self.save()
 
         gJsonQueue.append(self.json())
