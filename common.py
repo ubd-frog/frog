@@ -5,7 +5,8 @@ import collections
 import random
 import string
 import hashlib
-from pprint import pprint
+import imp
+
 try:
     import ujson as json
 except ImportError:
@@ -21,7 +22,9 @@ from django.core.exceptions import ObjectDoesNotExist
 from settings import MEDIA_URL
 
 from frog.models import Image, Video
+from frog.plugin import FrogPluginRegistry
 
+from path import path as Path
 
 
 def userToJson(user, context=None, **kwargs):
@@ -98,7 +101,6 @@ class MainView(object):
         if kwargs.has_key('obj_id'):
             return self.view(request, kwargs['obj_id'])
         else:
-            #self._processRequest(request)
             if request.method == 'GET':
                 return self.get(request)
             elif request.method == 'POST':
@@ -189,3 +191,51 @@ def commentToJson(comment):
     }
 
     return obj
+
+def getPluginContext():
+    plugins = __discoverPlugins()
+    js = []
+    css = []
+    buttons = []
+    defaultdata = {
+        'label': '',
+        'icon': '/frog/i/photos.png',
+        'callback': '',
+        'js': [],
+        'css': []
+    }
+
+    for plugin in plugins.values():
+        plugin = plugin()
+        buttondata = plugin.buttonHook()
+
+        if buttondata:
+            defdict = defaultdata.copy()
+            defdict.update(buttondata)
+
+            buttons.append([defdict['label'], defdict['icon'], defdict['callback']])
+            js += defdict['js']
+            css += defdict['css']
+
+    data = {
+        'buttons': buttons,
+        'js': list(set(js)),
+        'css': list(set(css)),
+    }
+
+    return data
+
+def __discoverPlugins():
+    """ Discover the plugin classes contained in Python files, given a
+        list of directory names to scan. Return a list of plugin classes.
+    """
+    ROOT = Path(__file__).parent.parent
+    for pyfile in ROOT.walk('frog_plugin.py'):
+        file_, path, descr = imp.find_module(pyfile.namebase, [pyfile.parent])
+        if file_:
+            imp.load_module(pyfile.namebase, file_, path, descr)
+
+    return FrogPluginRegistry.plugins
+
+
+PluginContext = getPluginContext()

@@ -28,6 +28,12 @@ Which UI to use?
     else {
         global.Frog = Frog;
     }
+    Ext.Loader.setConfig({
+        enabled:true,
+        paths: {
+            'Ext': '/static/frog/j/extjs-4.1.0/src'
+        }
+    });
 
     Frog.pixel = null;
     Frog.getPixel = function() {
@@ -53,6 +59,7 @@ Which UI to use?
             return {width: width * scale, height: height * scale};
         }
     }
+    
     Frog.Prefs = {
         init: function() {
             new Request.JSON({
@@ -177,7 +184,6 @@ Which UI to use?
     Frog.CommentManager = new Class({
         Implements: Events,
         initialize: function() {
-            Ext.require(['*']);
             var self = this;
             this.container = new Element('div', {
                 id: 'frog_comments_container',

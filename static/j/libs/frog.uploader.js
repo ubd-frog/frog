@@ -88,7 +88,6 @@ Frog.Uploader = new Class({
             return this.uploaderList;
         }
         
-        Ext.require(['*']);
         var store = Ext.create('Ext.data.ArrayStore', {
             fields: [
                 {name: 'id'},

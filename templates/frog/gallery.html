@@ -10,6 +10,9 @@
         <link id="page_favicon" href="{{MEDIA_URL}}frog/i/favicon.ico" rel="icon" type="image/x-icon" />
         <link rel="stylesheet" href="{{MEDIA_URL}}frog/c/ext-all-gray.css">
         <link rel="stylesheet" href="{{MEDIA_URL}}frog/c/style.css">
+        {% for stylesheet in plugins.css%}
+        <link rel="stylesheet" href="{{MEDIA_URL}}{{stylesheet}}">
+        {% endfor %}
 
         <script src="{{MEDIA_URL}}frog/j/libs/modernizr-2.5.3.min.js"></script>
         <script src="{{MEDIA_URL}}frog/j/ext-all.js"></script>
@@ -23,6 +26,13 @@
                 g = new Frog.Gallery(undefined, {{object.id}}, {
                     private: {{object.private|yesno:'true,false'}}
                 });
+                {% for button in plugins.buttons %}
+                Frog.UI.addTool(
+                    '{{button.0}}',
+                    '{{MEDIA_URL}}{{button.1}}',
+                    {{button.2}}
+                );
+                {% endfor %}
             });
             {% endblock %}
         </script>
@@ -47,10 +57,16 @@
         <script src="{{MEDIA_URL}}frog/j/libs/frog.viewer.js"></script>
         <script src="{{MEDIA_URL}}frog/j/libs/frog.queryBuilder.js"></script>
         <script src="{{MEDIA_URL}}frog/j/libs/frog.uploader.js"></script>
+        <script src="{{MEDIA_URL}}frog/j/libs/frog.observer.js"></script>
+        <script src="{{MEDIA_URL}}frog/j/libs/frog.ui.js"></script>
         <script src="{{MEDIA_URL}}frog/j/libs/frog.gallery.js"></script>
 
         <script src="{{MEDIA_URL}}frog/j/plugins.js"></script>
         <script src="{{MEDIA_URL}}frog/j/script.js"></script>
+
+        {% for script in plugins.js%}
+        <script src="{{MEDIA_URL}}{{script}}"></script>
+        {% endfor %}
         <!-- end scripts -->
     </body>
 </html>
