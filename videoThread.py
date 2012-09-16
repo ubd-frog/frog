@@ -1,4 +1,4 @@
-
+import logging
 import re
 import json
 import time
@@ -11,98 +11,66 @@ from settings import MEDIA_ROOT, FFMPEG, FFMPEG_ARGS, SCRUB_DURATION, SCRUB_FFMP
 from path import path as Path
 
 TIMEOUT = 1
+logger = logging.getLogger('dev.frog')
 
-
-class JsonQueue(object):
-    def __init__(self):
-        self.f = Path(__file__).parent / 'video.json'
-        self.data = None
-        self._get()
-
-    def _get(self):
-        self.data = json.loads(self.f.text())
-
-    def _set(self):
-        self.f.write_text(json.dumps(self.data, indent=4))
-
-    def pop(self):
-        self._get()
-        if self.data['queued']:
-            obj = self.data['queued'].pop(0)
-            self._set()
-
-            return obj
-
-        return None
-
-    def append(self, obj):
-        self._get()
-        self.data['queued'].append(obj)
-        self._set()
-
-    def setBuilding(self, key, value):
-        self._get()
-        self.data['building'][key] = value
-        self._set()
-
-    def complete(self, obj):
-        self._get()
-        self.data['building'] = {}
-        self.data['completed'].append(obj)
-        self._set()
 
 class VideoThread(Thread):
     def __init__(self, queue, *args, **kwargs):
         super(VideoThread, self).__init__(*args, **kwargs)
-        self.json = JsonQueue()
         self.queue = queue
         self.daemon = True
 
     def run(self):
         while True:
             if self.queue.qsize():
-                isH264 = False
-                item = self.queue.get()
-
-                item.video = 'frog/i/processing.mp4'
-                item.save()
-                
-                self.json.pop()
-                infile = "%s%s" % (MEDIA_ROOT, item.source.name)
-                cmd = '%s -i "%s"' % (FFMPEG, infile)
-                sourcepath = Path(MEDIA_ROOT) / item.source.name
-
-                self.json.setBuilding(item.title, 'Getting video information')
-
-                proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-                infoString = proc.stdout.readlines()
-                videodata = parseInfo(infoString)
-                isH264 = videodata['video'][0]['codec'].find('h264') != -1
-                m, s = divmod(SCRUB_DURATION, 60)
-                h, m = divmod(m, 60)
-                scrubstr = "%02d:%02d:%02d" % (h, m, s)
-                scrub = videodata['duration'] <= scrubstr
-
-                outfile = sourcepath.parent / ("_%s.mp4" % item.hash)
-
-                if not isH264 or scrub:
-                    self.json.setBuilding(item.title, 'Converting to MP4')
+                try:
+                    isH264 = False
+                    ## -- Get the video object to work on
+                    item = self.queue.get()
+                    ## -- Set the video to processing
+                    logger.info('processing')
+                    item.video = 'frog/i/processing.mp4'
+                    item.save()
+                    ## -- Set the status of the queue item
+                    item.queue.setStatus(item.queue.Processing)
+                    item.queue.setMessage('Processing video...')
                     
-                    cmds = '{exe} -i "{infile}" {args} "{outfile}"'.format(
-                        exe=FFMPEG,
-                        infile=infile,
-                        args=SCRUB_FFMPEG_ARGS if scrub else FFMPEG_ARGS,
-                        outfile=outfile,
-                    )
-                    proc = subprocess.Popen(cmds, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-                    proc.communicate()
+                    infile = "%s%s" % (MEDIA_ROOT, item.source.name)
+                    cmd = '%s -i "%s"' % (FFMPEG, infile)
+                    sourcepath = Path(MEDIA_ROOT) / item.source.name
 
-                item.video = outfile.replace('\\', '/').replace(MEDIA_ROOT, '')
+                    ## -- Get the video information
+                    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                    infoString = proc.stdout.readlines()
+                    videodata = parseInfo(infoString)
+                    isH264 = videodata['video'][0]['codec'].find('h264') != -1
+                    m, s = divmod(SCRUB_DURATION, 60)
+                    h, m = divmod(m, 60)
+                    scrubstr = "%02d:%02d:%02d" % (h, m, s)
+                    scrub = videodata['duration'] <= scrubstr
 
-                self.json.setBuilding(item.title, 'Saving asset')
+                    outfile = sourcepath.parent / ("_%s.mp4" % item.hash)
 
-                item.save()
-                self.json.complete(item.json())
+                    ## -- Further processing is needed if not h264 or needs to be scrubbable
+                    if not isH264 or scrub:
+                        item.queue.setMessage('Converting to MP4...')
+                        
+                        cmds = '{exe} -i "{infile}" {args} "{outfile}"'.format(
+                            exe=FFMPEG,
+                            infile=infile,
+                            args=SCRUB_FFMPEG_ARGS if scrub else FFMPEG_ARGS,
+                            outfile=outfile,
+                        )
+                        proc = subprocess.Popen(cmds, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                        proc.communicate()
+
+                    ## -- Set the video to the result
+                    logger.info('Done')
+                    item.video = outfile.replace('\\', '/').replace(MEDIA_ROOT, '')
+                    item.queue.setStatus(item.queue.Completed)
+                    item.save()
+                except Exception, e:
+                    logger.error(str(e))
 
                 time.sleep(TIMEOUT)
 

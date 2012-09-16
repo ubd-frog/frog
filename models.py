@@ -9,7 +9,7 @@ from django.core.exceptions import ObjectDoesNotExist
 
 from settings import MEDIA_ROOT, FFMPEG, IMAGE_SIZE_CAP, IMAGE_SMALL_SIZE, THUMB_SIZE
 
-from videoThread import VideoThread, JsonQueue, parseInfo
+from videoThread import VideoThread, parseInfo
 
 from path import path as Path
 from PIL import Image as pilImage
@@ -21,7 +21,6 @@ gThumbSize = THUMB_SIZE
 gQueue = Queue.Queue()
 gVideoThread = VideoThread(gQueue)
 gVideoThread.start()
-gJsonQueue = JsonQueue()
 
 DefaultPrefs = {
     'backgroundColor': '000000',
@@ -258,10 +257,11 @@ class Video(Piece):
 
         ## -- Set the temp video while processing
         self.video = 'frog/i/queued.mp4'
+        queuedvideo = VideoQueue(video=self)
+        queuedvideo.save()
 
         self.save()
 
-        gJsonQueue.append(self.json())
         gQueue.put(self)
 
     def json(self):
@@ -271,6 +271,24 @@ class Video(Piece):
         obj['video_thumbnail'] = self.video_thumbnail.url if self.video_thumbnail else ''
 
         return obj
+
+
+class VideoQueue(models.Model):
+    Queued = 0
+    Processing = 1
+    Completed = 2
+
+    video = models.OneToOneField(Video, related_name='queue')
+    status = models.SmallIntegerField(default=0)
+    message = models.TextField(blank=True, null=True)
+
+    def setStatus(self, status):
+        self.status = status
+        self.save()
+
+    def setMessage(self, message):
+        self.message = message
+        self.save()
 
 
 class Gallery(models.Model):
@@ -350,5 +368,5 @@ class RSSStorage(models.Model):
 
 
 ## -- Queue any remaining videos that did not finish prior to restart
-for guid in [o['id'] for o in gJsonQueue.data['queued']]:
-    gQueue.put(Video.objects.get(pk=guid))
+# for guid in [o['id'] for o in gJsonQueue.data['queued']]:
+#     gQueue.put(Video.objects.get(pk=guid))
