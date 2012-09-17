@@ -173,7 +173,6 @@ Frog.UI = (function(Frog) {
         return grid;
     }
     function buildPrefMenu() {
-        var self = this;
         var colorMenu = Ext.create('Ext.menu.ColorPicker', {
             height: 24,
             handler: function(cm, color){
@@ -442,7 +441,7 @@ Frog.UI = (function(Frog) {
             bodyStyle: 'padding: 5px;'
         });
         win.show();
-        var input = new Element('input', {placeholder: "Search"});
+        var input = new Element('input', {autofocus: 'autofocus', placeholder: "Search"});
 
         var fp = Ext.create('Ext.FormPanel', {
             items: [{
@@ -456,7 +455,7 @@ Frog.UI = (function(Frog) {
             buttons: [{
                 text: 'Send',
                 handler: function() {
-                    self.switchArtistCallback(input.value);
+                    switchArtistCallback(input.value);
                     win.close();
                 }
             },{
