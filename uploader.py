@@ -18,6 +18,15 @@ from settings import MEDIA_ROOT
 
 from path import path as Path
 
+EXT = {
+    'image': ['.jpg', '.png', '.gif'],
+    'video': ['.mp4', '.avi', '.wmv', '.mov']
+}
+
+
+class MediaTypeError(Exception):
+    pass
+
 
 class Uploader(object):
     def __init__(self):
@@ -53,19 +62,22 @@ class Uploader(object):
                 uniqueName = Piece.getUniqueID(foreignPath, user)
                 
                 if f.content_type.startswith('image'):
+                    if Path(filename).ext not in EXT['image']:
+                        raise MediaTypeError
                     model = Image
                 else:
+                    if Path(filename).ext not in EXT['video']:
+                        raise MediaTypeError
                     model = Video
 
                 obj, created = model.objects.get_or_create(unique_id=uniqueName, defaults={'author': user})
                 guid = obj.getGuid()
-                hashVal = getHashForFile(f);
+                hashVal = getHashForFile(f)
 
                 if hashVal == obj.hash:
                     for gal in galleries:
                         g = Gallery.objects.get(pk=int(gal))
                         obj.gallery_set.add(g)
-                        #g.images.add(self)
                     res.isSuccess = True
                     res.message = "Files were the same"
 
@@ -95,6 +107,10 @@ class Uploader(object):
             except Exception, e:
                 res.isError = True
                 res.message = str(e)
+                return JsonResponse(res)
+            except MediaTypeError:
+                res.isError = True
+                res.message = 'Filetype not supported'
                 return JsonResponse(res)
         else:
             res.isError = True
