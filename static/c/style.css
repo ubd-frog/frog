@@ -215,6 +215,7 @@ td { vertical-align: top; }
 body {
     background: #202020;
     overflow-y: scroll;
+    min-height: 800px;
 }
 
 /* EXT overrides */
