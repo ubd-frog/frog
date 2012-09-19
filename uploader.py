@@ -62,7 +62,7 @@ class Uploader(object):
                 uniqueName = Piece.getUniqueID(foreignPath, user)
                 
                 if f.content_type.startswith('image'):
-                    if Path(filename).ext not in EXT['image']:
+                    if Path(filename).ext.lower() not in EXT['image']:
                         raise MediaTypeError
                     model = Image
                 else:
@@ -104,14 +104,18 @@ class Uploader(object):
                         self.handle_uploaded_file(dest, f)
 
                 res.isSuccess = True
-            except Exception, e:
-                res.isError = True
-                res.message = str(e)
-                return JsonResponse(res)
             except MediaTypeError:
                 res.isError = True
                 res.message = 'Filetype not supported'
+                
                 return JsonResponse(res)
+            
+            except Exception, e:
+                res.isError = True
+                res.message = str(e)
+
+                return JsonResponse(res)
+
         else:
             res.isError = True
             res.message = "No file found"

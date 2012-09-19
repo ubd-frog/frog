@@ -54,7 +54,10 @@ Frog.Uploader = new Class({
         });
 
         uploader.bind('UploadProgress', function(up, file) {
-            self.uploaderList.store.getById(file.id).set('percent', file.percent);
+            var row = self.uploaderList.store.getById(file.id);
+            if (row) {
+                row.set('percent', file.percent);
+            }
         });
 
         uploader.bind('FileUploaded', function(up, file, res) {
