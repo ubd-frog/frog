@@ -4,6 +4,11 @@ Frog
 Frog is released under the MIT license. It is simple and easy to understand and places almost no restrictions on what you can do with Frog.
 [More Information](http://en.wikipedia.org/wiki/MIT_License)
 
+Some portions of Frog utilize GPL or LGPL code or apps:
+* Plupload under GPL2
+* ExtJS under GPL3
+* ffmpeg under LGPL
+
 Frog is a Server and Client solution for hosting and serving media files.  The initial build was intended for creative studios, but could be used for anything, even a home solution.  It was not meant for a front facing tool as the bandwidth costs would be outrageous.
 
 With Frog there are a few key points that make it a perfect solution for your team(s) creative uses.
