@@ -86,7 +86,7 @@ class Command(BaseCommand):
 
                 tags = []
                 if options['dirnames']:
-                    tags = file_.parent.replace(options['topdir'], '').split('/')
+                    tags = file_.parent.replace(options['topdir'], '').replace('\\', '/').split('/')
                     tags = filter(None, tags)
                 
                 obj.export(hashVal, hashPath, tags=tags)
