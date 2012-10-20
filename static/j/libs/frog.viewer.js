@@ -153,15 +153,13 @@ Frog.Viewer = new Class({
     render: function() {
         this.clear();
         
-        try {
-            this.ctx.drawImage(
-                this.image, 
-                this.xform.elements[2][0],
-                this.xform.elements[2][1],
-                this.xform.elements[0][0],
-                this.xform.elements[1][1]
-            );
-        } catch (e) {}
+        this.ctx.drawImage(
+            this.image, 
+            this.xform.elements[2][0],
+            this.xform.elements[2][1],
+            this.xform.elements[0][0],
+            this.xform.elements[1][1]
+        );
     },
     center: function(scale) {
         scale = scale || 1.0;
@@ -296,6 +294,7 @@ Frog.Viewer = new Class({
         this.countLabel.set('text', (idx + 1) + '/' + this.objects.length);
     },
     _loadCallback: function() {
+        this.loading.hide();
         this.xform = this.main = $M([
             [this.image.width,0,0],
             [0,this.image.height,0],
@@ -306,8 +305,9 @@ Frog.Viewer = new Class({
         this.fitToWindow();
     },
     show: function() {
-        this.element.show();
         this.clear();
+        this.image.src = Frog.loading.src;
+        this.element.show();
 
         this.canvas.addEvent('mousedown', this.events.down);
         window.addEvent('mouseup', this.events.up);
@@ -326,7 +326,6 @@ Frog.Viewer = new Class({
         }
 
         this.element.setStyle('background-color', Frog.Prefs.backgroundColor);
-        
         
         this.fireEvent('onShow', [this]);
         this.isOpen = true;

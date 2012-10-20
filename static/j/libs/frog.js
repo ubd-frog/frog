@@ -41,6 +41,10 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     });
 
     Frog.pixel = null;
+    // -- Set the loading image
+    Frog.loading = new Image();
+    Frog.loading.src = '/static/frog/i/loading.png';
+
     Frog.getPixel = function() {
         if (Frog.pixel === null) {
             Frog.pixel = '/static/frog/i/pixel.png';
