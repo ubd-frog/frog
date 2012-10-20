@@ -90,7 +90,7 @@ Frog.Gallery = new Class({
         }.bind(this));
         this.viewer.addEvent('hide', function() {
             self.container.setStyle('height', 'auto')
-            this.resize();
+            //this.resize();
             window.scrollTo(0,this.y);
         }.bind(this));
         this.keyboard = new Keyboard({
@@ -208,7 +208,7 @@ Frog.Gallery = new Class({
         var key = (typeOf(e) === 'string') ? e : e.newURL;
         var data = JSON.parse(unescape(key.split('#')[1]));
         data.filters = JSON.stringify(data.filters);
-        if (typeof data.viewer === 'undefined') {
+        if (typeof data.viewer === 'undefined' && this.viewer.isOpen) {
             this.viewer.hide();
         }
         if (data.filters !== this.requestData.filters || !this.requestData.filters) {
@@ -290,7 +290,7 @@ Frog.Gallery = new Class({
         var heightDelta = this.container.getHeight() - window.getScroll().y;
         var buffer = 300;
         
-        if (heightDelta < window.getHeight() + buffer && this.requestValue.count > 0) {
+        if (heightDelta < window.getHeight() + buffer && this.requestValue.count > 0 && !this.viewer.isOpen) {
             this.request(undefined, true)
         }
     },
