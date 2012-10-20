@@ -26,7 +26,7 @@ MEDIA_ROOT = settings.MEDIA_ROOT
 MEDIA_URL = settings.MEDIA_URL
 MANAGERS = settings.MANAGERS
 ## -- Absolute url
-SITE_URL = 'http://127.0.0.1:8080'
+SITE_URL = 'http://127.0.0.1'
 DOMAIN = 'gmail.com'
 ## -- Video settings
 FFMPEG = 'C:/bin/ffmpeg.exe'

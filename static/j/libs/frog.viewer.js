@@ -294,7 +294,6 @@ Frog.Viewer = new Class({
         this.countLabel.set('text', (idx + 1) + '/' + this.objects.length);
     },
     _loadCallback: function() {
-        this.loading.hide();
         this.xform = this.main = $M([
             [this.image.width,0,0],
             [0,this.image.height,0],
