@@ -28,7 +28,7 @@ import subprocess
 import shutil
 from threading import Thread
 
-from settings import MEDIA_ROOT, FFMPEG, FFMPEG_ARGS, SCRUB_DURATION, SCRUB_FFMPEG_ARGS
+from django.conf import settings
 
 from path import path as Path
 
@@ -57,16 +57,16 @@ class VideoThread(Thread):
                     item.queue.setStatus(item.queue.Processing)
                     item.queue.setMessage('Processing video...')
                     
-                    infile = "%s%s" % (MEDIA_ROOT, item.source.name)
-                    cmd = '%s -i "%s"' % (FFMPEG, infile)
-                    sourcepath = Path(MEDIA_ROOT) / item.source.name
+                    infile = "%s%s" % (settings.MEDIA_ROOT, item.source.name)
+                    cmd = '%s -i "%s"' % (settings.FFMPEG, infile)
+                    sourcepath = Path(settings.MEDIA_ROOT) / item.source.name
 
                     ## -- Get the video information
                     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
                     infoString = proc.stdout.readlines()
                     videodata = parseInfo(infoString)
                     isH264 = videodata['video'][0]['codec'].find('h264') != -1
-                    m, s = divmod(SCRUB_DURATION, 60)
+                    m, s = divmod(settings.SCRUB_DURATION, 60)
                     h, m = divmod(m, 60)
                     scrubstr = "%02d:%02d:%02d" % (h, m, s)
                     scrub = videodata['duration'] <= scrubstr
@@ -78,9 +78,9 @@ class VideoThread(Thread):
                         item.queue.setMessage('Converting to MP4...')
                         
                         cmds = '{exe} -i "{infile}" {args} "{outfile}"'.format(
-                            exe=FFMPEG,
+                            exe=settings.FFMPEG,
                             infile=infile,
-                            args=SCRUB_FFMPEG_ARGS if scrub else FFMPEG_ARGS,
+                            args=settings.SCRUB_FFMPEG_ARGS if scrub else settings.FFMPEG_ARGS,
                             outfile=outfile,
                         )
                         proc = subprocess.Popen(cmds, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -88,7 +88,7 @@ class VideoThread(Thread):
 
                     ## -- Set the video to the result
                     logger.info('Done')
-                    item.video = outfile.replace('\\', '/').replace(MEDIA_ROOT, '')
+                    item.video = outfile.replace('\\', '/').replace(settings.MEDIA_ROOT, '')
                     item.queue.setStatus(item.queue.Completed)
                     item.save()
                 except Exception, e:

@@ -24,7 +24,8 @@
             var t, thumbnails, g, DEBUG;
             window.addEvent('domready', function() {
                 g = new Frog.Gallery(undefined, {{object.id}}, {
-                    private: {{object.private|yesno:'true,false'}}
+                    private: {{object.private|yesno:'true,false'}},
+                    upload: {{object.uploads|yesno:'true,false'}}
                 });
                 {% for button in plugins.buttons %}
                 Frog.UI.addTool(

@@ -19,7 +19,7 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTI
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 
-
+import sys
 import time
 import datetime
 import urlparse
@@ -40,8 +40,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.models import User
 from django.views.decorators.csrf import csrf_exempt
 from django.core.exceptions import ObjectDoesNotExist
-
-from settings import MEDIA_URL
+from django.conf import settings
 
 from frog.models import Image, Video
 from frog.plugin import FrogPluginRegistry
@@ -251,7 +250,7 @@ def __discoverPlugins():
     """ Discover the plugin classes contained in Python files, given a
         list of directory names to scan. Return a list of plugin classes.
     """
-    ROOT = Path(__file__).parent.parent
+    ROOT = Path(sys.path[0])
     for pyfile in ROOT.walk('frog_plugin.py'):
         file_, path, descr = imp.find_module(pyfile.namebase, [pyfile.parent])
         if file_:
@@ -259,5 +258,4 @@ def __discoverPlugins():
 
     return FrogPluginRegistry.plugins
 
-
-#PluginContext = getPluginContext()
+PluginContext = getPluginContext()

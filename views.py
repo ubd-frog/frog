@@ -40,6 +40,7 @@ from django.utils.decorators import method_decorator
 from django.contrib.comments.models import Comment
 from django.core.mail import EmailMultiAlternatives, send_mail
 from django.template.loader import render_to_string
+from django.conf import settings
 
 try:
     from haystack.query import SearchQuerySet
@@ -53,8 +54,6 @@ from common import MainView, Result, JsonResponse, getObjectsFromGuids, commentT
 from uploader import uploader
 
 from sendFile import send_file, send_zipfile
-
-from settings import MEDIA_ROOT, MANAGERS, DOMAIN
 
 
 logger = logging.getLogger('dev.frog')
@@ -746,7 +745,7 @@ def switchArtist(request):
         first, last = artist.lower().split(' ')
         author = User.objects.get_or_create(first_name=first, last_name=last, defaults={
             'username': '%s%s' % (first[0], last),
-            'email': '%s%s@%s' % (first[0], last, DOMAIN),
+            'email': '%s%s@%s' % (first[0], last, settings.DOMAIN),
         })[0]
         tag = Tag.objects.get_or_create(name=artist.lower(), defaults={'artist': True})[0]
         objects = getObjectsFromGuids(guids)
@@ -776,7 +775,7 @@ def artistLookup(request):
 @login_required
 def helpMe(request):
     msg = request.POST.get('message')
-    toAddr = [m[1] for m in MANAGERS]
+    toAddr = [m[1] for m in settings.MANAGERS]
     send_mail('Frog Help', msg, request.user.email, toAddr)
 
     return HttpResponse()

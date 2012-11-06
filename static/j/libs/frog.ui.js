@@ -23,6 +23,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 Frog.UI = (function(Frog) {
     var ID, Store, ToolBar;
     var navmenu = Ext.create('Ext.menu.Menu');
+    var uploadEnabled = false;
 
 
     // -- Models
@@ -60,6 +61,10 @@ Frog.UI = (function(Frog) {
         ID = id;
     }
 
+    function enableUploads() {
+        uploadEnabled = true;
+    }
+
     function render(el) {
         var managemenu, menuremove, menucopy, menudownload, menuswitchartist;
         ToolBar.render(el);
@@ -70,12 +75,14 @@ Frog.UI = (function(Frog) {
             icon: FrogStaticRoot + '/frog/i/compass.png',
             menu: navmenu
         });
-        // -- Upload button
-        ToolBar.add({
-            id: 'frogBrowseButton',
-            text: 'Upload',
-            icon: FrogStaticRoot + '/frog/i/add.png'
-        });
+        if (uploadEnabled) {
+            // -- Upload button
+            ToolBar.add({
+                id: 'frogBrowseButton',
+                text: 'Upload',
+                icon: FrogStaticRoot + '/frog/i/add.png'
+            });
+        }
         // -- Edit Tags button
         ToolBar.add({
             text: 'Edit Tags',
@@ -111,7 +118,7 @@ Frog.UI = (function(Frog) {
             icon: FrogStaticRoot + '/frog/i/photos.png',
             menu: managemenu
         });
-        ToolBar.add('-')
+        ToolBar.add('-');
         // -- RSS button
         ToolBar.add({
             icon: FrogStaticRoot + '/frog/i/feed.png',
@@ -139,6 +146,7 @@ Frog.UI = (function(Frog) {
         }
     }
     function addTool(label, icon, callback) {
+        ToolBar.add('-');
         ToolBar.add({
             text: label,
             icon: icon,
@@ -653,7 +661,8 @@ Frog.UI = (function(Frog) {
         setId: setId,
         toolbar: ToolBar,
         addEvent: addEvent,
-        addTool: addTool
+        addTool: addTool,
+        enableUploads: enableUploads
     };
 
     return api;

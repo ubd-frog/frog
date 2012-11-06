@@ -35,7 +35,7 @@ from django.contrib.auth.models import User
 from models import Piece, Image, Video, Gallery
 from common import JsonResponse, Result, uniqueID, getHashForFile
 
-from settings import MEDIA_ROOT
+from django.conf import settings
 
 from path import path as Path
 
@@ -104,7 +104,7 @@ class Uploader(object):
 
                     return JsonResponse(res)
 
-                objPath = Path(MEDIA_ROOT) / guid.guid[-2:] / guid.guid / filename
+                objPath = Path(settings.MEDIA_ROOT) / guid.guid[-2:] / guid.guid / filename
                 hashPath = objPath.parent / hashVal + objPath.ext
                 
                 if not objPath.parent.exists():

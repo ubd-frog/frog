@@ -22,14 +22,17 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 from path import path as Path
 
-from settings import MEDIA_URL, MEDIA_ROOT
+from django.conf import settings
+
+from common import PluginContext
 
 
 def media(request):    
     obj = {
-        'MEDIA_URL': MEDIA_URL,
-        'MEDIA_ROOT': MEDIA_ROOT,
+        'MEDIA_URL': settings.MEDIA_URL,
+        'MEDIA_ROOT': settings.MEDIA_ROOT,
         'isAjax': request.is_ajax(),
+        'plugins': PluginContext,
     }
 
     return obj

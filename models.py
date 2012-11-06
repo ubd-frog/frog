@@ -28,17 +28,16 @@ import re
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
-
-from settings import MEDIA_ROOT, FFMPEG, IMAGE_SIZE_CAP, IMAGE_SMALL_SIZE, THUMB_SIZE
+from django.conf import settings
 
 from videoThread import VideoThread, parseInfo
 
 from path import path as Path
 from PIL import Image as pilImage
 
-gMaxSize = IMAGE_SIZE_CAP
-gSmallSize = IMAGE_SMALL_SIZE
-gThumbSize = THUMB_SIZE
+gMaxSize = settings.IMAGE_SIZE_CAP
+gSmallSize = settings.IMAGE_SMALL_SIZE
+gThumbSize = settings.THUMB_SIZE
 
 gQueue = Queue.Queue()
 gVideoThread = VideoThread(gQueue)
@@ -115,7 +114,7 @@ class Piece(models.Model):
     def getPath(self):
         guid = self.getGuid()
         
-        return Path(MEDIA_ROOT) / guid.guid[-2:] / guid.guid
+        return Path(settings.MEDIA_ROOT) / guid.guid[-2:] / guid.guid
 
     def getFiles(self):
         path = self.getPath()
@@ -124,8 +123,8 @@ class Piece(models.Model):
         thumb = Path(self.thumbnail.name).name.replace(self.hash, self.title)
         source = Path(self.source.name).name.replace(self.hash, self.title)
         files = {}
-        files[thumb] = MEDIA_ROOT + '/' + self.thumbnail.name
-        files[source] = MEDIA_ROOT + '/' + self.source.name
+        files[thumb] = settings.MEDIA_ROOT + '/' + self.thumbnail.name
+        files[source] = settings.MEDIA_ROOT + '/' + self.source.name
         
         for file_ in allfiles:
             if not re.findall('([0-9A-Za-z]{40}\.\w+)', file_):
@@ -186,11 +185,11 @@ class Image(Piece):
         - Save thumbnail, small, and image versions
         '''
         
-        self.source = hashPath.replace('\\', '/').replace(MEDIA_ROOT, '')
+        self.source = hashPath.replace('\\', '/').replace(settings.MEDIA_ROOT, '')
         galleries = galleries or []
         tags = tags or []
         
-        workImage = pilImage.open(MEDIA_ROOT + self.source.name)
+        workImage = pilImage.open(settings.MEDIA_ROOT + self.source.name)
         formats = [
             ('image', gMaxSize),
             ('small', gSmallSize),
@@ -201,7 +200,7 @@ class Image(Piece):
                 workImage.thumbnail((n[1], n[1]), pilImage.ANTIALIAS)
                 dest = self.source.name.replace(hashVal, '_' * i + hashVal)
                 setattr(self, n[0], self.source.name.replace(hashVal, '_' * i + hashVal))
-                workImage.save(MEDIA_ROOT + getattr(self, n[0]).name)
+                workImage.save(settings.MEDIA_ROOT + getattr(self, n[0]).name)
             else:
                 setattr(self, n[0], self.source)
 
@@ -242,12 +241,12 @@ class Video(Piece):
         - Save thumbnail, video_thumbnail, and MP4 versions.  If the source is already h264, then only transcode the thumbnails
         '''
 
-        self.source = hashPath.replace('\\', '/').replace(MEDIA_ROOT, '')
+        self.source = hashPath.replace('\\', '/').replace(settings.MEDIA_ROOT, '')
         galleries = galleries or []
         tags = tags or []
 
         ## -- Get info
-        cmd = '%s -i "%s"' % (FFMPEG, hashPath.replace('/', '\\'))
+        cmd = '%s -i "%s"' % (settings.FFMPEG, hashPath.replace('/', '\\'))
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         infoString = proc.stdout.readlines()
         videodata = parseInfo(infoString)
@@ -257,11 +256,11 @@ class Video(Piece):
 
         ## -- Save thumbnail and put into queue
         thumbnail = Path(hashPath.parent.replace('/', '\\')) / "_%s.jpg" % hashVal
-        cmd = '%s -i "%s" -ss 1 -vframes 1 "%s"' % (FFMPEG, hashPath.replace('/', '\\'), thumbnail)
+        cmd = '%s -i "%s" -ss 1 -vframes 1 "%s"' % (settings.FFMPEG, hashPath.replace('/', '\\'), thumbnail)
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         proc.communicate()
 
-        self.thumbnail = thumbnail.replace('\\', '/').replace(MEDIA_ROOT, '')
+        self.thumbnail = thumbnail.replace('\\', '/').replace(settings.MEDIA_ROOT, '')
 
         for gal in galleries:
             g = Gallery.objects.get(pk=int(gal))
@@ -320,6 +319,7 @@ class Gallery(models.Model):
     private = models.BooleanField(default=False)
     owner = models.ForeignKey(User, default=1)
     description = models.TextField(default="")
+    uploads = models.BooleanField(default=True)
 
     class Meta:
         verbose_name_plural = "Galleries"
@@ -335,7 +335,8 @@ class Gallery(models.Model):
             'image_count': self.images.count(),
             'video_count': self.videos.count(),
             'owner': {'id': self.owner.id, 'name': self.owner.get_full_name()},
-            'description': self.description
+            'description': self.description,
+            'uploads': self.uploads,
         }
 
         return obj

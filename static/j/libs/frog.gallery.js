@@ -22,7 +22,10 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 Frog.Gallery = new Class({
     Implements: [Events, Options],
-    options: {private: false},
+    options: {
+        private: false,
+        upload: true
+    },
     initialize: function(el, id, options) {
         var self = this;
         this.setOptions(options);
@@ -34,7 +37,15 @@ Frog.Gallery = new Class({
             id: 'gallery'
         }).inject(this.el);
         this.toolsElement = new Element('div', {id: 'frog_tools'}).inject(this.container, 'before');
-        var uploaderElement = $('upload');
+        
+        if (this.options.upload) {
+            var uploaderElement = $('upload');
+            this.uploader = new Frog.Uploader(this.id);
+            this.uploader.addEvent('complete', function() {
+                this.request();
+            }.bind(this));
+            Frog.UI.enableUploads();
+        }
 
         // -- Members
         this.tilesPerRow = Frog.Prefs.tileCount;
@@ -46,7 +57,6 @@ Frog.Gallery = new Class({
         this.dirty = true;
         this.requestValue = {};
         this.isRequesting = false;
-        this.uploader = null;
         this.requestData = {};
         this.spinner = new Spinner(undefined, {message: "fetching images...", fxOptions: {duration: 0}});
 
@@ -66,7 +76,6 @@ Frog.Gallery = new Class({
         })
 
         // -- Instance objects
-        //this.controls = new Frog.Gallery.Controls(, this.id);
         Frog.UI.addEvent('remove', this.removeItems.bind(this));
         Frog.UI.addEvent('change', function() {
             self.tilesPerRow = Frog.Prefs.tileCount;
@@ -79,10 +88,7 @@ Frog.Gallery = new Class({
         Frog.UI.setId(this.id);
         Frog.UI.render(this.toolsElement)
 
-        this.uploader = new Frog.Uploader(this.id);
-        this.uploader.addEvent('complete', function() {
-            this.request();
-        }.bind(this));
+        
         this.viewer = new Frog.Viewer();
         this.viewer.addEvent('show', function() {
             window.scrollTo(0,0);
