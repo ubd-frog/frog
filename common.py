@@ -185,17 +185,6 @@ class Result(object):
 def uniqueID(size=6, chars=string.ascii_uppercase + string.digits):
     return ''.join(random.choice(chars) for x in xrange(size))
 
-def getHashForFile(f):
-    hashVal = hashlib.sha1()
-    while True:
-        r = f.read(1024)
-        if not r:
-            break
-        hashVal.update(r)
-    f.seek(0)
-
-    return hashVal.hexdigest()
-
 def getObjectsFromGuids(guids):
     img = list(Image.objects.filter(guid__in=guids))
     vid = list(Video.objects.filter(guid__in=guids))
@@ -250,11 +239,22 @@ def __discoverPlugins():
     """ Discover the plugin classes contained in Python files, given a
         list of directory names to scan. Return a list of plugin classes.
     """
-    ROOT = Path(sys.path[0])
-    for pyfile in ROOT.walk('frog_plugin.py'):
-        file_, path, descr = imp.find_module(pyfile.namebase, [pyfile.parent])
-        if file_:
-            imp.load_module(pyfile.namebase, file_, path, descr)
+    # ROOT = Path(sys.path[0])
+    # for pyfile in ROOT.walk('frog_plugin.py'):
+    #     file_, path, descr = imp.find_module(pyfile.namebase, [pyfile.parent])
+    #     if file_:
+    #         imp.load_module(pyfile.namebase, file_, path, descr)
+    for app in settings.INSTALLED_APPS:
+        if not app.startswith('django'):
+            module = __import__(app)
+            moduledir = Path(module.__file__).parent
+            plugin = moduledir / 'frog_plugin.py'
+            if plugin.exists():
+                file_, path, desc = imp.find_module('frog_plugin', [moduledir])
+                if file_:
+                    imp.load_module('frog_plugin', file_, path, desc)
+
+    print FrogPluginRegistry.plugins
 
     return FrogPluginRegistry.plugins
 

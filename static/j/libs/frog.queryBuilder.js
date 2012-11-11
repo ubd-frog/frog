@@ -64,7 +64,7 @@ Frog.QueryBuilder = new Class({
         frog.onload = function() {
             this.element.grab(frog);
         }.bind(this)
-        frog.src = FrogStaticRoot + '/frog/i/frog.png';
+        frog.src = Frog.icon('frog');
         this.change = this._change.bind(this);
         this.historyCallback = this._historyEvent.bind(this);
 

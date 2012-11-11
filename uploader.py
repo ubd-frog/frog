@@ -33,14 +33,14 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.models import User
 
 from models import Piece, Image, Video, Gallery
-from common import JsonResponse, Result, uniqueID, getHashForFile
+from common import JsonResponse, Result, uniqueID
 
 from django.conf import settings
 
 from path import path as Path
 
 EXT = {
-    'image': ['.jpg', '.png', '.gif'],
+    'image': ['.jpg', '.png', '.gif', '.tif', '.tiff'],
     'video': ['.mp4', '.avi', '.wmv', '.mov']
 }
 

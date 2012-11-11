@@ -37,15 +37,6 @@ Frog.Gallery = new Class({
             id: 'gallery'
         }).inject(this.el);
         this.toolsElement = new Element('div', {id: 'frog_tools'}).inject(this.container, 'before');
-        
-        if (this.options.upload) {
-            var uploaderElement = $('upload');
-            this.uploader = new Frog.Uploader(this.id);
-            this.uploader.addEvent('complete', function() {
-                this.request();
-            }.bind(this));
-            Frog.UI.enableUploads();
-        }
 
         // -- Members
         this.tilesPerRow = Frog.Prefs.tileCount;
@@ -82,11 +73,23 @@ Frog.Gallery = new Class({
             self.tileSize = Math.floor((window.getWidth() - 2) / self.tilesPerRow);
             self.request();
         });
-        // if (options.private) {
-        //     this.controls.addPrivateMenu();
-        // }
+        if (options.private) {
+            Frog.UI.addPrivateMenu();
+        }
+        if (this.options.upload) {
+            Frog.UI.enableUploads();
+        }
+
         Frog.UI.setId(this.id);
-        Frog.UI.render(this.toolsElement)
+        Frog.UI.render(this.toolsElement);
+
+        if (this.options.upload) {
+            var uploaderElement = $('upload');
+            this.uploader = new Frog.Uploader(this.id);
+            this.uploader.addEvent('complete', function() {
+                this.request();
+            }.bind(this));
+        }
 
         
         this.viewer = new Frog.Viewer();
@@ -222,27 +225,37 @@ Frog.Gallery = new Class({
         }
     },
     removeItems: function(ids) {
-        var guids = [];
-        var r = confirm('Are you sure you wish to remove (' + ids.length + ') items from the gallery?');
-        if (r) {
-            ids.each(function(id) {
-                guids.push(this.objects[id].guid);
-            }, this);
+        if (ids.length === 0) {
+            Ext.MessageBox.alert('Selection', 'Please select items first!');
 
-            new Request.JSON({
-                url: location.href,
-                emulation: false,
-                headers: {"X-CSRFToken": Cookie.read('csrftoken')},
-                onSuccess: function(res) {
-                    if (res.isSuccess) {
-                        ids.each(function(id) {
-                            $(this.thumbnails[id]).destroy();
-                            this.thumbnails.erase(id);
-                        }, this)
-                    }
-                }.bind(this)
-            }).DELETE({guids: guids.join(',')});
+            return false;
         }
+        var guids = [];
+        var r = Ext.MessageBox.confirm(
+            'Remove Items',
+            'Are you sure you wish to remove (' + ids.length + ') items from the gallery?',
+            function(r) {
+                if (r === 'yes') {
+                    ids.each(function(id) {
+                        guids.push(this.objects[id].guid);
+                    }, this);
+
+                    new Request.JSON({
+                        url: location.href,
+                        emulation: false,
+                        headers: {"X-CSRFToken": Cookie.read('csrftoken')},
+                        onSuccess: function(res) {
+                            if (res.isSuccess) {
+                                ids.each(function(id) {
+                                    $(this.thumbnails[id]).destroy();
+                                    this.thumbnails.erase(id);
+                                }, this)
+                            }
+                        }.bind(this)
+                    }).DELETE({guids: guids.join(',')});
+                }
+            }.bind(this)
+        );
     },
     viewImages: function(e, el) {
         e.stop();

@@ -27,7 +27,6 @@ from django.core.management.base import BaseCommand, CommandError
 
 from frog.settings import MEDIA_ROOT
 from frog.models import Gallery, RSSStorage, Image, Video, Piece, Tag
-from frog.common import getHashForFile
 from frog.uploader import EXT, User
 from frog.path import path as Path
 
@@ -69,7 +68,7 @@ class Command(BaseCommand):
 
                 obj = model.objects.get_or_create(unique_id=uniqueName, defaults={'author': USER})[0]
                 guid = obj.getGuid()
-                hashVal = getHashForFile(file_.open('rb'))
+                hashVal = file_.read_hexhash('sha1')
 
                 objPath = Path(MEDIA_ROOT) / guid.guid[-2:] / guid.guid / file_.name.lower()
                 hashPath = objPath.parent / hashVal + objPath.ext

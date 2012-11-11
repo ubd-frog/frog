@@ -19,21 +19,39 @@
         <script src="{{MEDIA_URL}}frog/j/mootoolsCore.js"></script>
 
         <script>
-            window.FrogStaticRoot = '{{MEDIA_URL}}';
             {% block script %}
-            var t, thumbnails, g, DEBUG;
             window.addEvent('domready', function() {
-                g = new Frog.Gallery(undefined, {{object.id}}, {
-                    private: {{object.private|yesno:'true,false'}},
-                    upload: {{object.uploads|yesno:'true,false'}}
-                });
-                {% for button in plugins.buttons %}
-                Frog.UI.addTool(
-                    '{{button.0}}',
-                    '{{MEDIA_URL}}{{button.1}}',
-                    {{button.2}}
-                );
-                {% endfor %}
+                Frog.StaticRoot = '{{MEDIA_URL}}';
+
+                {% if object.private %}
+                    {% if user == object.owner %}
+                        new Frog.Gallery(undefined, {{object.id}}, {
+                            private: {{object.private|yesno:'true,false'}},
+                            upload: {{object.uploads|yesno:'true,false'}}
+                        });
+                        {% for button in plugins.buttons %}
+                        Frog.UI.addTool(
+                            '{{button.0}}',
+                            '{{MEDIA_URL}}{{button.1}}',
+                            {{button.2}}
+                        );
+                        {% endfor %}
+                    {% else %}
+                        $('main').set('html', '<h1>Gallery is private</h1>');
+                    {% endif %}
+                {% else %}
+                    new Frog.Gallery(undefined, {{object.id}}, {
+                        private: {{object.private|yesno:'true,false'}},
+                        upload: {{object.uploads|yesno:'true,false'}}
+                    });
+                    {% for button in plugins.buttons %}
+                    Frog.UI.addTool(
+                        '{{button.0}}',
+                        '{{MEDIA_URL}}{{button.1}}',
+                        {{button.2}}
+                    );
+                    {% endfor %}
+                {% endif %}
             });
             {% endblock %}
         </script>

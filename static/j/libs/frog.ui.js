@@ -23,6 +23,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 Frog.UI = (function(Frog) {
     var ID, Store, ToolBar;
     var navmenu = Ext.create('Ext.menu.Menu');
+    var managemenu =  Ext.create('Ext.menu.Menu');
     var uploadEnabled = false;
 
 
@@ -66,13 +67,13 @@ Frog.UI = (function(Frog) {
     }
 
     function render(el) {
-        var managemenu, menuremove, menucopy, menudownload, menuswitchartist;
+        var menuremove, menucopy, menudownload, menuswitchartist;
         ToolBar.render(el);
         // -- Navigation panel
         navmenu.add(buildNav());
         ToolBar.add({
             text: 'Navigation',
-            icon: FrogStaticRoot + '/frog/i/compass.png',
+            icon: Frog.icon('compass'),
             menu: navmenu
         });
         if (uploadEnabled) {
@@ -80,58 +81,59 @@ Frog.UI = (function(Frog) {
             ToolBar.add({
                 id: 'frogBrowseButton',
                 text: 'Upload',
-                icon: FrogStaticRoot + '/frog/i/add.png'
+                icon: Frog.icon('add')
             });
         }
         // -- Edit Tags button
         ToolBar.add({
             text: 'Edit Tags',
-            icon: FrogStaticRoot + '/frog/i/tag_orange.png',
+            icon: Frog.icon('tag_orange'),
             handler: editTagsHandler
         });
         // Manage Menu
         menuremove = Ext.create('Ext.menu.Item', {
             text: 'Remove Selected',
-            icon: FrogStaticRoot + '/frog/i/cross.png',
+            icon: Frog.icon('cross'),
             handler: removeHandler
         });
         menucopy = Ext.create('Ext.menu.Item', {
             text: 'Copy to Gallery',
-            icon: FrogStaticRoot + '/frog/i/page_white_copy.png',
+            icon: Frog.icon('page_white_copy'),
             handler: copyHandler
         });
         menudownload = Ext.create('Ext.menu.Item', {
             text: 'Download Sources',
-            icon: FrogStaticRoot + '/frog/i/compress.png',
+            icon: Frog.icon('compress'),
             handler: downloadHandler
         });
         menuswitchartist = Ext.create('Ext.menu.Item', {
             text: 'Switch Artist',
-            icon: FrogStaticRoot + '/frog/i/user_edit.png',
+            icon: Frog.icon('user_edit'),
             handler: switchArtistHandler
         });
-        managemenu = Ext.create('Ext.menu.Menu', {
-            items: [menuremove, menucopy, menudownload, '-', menuswitchartist]
-        });
+        managemenu.add([menuremove, menucopy, menudownload, '-', menuswitchartist]);
+        // managemenu = Ext.create('Ext.menu.Menu', {
+        //     items: [menuremove, menucopy, menudownload, '-', menuswitchartist]
+        // });
         ToolBar.add({
             text: 'Manage',
-            icon: FrogStaticRoot + '/frog/i/photos.png',
+            icon: Frog.icon('photos'),
             menu: managemenu
         });
         ToolBar.add('-');
         // -- RSS button
         ToolBar.add({
-            icon: FrogStaticRoot + '/frog/i/feed.png',
+            icon: Frog.icon('feed'),
             handler: rssHandler
         });
         // -- Help button
         ToolBar.add({
-            icon: FrogStaticRoot + '/frog/i/help.png',
+            icon: Frog.icon('help'),
             handler: helpHandler
         });
         // -- Preferences Menu
         ToolBar.add({
-            icon: FrogStaticRoot + '/frog/i/cog.png',
+            icon: Frog.icon('cog'),
             menu: buildPrefMenu()
         });
     }
@@ -290,7 +292,7 @@ Frog.UI = (function(Frog) {
         });
         var win = Ext.create('widget.window', {
             title: 'Edit Tags',
-            icon: FrogStaticRoot + '/frog/i/tag_orange.png',
+            icon: Frog.icon('tag_orange'),
             closable: true,
             resizable: false,
             modal: true,
@@ -355,7 +357,7 @@ Frog.UI = (function(Frog) {
     function copyHandler() {
         var win = Ext.create('widget.window', {
             title: 'Copy to Gallery',
-            icon: FrogStaticRoot + '/frog/i/page_white_copy.png',
+            icon: Frog.icon('page_white_copy'),
             closable: true,
             resizable: false,
             modal: true,
@@ -516,7 +518,7 @@ Frog.UI = (function(Frog) {
     function rssHandler() {
         var win = Ext.create('widget.window', {
             title: 'RSS Feeds',
-            icon: FrogStaticRoot + '/frog/i/feed.png',
+            icon: Frog.icon('feed'),
             closable: true,
             closeAction: 'hide',
             resizable: false,
@@ -562,7 +564,7 @@ Frog.UI = (function(Frog) {
     function helpHandler() {
         var win = Ext.create('widget.window', {
             title: 'Ask for Help',
-            icon: FrogStaticRoot + '/frog/i/help.png',
+            icon: Frog.icon('help'),
             closable: true,
             closeAction: 'hide',
             resizable: false,
@@ -610,17 +612,18 @@ Frog.UI = (function(Frog) {
     }
     function addPrivateMenu() {
         var id = this.id;
-        this.menu.add({
+        var item = managemenu.add({
             text: 'Make public',
-            icon: FrogStaticRoot + '/frog/i/page_white_copy.png',
+            icon: Frog.icon('world'),
             handler: function() {
                 Ext.MessageBox.confirm('Confirm', 'Are you sure you want to make this public?', function(res) {
                     if (res === 'yes') {
                         new Request.JSON({
-                            url: '/frog/gallery/' + id,
+                            url: '/frog/gallery/' + ID,
                             emulation: false,
                             headers: {"X-CSRFToken": Cookie.read('csrftoken')}
-                        }).PUT({private: false})
+                        }).PUT({private: false});
+                        managemenu.remove(item);
                     }
                 });
             }
@@ -662,7 +665,8 @@ Frog.UI = (function(Frog) {
         toolbar: ToolBar,
         addEvent: addEvent,
         addTool: addTool,
-        enableUploads: enableUploads
+        enableUploads: enableUploads,
+        addPrivateMenu: addPrivateMenu
     };
 
     return api;

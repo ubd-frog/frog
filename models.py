@@ -188,8 +188,18 @@ class Image(Piece):
         self.source = hashPath.replace('\\', '/').replace(settings.MEDIA_ROOT, '')
         galleries = galleries or []
         tags = tags or []
+
+        imagefile = Path(settings.MEDIA_ROOT + self.source.name)
         
-        workImage = pilImage.open(settings.MEDIA_ROOT + self.source.name)
+        workImage = pilImage.open(imagefile)
+
+        if imagefile.ext in ('.tif', '.tiff'):
+            png = imagefile.parent / imagefile.namebase + '.png'
+            workImage.save(png)
+            workImage = pilImage.open(png)
+            imagefile.move(imagefile.replace(self.hash, self.title))
+            self.source = png.replace(settings.MEDIA_ROOT, '')
+
         formats = [
             ('image', gMaxSize),
             ('small', gSmallSize),

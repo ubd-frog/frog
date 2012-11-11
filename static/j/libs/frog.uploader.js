@@ -39,7 +39,7 @@ Frog.Uploader = new Class({
                 'galleries': this.id.toString()
             },
             filters: [
-                {title: "Image files", extensions: "jpg,png"},
+                {title: "Image files", extensions: "jpg,png,tif,tiff"},
                 {title: "Video files", extensions: "mp4,avi,mov,wmv"}
             ]
         });

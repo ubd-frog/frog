@@ -44,6 +44,9 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     // -- Set the loading image
     Frog.loading = new Image();
     Frog.loading.src = '/static/frog/i/loading.png';
+    Frog.icon = function(icon) {
+        return Frog.StaticRoot + '/frog/i/' + icon + '.png'
+    }
 
     Frog.getPixel = function() {
         if (Frog.pixel === null) {
