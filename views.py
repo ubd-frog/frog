@@ -52,6 +52,7 @@ from models import Gallery, Image, Video, Tag, Piece, UserPref, DefaultPrefs
 
 from common import MainView, Result, JsonResponse, getObjectsFromGuids, commentToJson, userToJson
 from uploader import uploader
+from signals import frog_auth_check
 
 from sendFile import send_file, send_zipfile
 
@@ -702,6 +703,8 @@ def downloadView(request):
 @csrf_exempt
 def index(request):
     if request.method == 'GET':
+        frog_auth_check.send(sender=None, request=request)
+
         if not request.user.is_anonymous():
             return HttpResponseRedirect('/frog/gallery/1')
         return render(request, 'frog/index.html', {'title': 'Frog Login'})
@@ -807,7 +810,6 @@ def isUnique(request):
         res.message = "No path provided"
 
     return JsonResponse(res)
-
 
 
 gallery = GalleryView()
