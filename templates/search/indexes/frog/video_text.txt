@@ -1,0 +1,6 @@
+{{ object.title }}
+{{ object.user.get_full_name }}
+{{ object.created }}
+{% for tag in object.tags.all %}
+{{tag.name}}
+{% endfor %}
