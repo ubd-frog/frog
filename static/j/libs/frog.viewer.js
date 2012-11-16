@@ -98,6 +98,7 @@ Frog.Viewer = new Class({
             }
 
             this.xform = Matrix.I(3).x(this.main);
+
             this.translate(x,y);
 
             this.render();
@@ -152,7 +153,7 @@ Frog.Viewer = new Class({
     },
     render: function() {
         this.clear();
-        
+
         this.ctx.drawImage(
             this.image, 
             this.xform.elements[2][0],
@@ -225,6 +226,18 @@ Frog.Viewer = new Class({
             [x,0,0],
             [0,y,0],
             [0,0,1]
+        ]);
+
+        m2 = this.xform.x(m1);
+        this.xform = m2.dup();
+    },
+    rotate: function(angle) {
+        var m1, m2;
+
+        m1 = $M([
+            [Math.cos(angle), -Math.sin(angle), 0],
+            [Math.sin(angle), Math.cos(angle), 0],
+            [0, 0, 1]
         ]);
 
         m2 = this.xform.x(m1);

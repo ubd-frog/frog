@@ -33,7 +33,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.models import User
 
 from models import Piece, Image, Video, Gallery
-from common import JsonResponse, Result, uniqueID
+from common import JsonResponse, Result, uniqueID, getHashForFile
 
 from django.conf import settings
 

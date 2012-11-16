@@ -8,9 +8,8 @@
             location.href = '/frog/gallery/1';
         });
         var img = JSON.parse('{{object.serialize|safe}}');
-        viewer.setImages([img]);
-        viewer.fitToWindow();
         viewer.show();
+        viewer.setImages([img]);
     });
     {% endblock %}
 </script>

@@ -181,6 +181,16 @@ class Result(object):
         self.values.append(val)
         self.value = self.values[0]
 
+def getHashForFile(f):
+    hashVal = hashlib.sha1()
+    while True:
+        r = f.read(1024)
+        if not r:
+            break
+        hashVal.update(r)
+    f.seek(0)
+
+    return hashVal.hexdigest()
 
 def uniqueID(size=6, chars=string.ascii_uppercase + string.digits):
     return ''.join(random.choice(chars) for x in xrange(size))
@@ -253,8 +263,6 @@ def __discoverPlugins():
                 file_, path, desc = imp.find_module('frog_plugin', [moduledir])
                 if file_:
                     imp.load_module('frog_plugin', file_, path, desc)
-
-    print FrogPluginRegistry.plugins
 
     return FrogPluginRegistry.plugins
 
