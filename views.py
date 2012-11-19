@@ -65,14 +65,22 @@ class GalleryView(MainView):
     def __init__(self):
         super(GalleryView, self).__init__(Gallery)
 
-    @LoginRequired
     def get(self, request, obj_id=None):
         if obj_id:
+            obj = self._getObject(obj_id)
+            if obj.private and request.user.is_anonymous():
+                return HttpResponseRedirect('/frog')
+
             return super(GalleryView, self).get(request, obj_id)
         else:
             res = Result()
             res.isSuccess = True
-            for n in Gallery.objects.filter(Q(private=False) | Q(owner=request.user)):
+            if request.user.is_anonymous():
+                objects = Gallery.objects.filter(private=False)
+            else:
+                objects = Gallery.objects.filter(Q(private=False) | Q(owner=request.user))
+
+            for n in objects:
                 res.append(n.json())
 
             return JsonResponse(res)
@@ -140,12 +148,20 @@ class GalleryView(MainView):
 
         return JsonResponse(res)
 
-    @LoginRequired
     def filter(self, request, obj_id):
         """
         Filters Gallery for the requested Image/Video objects.  Returns a Result object with 
         serialized objects
         """
+        obj = self._getObject(obj_id)
+
+        if request.user.is_anonymous() and obj.private:
+            res = Result()
+            res.isError = True
+            res.message = 'This gallery is private'
+
+            return JsonResponse(res)
+
         
         tags = json.loads(request.GET.get('filters', '[[]]'))
         rng = request.GET.get('rng', None)
@@ -158,7 +174,7 @@ class GalleryView(MainView):
 
         models = [ContentType.objects.get(app_label='frog', model=x) for x in models.split(',')]
 
-        return self._filter(request, self._getObject(obj_id), tags=tags, rng=rng, models=models, more=more)
+        return self._filter(request, obj, tags=tags, rng=rng, models=models, more=more)
 
     def _filter(self, request, object_, tags=None, models=(Image, Video), rng=None, more=False):
         """
@@ -183,8 +199,8 @@ class GalleryView(MainView):
 
         logger.debug('init: %f' % (time.clock() - NOW))
 
-        Prefs = json.loads(UserPref.objects.get(user=request.user).data)
-        gRange = Prefs['batchSize']
+        #Prefs = json.loads(UserPref.objects.get(user=request.user).data)
+        gRange = 300#Prefs['batchSize']
         request.session.setdefault('frog_range', '0:%i' % gRange)
 
         if rng:
@@ -331,7 +347,6 @@ class TagView(MainView):
     def __init__(self):
         super(TagView, self).__init__(Tag)
 
-    @LoginRequired
     def get(self, request, obj_id=None):
         if obj_id:
             return super(TagView, self).get(request, obj_id)
@@ -387,10 +402,9 @@ class TagView(MainView):
 
         return JsonResponse(res)
 
-    @LoginRequired
     def search(self, request):
         """
-        Search for Tag pbjects and returns a Result object with a list of searialize Tag
+        Search for Tag objects and returns a Result object with a list of searialize Tag
         objects.
 
         -- search: bool, Append a "Search for" tag
@@ -563,6 +577,7 @@ class UserPrefView(MainView):
 
         return JsonResponse(res)
 
+    @LoginRequired
     def post(self, request):
         key = request.POST.get('key', None)
         val = request.POST.get('val', None)
@@ -629,6 +644,7 @@ class CommentView(MainView):
                 comments = Comment.objects.filter(object_pk=obj.id, content_type=contentType)
                 return render(request, 'frog/comment_list.html', {'comments': comments, 'guid': guid, 'id': id})
 
+    @LoginRequired
     def post(self, request, obj_id=None):
         guid = request.POST.get('guid', None)
         res = Result()
@@ -808,6 +824,16 @@ def isUnique(request):
     else:
         res.isError = True
         res.message = "No path provided"
+
+    return JsonResponse(res)
+
+def getUser(request):
+    res = Result()
+    if request.user.is_anonymous():
+        res.isError = True
+        res.append(DefaultPrefs)
+    else:
+        res.isSuccess = True
 
     return JsonResponse(res)
 

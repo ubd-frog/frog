@@ -82,8 +82,8 @@ class Piece(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     modified = models.DateTimeField(auto_now_add=True, auto_now=True)
     thumbnail = models.ImageField(upload_to='%Y/%m/%d', max_length=255, blank=True, null=True)
-    width = models.IntegerField(blank=True, null=True)
-    height = models.IntegerField(blank=True, null=True)
+    width = models.IntegerField(default=0)
+    height = models.IntegerField(default=0)
     foreign_path = models.TextField(blank=True)
     unique_id = models.CharField(max_length=255, blank=True)
     guid = models.CharField(max_length=16, blank=True)
@@ -164,7 +164,7 @@ class Piece(models.Model):
             'deleted': self.deleted,
             'hash': self.hash,
             'tags': [tag.json() for tag in self.tags.all()],
-            'thumbnail': self.thumbnail.url,
+            'thumbnail': self.thumbnail.url if self.thumbnail else '',
             'comment_count': self.comment_count,
         }
 
@@ -398,8 +398,3 @@ class RSSStorage(models.Model):
     interval = models.CharField(max_length=6)
     data = models.TextField()
     gallery = models.ForeignKey(Gallery, related_name='rss_storage')
-
-
-## -- Queue any remaining videos that did not finish prior to restart
-# for guid in [o['id'] for o in gJsonQueue.data['queued']]:
-#     gQueue.put(Video.objects.get(pk=guid))

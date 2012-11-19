@@ -36,8 +36,7 @@ Frog.UI = (function(Frog) {
             {name: 'image_count', type: 'int'},
             {name: 'video_count', type: 'int'},
             {name: 'owner'},
-            {name: 'description'},
-            {name: 'private'}
+            {name: 'description'}
         ]
     });
     Store = Ext.create('Ext.data.Store', {
@@ -76,65 +75,73 @@ Frog.UI = (function(Frog) {
             icon: Frog.icon('compass'),
             menu: navmenu
         });
-        if (uploadEnabled) {
-            // -- Upload button
-            ToolBar.add({
-                id: 'frogBrowseButton',
-                text: 'Upload',
-                icon: Frog.icon('add')
-            });
-        }
-        // -- Edit Tags button
-        ToolBar.add({
-            text: 'Edit Tags',
-            icon: Frog.icon('tag_orange'),
-            handler: editTagsHandler
-        });
-        // Manage Menu
-        menuremove = Ext.create('Ext.menu.Item', {
-            text: 'Remove Selected',
-            icon: Frog.icon('cross'),
-            handler: removeHandler
-        });
-        menucopy = Ext.create('Ext.menu.Item', {
-            text: 'Copy to Gallery',
-            icon: Frog.icon('page_white_copy'),
-            handler: copyHandler
-        });
-        menudownload = Ext.create('Ext.menu.Item', {
-            text: 'Download Sources',
-            icon: Frog.icon('compress'),
-            handler: downloadHandler
-        });
-        menuswitchartist = Ext.create('Ext.menu.Item', {
-            text: 'Switch Artist',
-            icon: Frog.icon('user_edit'),
-            handler: switchArtistHandler
-        });
-        managemenu.add([menuremove, menucopy, menudownload, '-', menuswitchartist]);
-        // managemenu = Ext.create('Ext.menu.Menu', {
-        //     items: [menuremove, menucopy, menudownload, '-', menuswitchartist]
-        // });
-        ToolBar.add({
-            text: 'Manage',
-            icon: Frog.icon('photos'),
-            menu: managemenu
-        });
-        ToolBar.add('-');
+        // -- Check for user
+        new Request.JSON({
+            url: '/frog/getuser',
+            async: false,
+            onSuccess: function(res) {
+                if (res.isSuccess) {
+                    if (uploadEnabled) {
+                        // -- Upload button
+                        ToolBar.add({
+                            id: 'frogBrowseButton',
+                            text: 'Upload',
+                            icon: Frog.icon('add')
+                        });
+                    }
+                    // -- Edit Tags button
+                    ToolBar.add({
+                        text: 'Edit Tags',
+                        icon: Frog.icon('tag_orange'),
+                        handler: editTagsHandler
+                    });
+                    // Manage Menu
+                    menuremove = Ext.create('Ext.menu.Item', {
+                        text: 'Remove Selected',
+                        icon: Frog.icon('cross'),
+                        handler: removeHandler
+                    });
+                    menucopy = Ext.create('Ext.menu.Item', {
+                        text: 'Copy to Gallery',
+                        icon: Frog.icon('page_white_copy'),
+                        handler: copyHandler
+                    });
+                    menudownload = Ext.create('Ext.menu.Item', {
+                        text: 'Download Sources',
+                        icon: Frog.icon('compress'),
+                        handler: downloadHandler
+                    });
+                    menuswitchartist = Ext.create('Ext.menu.Item', {
+                        text: 'Switch Artist',
+                        icon: Frog.icon('user_edit'),
+                        handler: switchArtistHandler
+                    });
+                    managemenu.add([menuremove, menucopy, menudownload, '-', menuswitchartist]);
+                    ToolBar.add({
+                        text: 'Manage',
+                        icon: Frog.icon('photos'),
+                        menu: managemenu
+                    });
+                    ToolBar.add('-');
+                    
+                    // -- Help button
+                    ToolBar.add({
+                        icon: Frog.icon('help'),
+                        handler: helpHandler
+                    });
+                    // -- Preferences Menu
+                    ToolBar.add({
+                        icon: Frog.icon('cog'),
+                        menu: buildPrefMenu()
+                    });
+                }
+            }
+        }).GET();
+        
         // -- RSS button
         ToolBar.add({
             icon: Frog.icon('feed'),
             handler: rssHandler
-        });
-        // -- Help button
-        ToolBar.add({
-            icon: Frog.icon('help'),
-            handler: helpHandler
-        });
-        // -- Preferences Menu
-        ToolBar.add({
-            icon: Frog.icon('cog'),
-            menu: buildPrefMenu()
         });
     }
     function addEvent(event, fn) {
@@ -186,10 +193,6 @@ Frog.UI = (function(Frog) {
                 field: {
                     xtype: 'textfield'
                 }
-            }, {
-                text: 'Private',
-                flex: 1,
-                dataIndex: 'private'
             }, {
                 text: 'Description',
                 flex: 2,

@@ -41,6 +41,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     });
 
     Frog.pixel = null;
+    Frog.user = null;
     // -- Set the loading image
     Frog.loading = new Image();
     Frog.loading.src = '/static/frog/i/loading.png';
@@ -98,7 +99,20 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
             }).POST({key: key, val: value});
         }
     };
-    Frog.Prefs.init();
+
+    new Request.JSON({
+        url: '/frog/getuser',
+        async: false,
+        onSuccess: function(res) {
+            if (res.isSuccess) {
+                Frog.Prefs.init();
+                Frog.user = true;
+            }
+            else {
+                Object.append(Frog.Prefs, res.value);
+            }
+        }
+    }).GET();
 
     Frog.TagManager = new Class({
         initialize: function() {
@@ -221,41 +235,45 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
             });
             this.top = new Element('div').inject(this.element);
             var bot = new Element('div').inject(this.element);
-            this.fakeInput = new Element('input', {
-                'placeholder': 'Comment...',
-                events: {
-                    click: function(e) {
-                        e.stop();
-                        this.hide();
-                        var el = $('frog_comments');
-                        var guid = el.dataset.frog_guid;
-                        var id = el.dataset.frog_gallery_id;
-                        self.input.show();
-                        self.input.focus();
-                        if (!self.saveButton) {
-                            self.saveButton = Ext.create('Ext.Button', {
-                                text: 'Save',
-                                renderTo: bot,
-                                handler: function() {
-                                    new Request.JSON({
-                                        url: '/frog/comment/'
-                                    }).POST({guid: guid, comment: self.input.value});
-                                    self.close();
+            if (Frog.user !== null) {
+                this.fakeInput = new Element('input', {
+                    'placeholder': 'Comment...',
+                    events: {
+                        click: function(e) {
+                            e.stop();
+                            this.hide();
+                            var el = $('frog_comments');
+                            var guid = el.dataset.frog_guid;
+                            var id = el.dataset.frog_gallery_id;
+                            self.input.show();
+                            self.input.focus();
+                            if (!self.saveButton) {
+                                self.saveButton = Ext.create('Ext.Button', {
+                                    text: 'Save',
+                                    renderTo: bot,
+                                    handler: function() {
+                                        new Request.JSON({
+                                            url: '/frog/comment/'
+                                        }).POST({guid: guid, comment: self.input.value});
+                                        self.close();
 
-                                    self.fireEvent('onPost', [id]);
-                                }
-                            });
-                            Ext.create('Ext.Button', {
-                                text: 'Cancel',
-                                renderTo: bot,
-                                handler: function() {
-                                    self.close();
-                                }
-                            })
+                                        self.fireEvent('onPost', [id]);
+                                    }
+                                });
+                                Ext.create('Ext.Button', {
+                                    text: 'Cancel',
+                                    renderTo: bot,
+                                    handler: function() {
+                                        self.close();
+                                    }
+                                })
+                            }
                         }
                     }
-                }
-            }).inject(bot);
+                }).inject(bot);
+            }
+            
+            
             this.input = new Element('textarea').inject(bot);
             this.input.hide();
             this.scrollEvent = function(e) {
@@ -283,7 +301,10 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         },
         close: function() {
             this.container.hide();
-            this.fakeInput.show();
+            if (Frog.user !== null) {
+                this.fakeInput.show();
+            }
+            
             this.input.value = "";
             this.input.hide();
             window.removeEvent('mousewheel', this.scrollEvent);

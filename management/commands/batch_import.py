@@ -24,8 +24,8 @@ import datetime
 import json
 from optparse import make_option
 from django.core.management.base import BaseCommand, CommandError
+from django.conf import settings
 
-from frog.settings import MEDIA_ROOT
 from frog.models import Gallery, RSSStorage, Image, Video, Piece, Tag
 from frog.uploader import EXT, User
 from frog.path import path as Path
@@ -70,7 +70,7 @@ class Command(BaseCommand):
                 guid = obj.getGuid()
                 hashVal = file_.read_hexhash('sha1')
 
-                objPath = Path(MEDIA_ROOT) / guid.guid[-2:] / guid.guid / file_.name.lower()
+                objPath = Path(settings.MEDIA_ROOT) / guid.guid[-2:] / guid.guid / file_.name.lower()
                 hashPath = objPath.parent / hashVal + objPath.ext
                 
                 if not objPath.parent.exists():

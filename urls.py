@@ -22,7 +22,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 from django.conf.urls import patterns, include, url
 
-from views import gallery, tag, image, video, comment, downloadView, index, pref, frogLogin, frogLogout, switchArtist, isUnique, helpMe, artistLookup
+from views import gallery, tag, image, video, comment, downloadView, index, pref, frogLogin, frogLogout, switchArtist, isUnique, helpMe, artistLookup, getUser
 from rss import Daily, Weekly
 from uploader import uploader
 
@@ -61,6 +61,7 @@ urlpatterns = patterns('',
     url(r'^switchartist$', switchArtist),
     url(r'^artistlookup$', artistLookup),
     url(r'^isunique$', isUnique),
+    url(r'^getuser$', getUser),
 
     url(r'^$', index),
 )
