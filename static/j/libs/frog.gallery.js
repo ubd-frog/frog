@@ -224,38 +224,30 @@ Frog.Gallery = new Class({
             this.request(data)
         }
     },
-    removeItems: function(ids) {
+    removeItems: function(data) {
+        var ids = data.ids;
+        var silent = data.silent;
+
         if (ids.length === 0) {
             Ext.MessageBox.alert('Selection', 'Please select items first!');
 
             return false;
         }
         var guids = [];
-        var r = Ext.MessageBox.confirm(
-            'Remove Items',
-            'Are you sure you wish to remove (' + ids.length + ') items from the gallery?',
-            function(r) {
-                if (r === 'yes') {
-                    ids.each(function(id) {
-                        guids.push(this.objects[id].guid);
-                    }, this);
-
-                    new Request.JSON({
-                        url: location.href,
-                        emulation: false,
-                        headers: {"X-CSRFToken": Cookie.read('csrftoken')},
-                        onSuccess: function(res) {
-                            if (res.isSuccess) {
-                                ids.each(function(id) {
-                                    $(this.thumbnails[id]).destroy();
-                                    this.thumbnails.erase(id);
-                                }, this)
-                            }
-                        }.bind(this)
-                    }).DELETE({guids: guids.join(',')});
-                }
-            }.bind(this)
-        );
+        if (silent) {
+            this._removeItems(ids);
+        }
+        else {
+            var r = Ext.MessageBox.confirm(
+                'Remove Items',
+                'Are you sure you wish to remove (' + ids.length + ') items from the gallery?',
+                function(r) {
+                    if (r === 'yes') {
+                        this._removeItems(ids);
+                    }
+                }.bind(this)
+            );
+        }
     },
     viewImages: function(e, el) {
         e.stop();
@@ -317,5 +309,26 @@ Frog.Gallery = new Class({
         if (this.dirty) {
             this._getScreen();
         }
+    },
+    _removeItems: function(ids) {
+        ids.each(function(id) {
+            guids.push(this.objects[id].guid);
+        }, this);
+
+        new Request.JSON({
+            url: location.href,
+            emulation: false,
+            headers: {"X-CSRFToken": Cookie.read('csrftoken')},
+            onSuccess: function(res) {
+                if (res.isSuccess) {
+                    ids.each(function(id) {
+                        $(this.thumbnails[id]).destroy();
+                        this.thumbnails.erase(id);
+                    }, this);
+                }
+            }.bind(this)
+        }).DELETE({guids: guids.join(',')});
+
+        this.dirty = true;
     }
 });

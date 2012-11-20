@@ -350,12 +350,13 @@ Frog.UI = (function(Frog) {
         });
         win.show();
     }
-    function removeHandler() {
+    function removeHandler(silent) {
+        silent = silent || false;
         var ids = [];
         $$('.selected').each(function(item) {
             ids.push(item.dataset.frog_tn_id.toInt());
         });
-        RemoveObserver.fire(ids);
+        RemoveObserver.fire({ids: ids, silent: silent});
     }
     function copyHandler() {
         var win = Ext.create('widget.window', {
@@ -365,7 +366,7 @@ Frog.UI = (function(Frog) {
             resizable: false,
             modal: true,
             width: 600,
-            height: 300,
+            height: 330,
             bodyStyle: 'padding: 5px;'
         });
         win.show();
@@ -409,13 +410,33 @@ Frog.UI = (function(Frog) {
                         id: 'frog_gallery_id'
                     }
                 ]
+            }, {
+                xtype: 'checkbox',
+                fieldLabel: 'Move Items?',
+                name: 'move'
             }],
             buttons: [{
-                text: 'Send',
+                text: 'Submit',
                 handler: function() {
                     var data = fp.getForm().getValues();
+                    var selected = $$('.thumbnail.selected');
+                    var obj = {};
+
                     data.id = data['frog_gallery_id-inputEl'];
+                    if (typeof(data.id) === 'undefined') {
+                        Ext.MessageBox.show({
+                            title: 'Missing Information',
+                            msg: 'Please enter a title or choose an existing gallery',
+                            buttons: Ext.MessageBox.OK,
+                            icon: Ext.MessageBoxINFO
+                        });
+                        
+                        return false;
+                    }
+
+                    // -- New Gallery
                     if (data.title !== "") {
+                        // -- Create the new gallery first synchronously
                         var private = (data.private === 'on') ? true : false;
                         new Request.JSON({
                             url: '/frog/gallery',
@@ -425,11 +446,17 @@ Frog.UI = (function(Frog) {
                             }
                         }).POST({title: data.title, description: data.description, private: private});
                     }
-                    var selected = $$('.thumbnail.selected');
+
                     guids = [];
                     selected.each(function(item) {
                         guids.push(item.dataset.frog_guid);
                     });
+                    obj.guids = guids.join(',');
+
+                    if (data.move === 'on' && data.id !== ID) {
+                        obj.move = ID;
+                    }
+
                     new Request.JSON({
                         url: '/frog/gallery/' + data.id,
                         emulation: false,
@@ -442,8 +469,12 @@ Frog.UI = (function(Frog) {
                                 }
                             });
                         }
-                    }).PUT({guids: guids.join(',')});
+                    }).PUT(obj);
                     win.close();
+
+                    if (typeof(obj.move) !== 'undefined') {
+                        removeHandler(true);
+                    }
                 }
             },{
                 text: 'Cancel',

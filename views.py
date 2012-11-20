@@ -108,7 +108,8 @@ class GalleryView(MainView):
     def put(self, request, obj_id=None):
         """ Adds Image and Video objects to Gallery based on GUIDs """
         guids = filter(None, request.PUT.get('guids', '').split(','))
-        private = request.PUT.get('private', None)
+        private = request.PUT.get('private')
+        move = request.PUT.get('move')
         object_ = self._getObject(obj_id)
         
         if guids:
