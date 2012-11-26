@@ -233,8 +233,8 @@ class GalleryView(MainView):
             logger.debug(m.model + '_initial_query: %f' % (time.clock() - NOW))
 
             if tags:
-                searchQuery = ""
                 for bucket in tags:
+                    searchQuery = ""
                     o = None
                     for item in bucket:
                         ## -- filter by tag
@@ -253,7 +253,7 @@ class GalleryView(MainView):
                                 o |= Q(title__icontains=item)
                     if HAYSTACK and searchQuery != "":
                         ## -- once all tags have been filtered, filter by search
-                        searchIDs = self._search(searchQuery.strip())
+                        searchIDs = self._search(searchQuery)
                         if searchIDs:
                             if not o:
                                 o = Q()
@@ -341,7 +341,8 @@ class GalleryView(MainView):
     def _search(self, query):
         """ Performs a search query and returns the object ids """
         query = query.strip()
-        return [o.object.id for o in SearchQuerySet().auto_query(query)]
+        logger.debug(query)
+        return [o.object.id for o in SearchQuerySet().auto_query(query).load_all()]
 
 
 class TagView(MainView):

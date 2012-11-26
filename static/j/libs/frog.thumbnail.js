@@ -90,6 +90,7 @@ Frog.Thumbnail = new Class({
         }).inject(top);
         this.img = new Element('img', {
             src: Frog.getPixel(),
+            unselectable: 'on',
             events: {
                 load: function() {
                     self.fireEvent('onLoad', [this]);

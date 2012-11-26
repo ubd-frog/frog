@@ -24,6 +24,7 @@ Frog.QueryBuilder = new Class({
     Implements: [Options, Events],
     options: {
         data: [[]],
+        buckets: 3,
         onChange: function(){}
     },
     initialize: function(options) {
@@ -34,6 +35,20 @@ Frog.QueryBuilder = new Class({
         this.data = [];
         this.buckets = [];
         this.sourcebucket = null;
+        this.maxBuckets = 3;
+        this.__isInit = true;
+        var dirty = false;
+
+        // -- Add our main element
+        this.element = new Element('div', {id: 'frog_builder'});
+        var frog = new Image();
+        frog.addClass('frog-logo');
+        frog.onload = function() {
+            this.element.grab(frog);
+        }.bind(this)
+        frog.src = Frog.icon('frog');
+
+
         // this.sortables = new Sortables($$('.frog-bucket'), {
         //     clone: true,
         //     revert: true,
@@ -43,35 +58,44 @@ Frog.QueryBuilder = new Class({
         //     this.sourcebucket = el.parentNode;
         // }.bind(this));
         // this.sortables.addEvent('complete', function(el) {
-        //     var bucket = el.parentNode;
+        //     var tag, bucket, source;
+        //     var bucketElement = el.parentNode;
         //     var id = el.dataset.frog_tag_id.toInt();
-        //     if (typeOf(id) === 'null') {
-        //         id = new Frog.Tag(el.dataset.frog_tag_id, el.dataset.frog_tag_id);
+        //     if (bucketElement !== this.sourcebucket) {
+        //         if (typeOf(id) === 'null') {
+        //             tag = new Frog.Tag(el.dataset.frog_tag_id, el.dataset.frog_tag_id);
+        //         }
+        //         for(var i=0;i<this.buckets.length;i++) {
+        //             if (bucketElement === $(this.buckets[i])) {
+        //                 bucket = this.buckets[i];
+        //                 break;
+        //             }
+        //         }
+        //         for(var i=0;i<this.buckets.length;i++) {
+        //             if (this.sourcebucket === $(this.buckets[i])) {
+        //                 source = this.buckets[i];
+        //                 break;
+        //             }
+        //         }
+        //         if (bucket && source) {
+        //             bucket.addTag(tag);
+        //             source.removeTag(tag);
+        //         }
         //     }
-        //     if (bucket !== this.sourcebucket) {
-        //         this.sourcebucket
-        //     }
-
-        //     this.buckets[0].addTag(id);
+            
         // }.bind(this));
-        data.each(function(bucket) {
-            var clean = bucket.filter(function(item) { return item !== "" });
-            self.data.push(clean);
-        })
-        this.element = new Element('div', {id: 'frog_builder'});
-        var frog = new Image();
-        frog.addClass('frog-logo');
-        frog.onload = function() {
-            this.element.grab(frog);
-        }.bind(this)
-        frog.src = Frog.icon('frog');
-        this.change = this._change.bind(this);
-        this.historyCallback = this._historyEvent.bind(this);
 
+        // -- Remove empty buckets
+        this.clean(data);
+
+        // -- Event bindings
+        this.change = this._change.bind(this);
+        this.filterHandler = this._filter.bind(this);
+        Frog.UI.addEvent('filter', this.filterHandler);
+        this.historyCallback = this._historyEvent.bind(this);
         window.addEventListener('hashchange', this.historyCallback, false);
 
-        var dirty = false;
-
+        // -- Build buckets based on data
         this.data.each(function(bucket, idx) {
             dirty = true;
             var bucketObject = self.addBucket(true);
@@ -85,6 +109,12 @@ Frog.QueryBuilder = new Class({
             this.addBucket(true);
             dirty = true;
         }
+        if (Frog.UI.isAdvancedFilterEnabled()) {
+            if (this.buckets.getLast().length() > 0) {
+                this.addBucket();
+            }
+        }
+        this.__isInit = false;
 
         if (dirty) {
             this.change();
@@ -94,23 +124,19 @@ Frog.QueryBuilder = new Class({
         return this.element;
     },
     addBucket: function() {
-        var idx = this.buckets.length;
-        var bucket = new Frog.Bucket(idx);
+        var bucket = new Frog.Bucket();
         $(bucket).inject(this.element);
         bucket.addEvent('change', this.change);
         bucket.addEvent('empty', function(b) {
             if (this.buckets.length > 1) {
-                $(b).destroy();
+                b.destroy();
                 this.buckets.erase(b);
+                if (this.buckets.getLast().length() > 0) {
+                    this.addBucket();
+                }
                 this.fireEvent('remove', [this, b]);
             }
         }.bind(this));
-        // Ext.create('Ext.Button', {
-        //     text: 'add',
-        //     renderTo: bucket.li,
-        //     height: 22,
-        //     handler: this.addBucket.bind(this)
-        // });
         
         this.buckets.push(bucket);
         //this.sortables.addLists($(bucket));
@@ -122,29 +148,68 @@ Frog.QueryBuilder = new Class({
     },
     addTag: function(bucket, tag_id) {
         var tag = this.buckets[bucket].addTag(tag_id);
-        //this.sortables.addItems($(tag));
+    },
+    clean: function(buckets) {
+        var self = this;
+        buckets = buckets || this.buckets;
+        buckets.each(function(bucket) {
+            var clean = bucket.filter(function(item) { return item !== "" });
+            if (clean.length) {
+                self.data.push(clean);
+            }
+        });
     },
     _historyEvent: function(e) {
         var key = (typeOf(e) === 'string') ? e : e.newURL;
         var data = JSON.parse(unescape(key.split('#')[1]));
         this.data = data.filters;
     },
-    _change: function(e) {
-        var data = this.buckets.map(function(bucket) {
-            return bucket.data();
-        });
-        this.fireEvent('onChange', [data]);
+    _change: function(data, bucket) {
+        if (!this.__isInit) {
+            var data = this.buckets.map(function(bucket) {
+                return bucket.data();
+            });
+            if (Frog.UI.isAdvancedFilterEnabled() && typeof(bucket) !== 'undefined') {
+                if (this.buckets.getLast().length() > 0 && this.buckets.length < this.options.buckets) {
+                    this.addBucket();
+                }
+            }
+            this.fireEvent('onChange', [data]);
+        }
+        
         //this.sortables.addItems($$('.frog-tag'));
+    },
+    _filter: function(state) {
+        var bucket;
+        if (!state) {
+            while(this.buckets.length > 1) {
+                bucket = this.buckets.getLast();
+                bucket.destroy();
+                this.buckets.erase(bucket);
+                this.fireEvent('remove', [this, bucket]);
+            }
+        }
+
+        bucket = this.buckets[0];
+
+        for (var i=1;i<bucket.length();i++) {
+            bucket.removeTag(bucket.tags[i]);
+        }
+        this.change(undefined, bucket);
+    },
+    _enableSort: function(enable) {
+        if (typeof(enable) === 'undefined') {
+            enable = true;
+        }
+
     }
 });
 
 
 Frog.Bucket = new Class({
     Implements: Events,
-    initialize: function(index) {
-        this.index = index;
+    initialize: function() {
         this.element = new Element('ul', {'class': 'frog-bucket'});
-        this.element.dataset['frog_bucket_id'] = this.index;
         this.li = new Element('li').inject(this.element);
         this.input = new Element('input', {placeholder: "Search"}).inject(this.li);
         this.tags = [];
@@ -163,6 +228,9 @@ Frog.Bucket = new Class({
     toString: function() {
         return this.data().toString();
     },
+    length: function() {
+        return this.element.childElementCount - 1;
+    },
     data: function() {
         return this.tags.map(function(t) { return t.id; });
     },
@@ -172,38 +240,28 @@ Frog.Bucket = new Class({
         }
         var tagIDs = this.tags.map(function(t) { return t.id; });
         if (!tagIDs.contains(tag.id)) {
+            if (!Frog.UI.isAdvancedFilterEnabled()) {
+                this.tags = [];
+                this.element.getElements('.frog-tag').dispose();
+            }
             tag.addEvent('close', this.events.tagClose);
             this.tags.push(tag);
             this.element.grab($(tag), 'top');
-            this.fireEvent('onChange', [this.data]);
+            this.fireEvent('onChange', [this.data(), this]);
         }
 
         return tag;
     },
-    __build: function() {
-        this.input.addEvent('keyup', this.events.keyUp);
-        new Meio.Autocomplete(this.input, '/frog/tag/search', {
-            filter: {
-                path: 'name',
-                formatItem: function(text, data) {
-                    if (data.id === 0) {
-                        return '<span class="search"></span>' + data.name
-                    }
-                    else {
-                        return '<span></span>' + data.name
-                    }
-                }
-            },
-            urlOptions: {
-                extraParams: [{
-                    name: 'search', value: true
-                }]
-            },
-            requestOptions: {
-                headers: {"X-CSRFToken": Cookie.read('csrftoken')},
-            },
-            onSelect: this.events.select
-        });
+    removeTag: function(tag) {
+        for(var i=0;i<this.tags.length;i++) {
+            if (tag.id === this.tags[i].id) {
+                this.tags[i].close();
+            }
+        }
+    },
+    destroy: function() {
+        this.element.getElements('.frog-tag').dispose();
+        this.element.destroy();
     },
     keyUpEvent: function(e) {
         if (e.code === 13 && this.input.value !== "") {
@@ -231,6 +289,31 @@ Frog.Bucket = new Class({
         if (this.tags.length === 0) {
             this.fireEvent('onEmpty', [this]);
         }
-        this.fireEvent('onChange');
+        this.fireEvent('onChange', [this.data(), this]);
+    },
+    __build: function() {
+        this.input.addEvent('keyup', this.events.keyUp);
+        new Meio.Autocomplete(this.input, '/frog/tag/search', {
+            filter: {
+                path: 'name',
+                formatItem: function(text, data) {
+                    if (data.id === 0) {
+                        return '<span class="search"></span>' + data.name
+                    }
+                    else {
+                        return '<span></span>' + data.name
+                    }
+                }
+            },
+            urlOptions: {
+                extraParams: [{
+                    name: 'search', value: true
+                }]
+            },
+            requestOptions: {
+                headers: {"X-CSRFToken": Cookie.read('csrftoken')},
+            },
+            onSelect: this.events.select
+        });
     }
 })

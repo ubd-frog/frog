@@ -188,18 +188,23 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
             var self = this;
             this.id = id;
             this.name = name || Frog.Tags.get(id);
+            this.isSearch = typeof(id) === 'string';
             this.element = new Element('li', {'class': 'frog-tag'});
+            if (this.isSearch) {
+                this.element.addClass('frog-tag-search');
+            }
             this.element.dataset.frog_tag_id = this.id;
-            new Element('span').inject(this.element)
+            new Element('span').inject(this.element);
             new Element('a', {href: 'javascript:void(0);', text: this.name.capitalize(), 'class': 'frog-tag'}).inject(this.element);
             this.closeButton = new Element('div', {
                 text: 'x',
                 events: {
-                    'click': function(e) {
-                        self.fireEvent('onClose', [self]);
-                    }
+                    'click': this.close.bind(this)
                 }
             }).inject(this.element);
+        },
+        close: function(e) {
+            this.fireEvent('onClose', [this]);
         },
         toElement: function() {
             return this.element;

@@ -25,6 +25,7 @@ Frog.UI = (function(Frog) {
     var navmenu = Ext.create('Ext.menu.Menu');
     var managemenu =  Ext.create('Ext.menu.Menu');
     var uploadEnabled = false;
+    var advancedFilter = Frog.Prefs.advanced_filter;
 
 
     // -- Models
@@ -56,6 +57,7 @@ Frog.UI = (function(Frog) {
     ToolBar = Ext.create('Ext.toolbar.Toolbar');
     RemoveObserver = new Frog.Observer();
     ChangeObserver = new Frog.Observer();
+    FilterObserver = new Frog.Observer();
 
     function setId(id) {
         ID = id;
@@ -122,6 +124,17 @@ Frog.UI = (function(Frog) {
                         icon: Frog.icon('photos'),
                         menu: managemenu
                     });
+                    ToolBar.add({
+                        text: 'Filter',
+                        icon: Frog.icon('filter'),
+                        enableToggle: true,
+                        pressed: advancedFilter,
+                        toggleHandler: function(btn) {
+                            advancedFilter = btn.pressed;
+                            Frog.Prefs.set('advanced_filter', advancedFilter);
+                            FilterObserver.fire(advancedFilter);
+                        }
+                    });
                     ToolBar.add('-');
                     
                     // -- Help button
@@ -151,6 +164,9 @@ Frog.UI = (function(Frog) {
                 break;
             case 'change':
                 ChangeObserver.subscribe(fn);
+                break;
+            case 'filter':
+                FilterObserver.subscribe(fn);
                 break;
         }
     }
@@ -700,7 +716,8 @@ Frog.UI = (function(Frog) {
         addEvent: addEvent,
         addTool: addTool,
         enableUploads: enableUploads,
-        addPrivateMenu: addPrivateMenu
+        addPrivateMenu: addPrivateMenu,
+        isAdvancedFilterEnabled: function() { return advancedFilter; }
     };
 
     return api;

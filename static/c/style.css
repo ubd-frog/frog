@@ -343,6 +343,16 @@ a:hover { color: #fff; }
         -moz-transition: opacity 0.3s;
         -ms-box-sizing: border-box;
         -ms-transition: opacity 0.3s;
+        -moz-user-select: -moz-none;
+        -khtml-user-select: none;
+        -webkit-user-select: none;
+
+        /*
+        Introduced in IE 10.
+        See http://ie.microsoft.com/testdrive/HTML5/msUserSelect/
+        */
+        -ms-user-select: none;
+        user-select: none;
     }
     .thumbnail.loaded img {
         opacity: 1.0;
@@ -432,6 +442,9 @@ li.frog-tag {
         border-radius: 7px;
         -webkit-border-radius: 7px;
         -moz-border-radius: 7px;
+    }
+    li.frog-tag-search span {
+        background: #b8d364;
     }
     li.frog-tag * {
 
@@ -529,6 +542,9 @@ li.frog-tag {
     height: 16px;
     margin-right: 4px;
     background: url(../i/tag_orange.png) no-repeat;
+}
+.ma-container li span.search {
+    background: url(../i/magnifier.png) no-repeat;
 }
 /*Autocomplete*/
 .ma-container{
@@ -838,6 +854,11 @@ li.frog-tag {
 }
 #frog_shelf img {
     margin: 0 4px;
+    cursor: pointer;
+    border: 1px solid transparent;
+}
+#frog_shelf img:hover {
+    border-color: #fff;
 }
 #frog_shelf_trigger {
     position: absolute;

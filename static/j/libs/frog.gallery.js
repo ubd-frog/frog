@@ -108,14 +108,16 @@ Frog.Gallery = new Class({
                 'ctrl+a': function(e) { e.stop(); $$('.thumbnail').addClass('selected'); },
                 'ctrl+d': function(e) { e.stop(); $$('.thumbnail').removeClass('selected'); }
             }
-        })
+        });
+
+        this.selector = new Selection(this.container, {selector: '.thumbnail'});
         
         var builderData;
         if (location.hash !== "") {
             data = JSON.parse(location.hash.split('#')[1]);
             builderData = data.filters;
         }
-        var bucketHeight = 30;
+        var bucketHeight = 50;
         this.builder = new Frog.QueryBuilder({
             data: builderData,
             onChange: function(data) {
