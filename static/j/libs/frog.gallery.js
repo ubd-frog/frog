@@ -110,7 +110,10 @@ Frog.Gallery = new Class({
             }
         });
 
-        this.selector = new Selection(this.container, {selector: '.thumbnail'});
+        this.selector = new Selection(this.container, {
+            selector: '.thumbnail',
+            ignore: ['a', 'span']
+        });
         
         var builderData;
         if (location.hash !== "") {

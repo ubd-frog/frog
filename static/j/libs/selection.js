@@ -25,6 +25,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         options: {
             color: [51, 153, 255],
             selector: 'body *',
+            ignore: [],
             useCache: true,
             snap: 10,
             selectionClass: 'selected'
@@ -99,21 +100,23 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
             return false;
         },
         __down: function(e) {
-            e.preventDefault();
-            this.isMouseDown = true;
-            if (this.options.useCache) {
-                this.__processCache();
-            }
-            this.__activate();
-            this.__point = {x: e.client.x, y: e.client.y};
-            this.element.setStyles({
-                top: this.__point.y,
-                left: this.__point.x,
-                width: 0,
-                height: 0
-            });
+            if (!this.options.ignore.contains(e.target.get('tag').toLowerCase())) {
+                e.preventDefault();
+                this.isMouseDown = true;
+                if (this.options.useCache) {
+                    this.__processCache();
+                }
+                this.__activate();
+                this.__point = {x: e.client.x, y: e.client.y};
+                this.element.setStyles({
+                    top: this.__point.y,
+                    left: this.__point.x,
+                    width: 0,
+                    height: 0
+                });
 
-            return false;
+                return false;
+            }
         },
         __move: function(e) {
             var x, y, w, h, dx, dy;

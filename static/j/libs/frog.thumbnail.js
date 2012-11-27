@@ -105,7 +105,7 @@ Frog.Thumbnail = new Class({
         this.tagList = new Element('div').inject(tags);
 
         var bot = new Element('div').inject(this.element);
-        this.title = new Element('div', {'text': this.object.title}).inject(bot);
+        this.title = new Element('span', {'text': this.object.title}).inject(bot);
         var artistDiv = new Element('div', {'text': 'Artist: '}).inject(bot);
         this.artist = new Element('a', {'href': "javascript:void(0);", 'class': 'frog-tag'}).inject(artistDiv);
         var commentLink = new Element('div', {
