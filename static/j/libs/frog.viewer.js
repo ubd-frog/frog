@@ -338,6 +338,8 @@ Frog.Viewer = new Class({
         }
 
         this.element.setStyle('background-color', Frog.Prefs.backgroundColor);
+
+        document.body.addClass('noselect');
         
         this.fireEvent('onShow', [this]);
         this.isOpen = true;
@@ -362,6 +364,8 @@ Frog.Viewer = new Class({
         }
 
         this.videoEl.pause();
+
+        document.body.removeClass('noselect');
 
         this.fireEvent('onHide', [this]);
         this.isOpen = false;

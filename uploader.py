@@ -33,7 +33,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.models import User
 
 from models import Piece, Image, Video, Gallery
-from common import JsonResponse, Result, uniqueID, getHashForFile
+from common import JsonResponse, Result, uniqueID, getHashForFile, getRoot
 
 from django.conf import settings
 
@@ -104,7 +104,7 @@ class Uploader(object):
 
                     return JsonResponse(res)
 
-                objPath = Path(settings.MEDIA_ROOT) / guid.guid[-2:] / guid.guid / filename
+                objPath = getRoot() / guid.guid[-2:] / guid.guid / filename
                 hashPath = objPath.parent / hashVal + objPath.ext
                 
                 if not objPath.parent.exists():

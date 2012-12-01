@@ -29,6 +29,7 @@ from django.conf import settings
 from frog.models import Gallery, RSSStorage, Image, Video, Piece, Tag
 from frog.uploader import EXT, User
 from frog.path import path as Path
+from frog.common import getRoot
 
 
 class Command(BaseCommand):
@@ -70,7 +71,7 @@ class Command(BaseCommand):
                 guid = obj.getGuid()
                 hashVal = file_.read_hexhash('sha1')
 
-                objPath = Path(settings.MEDIA_ROOT) / guid.guid[-2:] / guid.guid / file_.name.lower()
+                objPath = getRoot() / guid.guid[-2:] / guid.guid / file_.name.lower()
                 hashPath = objPath.parent / hashVal + objPath.ext
                 
                 if not objPath.parent.exists():

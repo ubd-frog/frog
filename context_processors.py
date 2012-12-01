@@ -24,13 +24,13 @@ from path import path as Path
 
 from django.conf import settings
 
-from common import PluginContext
+from common import PluginContext, getRoot
 
 
 def media(request):    
     obj = {
         'MEDIA_URL': settings.MEDIA_URL,
-        'MEDIA_ROOT': settings.MEDIA_ROOT,
+        'MEDIA_ROOT': getRoot(),
         'isAjax': request.is_ajax(),
         'plugins': PluginContext,
     }

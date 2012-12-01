@@ -52,6 +52,8 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
             this.down = this.__down.bind(this);
             this.move = this.__move.bind(this);
 
+            this.__addClass();
+
             this.activate();
         },
         activate: function() {
@@ -175,15 +177,18 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
             this.element.setStyle('display', 'none');
         },
         __activate: function() {
-            this.__rootStyles = document.body.getStyles('cursor', '-webkit-user-select');
-            document.body.setStyles({
-                cursor: 'arrow',
-                '-webkit-user-select': 'none'
-            });
+            // this.__rootStyles = document.body.getStyles('cursor', '-webkit-user-select');
+            // document.body.setStyles({
+            //     cursor: 'arrow',
+            //     '-webkit-user-select': 'none'
+            // });
+            document.body.addClass('noselect');
         },
         __deactivate: function() {
             this.isActive = false;
-            document.body.setStyles(this.__rootStyles);
+            document.body.removeClass('noselect');
+            //document.body.setStyles(this.__rootStyles);
+            //document.body.setStyle('-webkit-user-select', null);
         },
         __intersect: function (r1, r2) {
             return !(
@@ -192,6 +197,18 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
                 r2.top > r1.bottom ||
                 r2.bottom < r1.top
             );
+        },
+        __addClass: function() {
+            var el = new Element('style', {'type': 'text/css'});
+            el.set('html', '.noselect {\
+                -webkit-touch-callout: none;\
+                -webkit-user-select: none;\
+                -khtml-user-select: none;\
+                -moz-user-select: none;\
+                -ms-user-select: none;\
+                user-select: none;\
+            }');
+            el.inject(document.head);
         }
     });
 

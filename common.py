@@ -181,6 +181,10 @@ class Result(object):
         self.values.append(val)
         self.value = self.values[0]
 
+
+def getRoot():
+    return Path(settings.MEDIA_ROOT.replace('\\', '/'))
+
 def getHashForFile(f):
     hashVal = hashlib.sha1()
     while True:

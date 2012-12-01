@@ -50,6 +50,7 @@ DefaultPrefs = {
     'includeImage': True,
     'includeVideo': True,
 }
+ROOT = Path(settings.MEDIA_ROOT.replace('\\', '/'))
 
 
 class Tag(models.Model):
@@ -114,7 +115,7 @@ class Piece(models.Model):
     def getPath(self):
         guid = self.getGuid()
         
-        return Path(settings.MEDIA_ROOT) / guid.guid[-2:] / guid.guid
+        return ROOT / guid.guid[-2:] / guid.guid
 
     def getFiles(self):
         path = self.getPath()
@@ -123,8 +124,8 @@ class Piece(models.Model):
         thumb = Path(self.thumbnail.name).name.replace(self.hash, self.title)
         source = Path(self.source.name).name.replace(self.hash, self.title)
         files = {}
-        files[thumb] = settings.MEDIA_ROOT + '/' + self.thumbnail.name
-        files[source] = settings.MEDIA_ROOT + '/' + self.source.name
+        files[thumb] = ROOT + '/' + self.thumbnail.name
+        files[source] = ROOT + '/' + self.source.name
         
         for file_ in allfiles:
             if not re.findall('([0-9A-Za-z]{40}\.\w+)', file_):
@@ -185,11 +186,11 @@ class Image(Piece):
         - Save thumbnail, small, and image versions
         '''
         
-        self.source = hashPath.replace('\\', '/').replace(settings.MEDIA_ROOT, '')
+        self.source = hashPath.replace('\\', '/').replace(ROOT, '')
         galleries = galleries or []
         tags = tags or []
 
-        imagefile = Path(settings.MEDIA_ROOT + self.source.name)
+        imagefile = Path(ROOT + self.source.name)
         
         workImage = pilImage.open(imagefile)
 
@@ -198,7 +199,7 @@ class Image(Piece):
             workImage.save(png)
             workImage = pilImage.open(png)
             imagefile.move(imagefile.replace(self.hash, self.title))
-            self.source = png.replace(settings.MEDIA_ROOT, '')
+            self.source = png.replace(ROOT, '')
 
         formats = [
             ('image', gMaxSize),
@@ -210,7 +211,7 @@ class Image(Piece):
                 workImage.thumbnail((n[1], n[1]), pilImage.ANTIALIAS)
                 dest = self.source.name.replace(hashVal, '_' * i + hashVal)
                 setattr(self, n[0], self.source.name.replace(hashVal, '_' * i + hashVal))
-                workImage.save(settings.MEDIA_ROOT + getattr(self, n[0]).name)
+                workImage.save(ROOT + getattr(self, n[0]).name)
             else:
                 setattr(self, n[0], self.source)
 
@@ -251,7 +252,7 @@ class Video(Piece):
         - Save thumbnail, video_thumbnail, and MP4 versions.  If the source is already h264, then only transcode the thumbnails
         '''
 
-        self.source = hashPath.replace('\\', '/').replace(settings.MEDIA_ROOT, '')
+        self.source = hashPath.replace('\\', '/').replace(ROOT, '')
         galleries = galleries or []
         tags = tags or []
 
@@ -270,7 +271,7 @@ class Video(Piece):
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         proc.communicate()
 
-        self.thumbnail = thumbnail.replace('\\', '/').replace(settings.MEDIA_ROOT, '')
+        self.thumbnail = thumbnail.replace('\\', '/').replace(ROOT, '')
 
         for gal in galleries:
             g = Gallery.objects.get(pk=int(gal))

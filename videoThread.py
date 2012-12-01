@@ -33,6 +33,7 @@ from django.conf import settings
 from path import path as Path
 
 TIMEOUT = 1
+ROOT = Path(settings.MEDIA_ROOT.replace('\\', '/'))
 logger = logging.getLogger('dev.frog')
 
 
@@ -57,9 +58,9 @@ class VideoThread(Thread):
                     item.queue.setStatus(item.queue.Processing)
                     item.queue.setMessage('Processing video...')
                     
-                    infile = "%s%s" % (settings.MEDIA_ROOT, item.source.name)
+                    infile = "%s%s" % (ROOT, item.source.name)
                     cmd = '%s -i "%s"' % (settings.FFMPEG, infile)
-                    sourcepath = Path(settings.MEDIA_ROOT) / item.source.name
+                    sourcepath = ROOT / item.source.name
 
                     ## -- Get the video information
                     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -88,7 +89,7 @@ class VideoThread(Thread):
 
                     ## -- Set the video to the result
                     logger.info('Done')
-                    item.video = outfile.replace('\\', '/').replace(settings.MEDIA_ROOT, '')
+                    item.video = outfile.replace('\\', '/').replace(ROOT, '')
                     item.queue.setStatus(item.queue.Completed)
                     item.save()
                 except Exception, e:

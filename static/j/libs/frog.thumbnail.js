@@ -55,7 +55,7 @@ Frog.Thumbnail = new Class({
     build: function() {
         var self = this;
         this.element = new Element('div', {
-            'class': 'thumbnail',
+            'class': 'thumbnail noselect',
             events: {
                 click: function(e) {
                     if (e.target.get('tag') === 'div') {

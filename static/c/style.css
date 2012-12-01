@@ -270,6 +270,14 @@ body > div {
     font-size: 11px;
     color: #ccc;
 }
+.noselect {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
 a, a:visited { color: #b8d364; text-decoration: none; }
 a:hover { color: #fff; }
 .thumbnail {
@@ -278,7 +286,6 @@ a:hover { color: #fff; }
     float: left;
     width: 200px;
     height: 220px;
-    /*padding: 4px;*/
     background: #202020;
     border: 1px solid transparent;
     box-sizing: border-box;
@@ -298,8 +305,10 @@ a:hover { color: #fff; }
         width: 100%;
         padding: 0 6px;
         overflow: hidden;
+        box-sizing: border-box;
         -webkit-box-sizing: border-box;
         -moz-box-sizing: border-box;
+        -ms-box-sizing: border-box;
     }
     .thumbnail > div:first-child {
         /*height: 80%;*/
@@ -311,25 +320,18 @@ a:hover { color: #fff; }
         bottom: 4px;
         height: 30px;
         white-space: nowrap;
-        -webkit-transition: height 0.3s ease-in 10s;
-        -moz-transition: height 0.3s ease-in 10s;
-
     }
         .thumbnail > div:last-child > div:first-child {
             text-overflow: ellipsis;
             
         }
-        /*.thumbnail > div:last-child:hover {
-            height: 50%;
-            white-space: normal;
-            background: #333;
-        }*/
     .thumbnail > div:first-child a {
         display: block;
         margin: 0 auto;
         background: #333;
         border: 1px solid #666;
         cursor: pointer;
+        box-sizing: border-box;
         -webkit-box-sizing: border-box;
         -moz-box-sizing: border-box;
         -ms-box-sizing: border-box;
@@ -337,22 +339,14 @@ a:hover { color: #fff; }
     .thumbnail img {
         margin: 2px;
         opacity: 0;
+        box-sizing: border-box;
         -webkit-box-sizing: border-box;
-        -webkit-transition: opacity 0.3s;
         -moz-box-sizing: border-box;
-        -moz-transition: opacity 0.3s;
         -ms-box-sizing: border-box;
-        -ms-transition: opacity 0.3s;
-        -moz-user-select: -moz-none;
-        -khtml-user-select: none;
-        -webkit-user-select: none;
 
-        /*
-        Introduced in IE 10.
-        See http://ie.microsoft.com/testdrive/HTML5/msUserSelect/
-        */
-        -ms-user-select: none;
-        user-select: none;
+        -webkit-transition: opacity 0.3s;
+        -moz-transition: opacity 0.3s;
+        -ms-transition: opacity 0.3s;
     }
     .thumbnail.loaded img {
         opacity: 1.0;
@@ -401,6 +395,8 @@ a:hover { color: #fff; }
         border: 1px solid #666;
         cursor: pointer;
         text-align: center;
+        border-radius: 4px 4px 0 4px;
+        -moz-border-radius: 4px 4px 0 4px;
         -webkit-border-radius: 4px 4px 0 4px;
     }
         .thumbnail .frog-comment-bubble:hover {
@@ -426,9 +422,9 @@ li.frog-tag {
     color: #b8d364;
     border: 1px solid #666;
     border-radius: 10px 0 0 10px;
-    z-index: 2002;
     -webkit-border-radius: 10px 0 0 10px;
     -moz-border-radius: 10px 0 0 10px;
+    z-index: 2002;
 }
     li.frog-tag span {
         display: inline-block;

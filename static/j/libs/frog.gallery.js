@@ -95,12 +95,13 @@ Frog.Gallery = new Class({
         this.viewer = new Frog.Viewer();
         this.viewer.addEvent('show', function() {
             window.scrollTo(0,0);
-            self.container.setStyle('height', 0)
+            self.container.setStyle('height', 0);
+            self.selector.deactivate();
         }.bind(this));
         this.viewer.addEvent('hide', function() {
             self.container.setStyle('height', 'auto')
-            //this.resize();
             window.scrollTo(0,this.y);
+            self.selector.activate();
         }.bind(this));
         this.keyboard = new Keyboard({
             active: true,
