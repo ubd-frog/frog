@@ -317,6 +317,7 @@ Frog.Gallery = new Class({
         }
     },
     _removeItems: function(ids) {
+        var guids = [];
         ids.each(function(id) {
             guids.push(this.objects[id].guid);
         }, this);
