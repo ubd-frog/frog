@@ -151,7 +151,11 @@ Frog.QueryBuilder = new Class({
     },
     clean: function(buckets) {
         var self = this;
-        buckets = buckets || this.buckets;
+        if (typeof(buckets) === 'undefined') {
+            buckets = this.buckets.map(function(item) {
+                return item.data();
+            });
+        }
         buckets.each(function(bucket) {
             var clean = bucket.filter(function(item) { return item !== "" });
             if (clean.length) {
@@ -160,9 +164,34 @@ Frog.QueryBuilder = new Class({
         });
     },
     _historyEvent: function(e) {
-        var key = (typeOf(e) === 'string') ? e : e.newURL;
-        var data = JSON.parse(unescape(key.split('#')[1]));
-        this.data = data.filters;
+        var self = this;
+        if (!this.__isInit) {
+            var key = (typeOf(e) === 'string') ? e : e.newURL;
+            var data = JSON.parse(unescape(key.split('#')[1]));
+            this.data = data.filters;
+        }
+        
+        this.__isInit = true;
+        this.buckets.each(function(bucket) {
+            bucket.destroy();
+            self.fireEvent('remove', [self, bucket]);
+        });
+        this.buckets = [];
+        this.data.each(function(bucket, idx) {
+            dirty = true;
+            var bucketObject = self.addBucket(true);
+            bucket.each(function(t) {
+                var name = (typeOf(t) === 'number') ? Frog.Tags.get(t) : t;
+                var tag = new Frog.Tag(t, name);
+                bucketObject.addTag(tag);
+            });
+        });
+        if (Frog.UI.isAdvancedFilterEnabled()) {
+            if (this.buckets.getLast().length() > 0) {
+                this.addBucket();
+            }
+        }
+        this.__isInit = false;
     },
     _change: function(data, bucket) {
         if (!this.__isInit) {
@@ -309,6 +338,9 @@ Frog.Bucket = new Class({
                 extraParams: [{
                     name: 'search', value: true
                 }]
+            },
+            listOptions: {
+                width: 300
             },
             requestOptions: {
                 headers: {"X-CSRFToken": Cookie.read('csrftoken')},

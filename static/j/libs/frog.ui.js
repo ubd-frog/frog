@@ -367,7 +367,13 @@ Frog.UI = (function(Frog) {
         win.show();
     }
     function removeHandler(silent) {
-        silent = silent || false;
+        if (typeof(silent) === 'undefined') {
+            silent = false;
+        }
+        else if (typeof(silent) !== 'boolean') {
+            silent = false;
+        }
+        
         var ids = [];
         $$('.selected').each(function(item) {
             ids.push(item.dataset.frog_tn_id.toInt());

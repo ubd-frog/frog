@@ -133,7 +133,8 @@ Frog.Gallery = new Class({
             },
             onRemove: function() {
                 var pad = self.container.getStyle('padding-top').toInt();
-                self.container.setStyle('padding-top', pad - bucketHeight);
+                var height = Math.max(bucketHeight, pad - bucketHeight)
+                self.container.setStyle('padding-top', height);
             }
         });
         $(this.builder).inject(this.container, 'before');
@@ -205,6 +206,7 @@ Frog.Gallery = new Class({
                         t.setSize(self.tileSize);
                         self.container.grab($(t));
                     });
+                    window.scrollTo(0,0);
                     self._getScreen();
                 }
                 self.isRequesting = false;
@@ -228,6 +230,9 @@ Frog.Gallery = new Class({
         }
         if (data.filters !== this.requestData.filters || !this.requestData.filters) {
             this.request(data)
+        }
+        if (this.builder) {
+            this.builder.clean();
         }
     },
     removeItems: function(data) {
