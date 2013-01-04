@@ -29,14 +29,8 @@ class FrogPluginRegistry(type):
 class FrogPlugin(object):
     __metaclass__ = FrogPluginRegistry
 
-    def buttonHook(self):
+    def data(self):
         """ 
-        Return a dict with label, callback, js, and css lists
-        """
-        return None
-
-    def managerHook(self):
-        """ 
-        Return a dict with label, callback, js, and css lists
+        Return a dict with label, callback, altclick, js, and css lists
         """
         return None

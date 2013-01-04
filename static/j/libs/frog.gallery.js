@@ -24,7 +24,8 @@ Frog.Gallery = new Class({
     Implements: [Events, Options],
     options: {
         private: false,
-        upload: true
+        upload: true,
+        altclick: false
     },
     initialize: function(el, id, options) {
         var self = this;
@@ -63,7 +64,6 @@ Frog.Gallery = new Class({
             var commentEl = $(self.thumbnails[id]).getElements('.frog-comment-bubble')[0];
             var count = commentEl.get('text').toInt();
             commentEl.set('text', count + 1);
-
         })
 
         // -- Instance objects
@@ -262,6 +262,13 @@ Frog.Gallery = new Class({
     },
     viewImages: function(e, el) {
         e.stop();
+        if (this.options.altclick && e.control) {
+            var id = el.parentNode.parentNode.dataset['frog_tn_id'].toInt();
+            this.options.altclick(this.objects[id]);
+
+            return true;
+        }
+        
         this.y = window.getScroll().y;
         var selection = $$('.thumbnail.selected');
         var id = (Browser.ie) ? el.parentNode.parentNode.getProperty('dataset-frog_tn_id') : el.parentNode.parentNode.dataset.frog_tn_id;

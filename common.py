@@ -221,28 +221,35 @@ def getPluginContext():
     js = []
     css = []
     buttons = []
+    altclick = None
     defaultdata = {
         'label': '',
         'icon': '/frog/i/photos.png',
         'callback': '',
         'js': [],
-        'css': []
+        'css': [],
+        'altclick': None,
     }
 
     for plugin in plugins.values():
         plugin = plugin()
-        buttondata = plugin.buttonHook()
+        plugindata = plugin.data()
 
-        if buttondata:
+        if plugindata:
             defdict = defaultdata.copy()
-            defdict.update(buttondata)
+            defdict.update(plugindata)
 
-            buttons.append([defdict['label'], defdict['icon'], defdict['callback']])
+            if defdict['callback']:
+                buttons.append([defdict['label'], defdict['icon'], defdict['callback']])
+            if defdict['altclick'] and altclick is None:
+                altclick = defdict['altclick']
+
             js += defdict['js']
             css += defdict['css']
 
     data = {
         'buttons': buttons,
+        'altclick': altclick,
         'js': list(set(js)),
         'css': list(set(css)),
     }
