@@ -70,6 +70,12 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
             }
 
             return {width: width * scale, height: height * scale};
+        },
+        clamp: function(min, max, val) {
+            var n = Math.max(min, val);
+            n = Math.min(max, n);
+
+            return n;
         }
     }
     
@@ -248,8 +254,15 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
                             e.stop();
                             this.hide();
                             var el = $('frog_comments');
-                            var guid = el.dataset.frog_guid;
-                            var id = el.dataset.frog_gallery_id;
+                            if (Browser.ie) {
+                                var guid = el.getProperty('dataset-frog_guid');
+                                var id = el.getProperty('dataset-frog_gallery_id');
+                            }
+                            else {
+                                var guid = el.dataset.frog_guid;
+                                var id = el.dataset.frog_gallery_id;
+                            }
+                            
                             self.input.show();
                             self.input.focus();
                             if (!self.saveButton) {
@@ -303,6 +316,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
             }
             this.top.set('html', html);
             window.addEvent('mousewheel', this.scrollEvent);
+            this.container.setStyle('top', window.pageYOffset);
         },
         close: function() {
             this.container.hide();

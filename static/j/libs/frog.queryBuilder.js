@@ -166,7 +166,8 @@ Frog.QueryBuilder = new Class({
     _historyEvent: function(e) {
         var self = this;
         if (!this.__isInit) {
-            var key = (typeOf(e) === 'string') ? e : e.newURL;
+            //var key = (typeOf(e) === 'string') ? e : e.newURL;
+            var key = location.href;
             var data = JSON.parse(unescape(key.split('#')[1]));
             this.data = data.filters;
         }

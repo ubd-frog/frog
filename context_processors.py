@@ -27,12 +27,15 @@ from django.conf import settings
 from common import PluginContext, getRoot
 
 
-def media(request):    
+BUILD = 1000
+
+def media(request):
     obj = {
         'MEDIA_URL': settings.MEDIA_URL,
         'MEDIA_ROOT': getRoot(),
         'isAjax': request.is_ajax(),
         'plugins': PluginContext,
+        'build': BUILD,
     }
 
     return obj

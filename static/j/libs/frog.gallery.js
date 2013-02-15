@@ -222,7 +222,8 @@ Frog.Gallery = new Class({
         this._getScreen();
     },
     historyEvent: function(e) {
-        var key = (typeOf(e) === 'string') ? e : e.newURL;
+        //var key = (typeOf(e) === 'string') ? e : e.newURL;
+        var key = location.href;
         var data = JSON.parse(unescape(key.split('#')[1]));
         data.filters = JSON.stringify(data.filters);
         if (typeof data.viewer === 'undefined' && this.viewer.isOpen) {
