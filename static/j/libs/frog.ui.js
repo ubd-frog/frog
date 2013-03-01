@@ -46,7 +46,7 @@ Frog.UI = (function(Frog) {
         model: 'Gallery',
         proxy: {
             type: 'ajax',
-            url: '/frog/gallery',
+            url: '/gallery',
             reader: {
                 type: 'json',
                 root: 'values'
@@ -79,7 +79,7 @@ Frog.UI = (function(Frog) {
         });
         // -- Check for user
         new Request.JSON({
-            url: '/frog/getuser',
+            url: '/getuser',
             async: false,
             onSuccess: function(res) {
                 if (res.isSuccess) {
@@ -216,7 +216,7 @@ Frog.UI = (function(Frog) {
             }]
         });
         grid.on('itemClick', function(view, rec, item) {
-            location.href = '/frog/gallery/' + rec.data.id;
+            location.href = '/gallery/' + rec.data.id;
         });
 
         return grid;
@@ -322,7 +322,7 @@ Frog.UI = (function(Frog) {
             bodyStyle: 'padding: 5px;',
             items: [{
                 loader: {
-                    url: '/frog/tag/manage?guids=' + guids.join(','),
+                    url: '/tag/manage?guids=' + guids.join(','),
                     contentType: 'html',
                     loadMask: true,
                     autoLoad: true,
@@ -344,7 +344,7 @@ Frog.UI = (function(Frog) {
                     });
                     
                     new Request.JSON({
-                        url: '/frog/tag/manage',
+                        url: '/tag/manage',
                         headers: {"X-CSRFToken": Cookie.read('csrftoken')},
                         onSuccess: function() {
                             add.each(function(tag) {
@@ -462,7 +462,7 @@ Frog.UI = (function(Frog) {
                         // -- Create the new gallery first synchronously
                         var private = (data.private === 'on') ? true : false;
                         new Request.JSON({
-                            url: '/frog/gallery',
+                            url: '/gallery',
                             async: false,
                             onSuccess: function(res) {
                                 data.id = res.value.id;
@@ -481,14 +481,14 @@ Frog.UI = (function(Frog) {
                     }
 
                     new Request.JSON({
-                        url: '/frog/gallery/' + data.id,
+                        url: '/gallery/' + data.id,
                         emulation: false,
                         async: false,
                         onSuccess: function(res) {
                             Store.sync();
                             Ext.MessageBox.confirm('Confirm', 'Would you like to visit this gallery now?', function(res) {
                                 if (res === 'yes') {
-                                    window.location = '/frog/gallery/' + data.id;
+                                    window.location = '/gallery/' + data.id;
                                 }
                             });
                         }
@@ -514,7 +514,7 @@ Frog.UI = (function(Frog) {
         selected.each(function(item) {
             guids.push(Frog.util.getData(item, 'frog_guid'));
         });
-        location.href = '/frog/download?guids=' + guids.join(',');
+        location.href = '/download?guids=' + guids.join(',');
     }
     function switchArtistHandler() {
         var win = Ext.create('widget.window', {
@@ -554,7 +554,7 @@ Frog.UI = (function(Frog) {
         });
         win.add(fp);
         var input = $('frog_switch_artist-inputEl');
-        new Meio.Autocomplete(input, '/frog/artistlookup', {
+        new Meio.Autocomplete(input, '/artistlookup', {
             requestOptions: {
                 headers: {"X-CSRFToken": Cookie.read('csrftoken')},
             },
@@ -606,7 +606,7 @@ Frog.UI = (function(Frog) {
                 text: 'Save',
                 handler: function() {
                     var r = fp.getForm().getValues(true).split('=')[1];
-                    location.href = 'feed://' + location.host + '/frog/rss/' + ID + '/' + r;
+                    location.href = 'feed://' + location.host + '/rss/' + ID + '/' + r;
                     win.close();
                 }
             },{
@@ -653,7 +653,7 @@ Frog.UI = (function(Frog) {
                 handler: function() {
                     var data = fp.getForm().getValues();
                     new Request({
-                        url: '/frog/help/',
+                        url: '/help/',
                         headers: {"X-CSRFToken": Cookie.read('csrftoken')}
                     }).POST(data);
                     win.close();
@@ -676,7 +676,7 @@ Frog.UI = (function(Frog) {
                 Ext.MessageBox.confirm('Confirm', 'Are you sure you want to make this public?', function(res) {
                     if (res === 'yes') {
                         new Request.JSON({
-                            url: '/frog/gallery/' + ID,
+                            url: '/gallery/' + ID,
                             emulation: false,
                             headers: {"X-CSRFToken": Cookie.read('csrftoken')}
                         }).PUT({private: false});
@@ -693,7 +693,7 @@ Frog.UI = (function(Frog) {
             guids.push(Frog.util.getData(item, 'frog_guid'));
         });
         new Request.JSON({
-            url: '/frog/switchartist',
+            url: '/switchartist',
             headers: {"X-CSRFToken": Cookie.read('csrftoken')},
             //async: false,
             onSuccess: function(res) {

@@ -5,7 +5,7 @@
     window.addEvent('domready', function() {
         viewer = new Frog.Viewer();
         viewer.addEvent('hide', function() {
-            location.href = '/frog/gallery/1';
+            location.href = '{{LOGIN_URL}}gallery/1';
         });
         var img = JSON.parse('{{object.serialize|safe}}');
         viewer.show();

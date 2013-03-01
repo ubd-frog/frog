@@ -69,7 +69,7 @@ class GalleryView(MainView):
         if obj_id:
             obj = self._getObject(obj_id)
             if obj.private and request.user.is_anonymous():
-                return HttpResponseRedirect('/frog')
+                return HttpResponseRedirect(settings.LOGIN_URL)
 
             return super(GalleryView, self).get(request, obj_id)
         else:
@@ -726,7 +726,7 @@ def index(request):
         frog_auth_check.send(sender=None, request=request)
 
         if not request.user.is_anonymous():
-            return HttpResponseRedirect('/frog/gallery/1')
+            return HttpResponseRedirect(settings.LOGIN_URL + 'gallery/1')
         return render(request, 'frog/index.html', {'title': 'Frog Login'})
     else:
         return uploader.post(request)
@@ -750,14 +750,14 @@ def frogLogin(request):
 
     if user.is_active:
         login(request, user)
-        return HttpResponseRedirect('/frog/gallery/1')
+        return HttpResponseRedirect(settings.LOGIN_URL + 'gallery/1')
     else:
         return render(request, 'frog/index.html', {'message': 'User account not active'})
 
 def frogLogout(request):
     logout(request)
 
-    return HttpResponseRedirect('/frog')
+    return HttpResponseRedirect(settings.LOGIN_URL)
 
 @login_required
 def switchArtist(request):

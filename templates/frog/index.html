@@ -21,7 +21,7 @@
             <div id='frog_login'>
                 <header> Frog login</header>
                 <section>
-                    <form method='post' action='/frog/login'>
+                    <form method='post' action='{{LOGIN_URL}}login'>
                         {% csrf_token %}
                         <p>
                             <label for='frog_login_email'>Email:</label>

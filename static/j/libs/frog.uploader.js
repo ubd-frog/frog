@@ -32,8 +32,8 @@ Frog.Uploader = new Class({
             browse_button: 'frogBrowseButton',
             drop_element: 'frog_upload',
             container: 'frog_upload',
-            max_file_size: '500mb',
-            url: '/frog/',
+            max_file_size: '1024mb',
+            url: '/',
             headers: {"X-CSRFToken": Cookie.read('csrftoken')},
             multipart_params: {
                 'galleries': this.id.toString()
@@ -54,7 +54,7 @@ Frog.Uploader = new Class({
             }
             files.each(function(f) {
                 new Request.JSON({
-                    url: '/frog/isunique',
+                    url: '/isunique',
                     onSuccess: function(res) {
                         obj = {
                             id: f.id,
