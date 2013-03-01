@@ -76,19 +76,23 @@ class VideoThread(Thread):
                     infoString = proc.stdout.readlines()
                     videodata = parseInfo(infoString)
 
-                    isH264 = videodata['video'][0]['codec'].find('h264') != -1 and sourcepath.ext == 'mp4'
+                    isMP4 =  infile.lower().endswith('.mp4')
 
-                    outfile = sourcepath.parent / ("_%s.mp4" % item.hash)
+                    outfile = infile
 
                     ## -- Further processing is needed if not h264 or needs to be scrubbable
-                    if not isH264:
+                    if not isMP4:
                         item.queue.setMessage('Converting to MP4...')
+                        outfile = sourcepath.parent / ("_%s.mp4" % item.hash)
 
                         cmds = [
                             settings.FFMPEG,
                             '-i', infile,
                             ('%s' % outfile)
                         ]
+
+                        #if scrub:
+                        #    addListItems(settings.FFMPEG_ARGS,settings.FFMPEG_SCRUB_ARGS,3)
 
                         addListItems(cmds,settings.FFMPEG_ARGS,3)
 
