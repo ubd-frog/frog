@@ -36,6 +36,10 @@ TIMEOUT = 1
 ROOT = Path(settings.MEDIA_ROOT.replace('\\', '/'))
 logger = logging.getLogger('dev.frog')
 
+def addListItems(src, dest, index):
+    for item in dest:
+        src.insert(index,item)
+        index += 1
 
 class VideoThread(Thread):
     def __init__(self, queue, *args, **kwargs):
@@ -59,31 +63,35 @@ class VideoThread(Thread):
                     item.queue.setMessage('Processing video...')
                     
                     infile = "%s%s" % (ROOT, item.source.name)
-                    cmd = '%s -i "%s"' % (settings.FFMPEG, infile)
+
+                    cmd =  [
+                        settings.FFMPEG,
+                        '-i', infile
+                    ]
+
                     sourcepath = ROOT / item.source.name
 
                     ## -- Get the video information
                     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
                     infoString = proc.stdout.readlines()
                     videodata = parseInfo(infoString)
+
                     isH264 = videodata['video'][0]['codec'].find('h264') != -1 and sourcepath.ext == 'mp4'
-                    m, s = divmod(settings.SCRUB_DURATION, 60)
-                    h, m = divmod(m, 60)
-                    scrubstr = "%02d:%02d:%02d" % (h, m, s)
-                    scrub = videodata['duration'] <= scrubstr
 
                     outfile = sourcepath.parent / ("_%s.mp4" % item.hash)
 
                     ## -- Further processing is needed if not h264 or needs to be scrubbable
-                    if not isH264 or scrub:
+                    if not isH264:
                         item.queue.setMessage('Converting to MP4...')
-                        
-                        cmds = '{exe} -i "{infile}" {args} "{outfile}"'.format(
-                            exe=settings.FFMPEG,
-                            infile=infile,
-                            args=settings.SCRUB_FFMPEG_ARGS if scrub else settings.FFMPEG_ARGS,
-                            outfile=outfile,
-                        )
+
+                        cmds = [
+                            settings.FFMPEG,
+                            '-i', infile,
+                            ('%s' % outfile)
+                        ]
+
+                        addListItems(cmds,settings.FFMPEG_ARGS,3)
+
                         proc = subprocess.Popen(cmds, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
                         proc.communicate()
 
