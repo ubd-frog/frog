@@ -298,9 +298,11 @@ Frog.Viewer = new Class({
         var obj = this.objects[idx];
         if (obj.guid.charAt(0) === '1') {
             this.videoEl.pause();
+            this.img.removeAttribute('style');
             this.setImage(obj.image);
         }
         else {
+            this.img.setStyle('display', 'none');
             this.setVideo(obj);
         }
         
