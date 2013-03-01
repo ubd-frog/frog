@@ -307,7 +307,8 @@ Frog.UI = (function(Frog) {
     function editTagsHandler() {
         var guids = [];
         $$('.selected').each(function(item) {
-            guids.push(item.dataset.frog_guid);
+            var guid = Frog.util.getData(item, 'frog_guid');
+            guids.push(guid);
         });
         var win = Ext.create('widget.window', {
             title: 'Edit Tags',
@@ -334,11 +335,11 @@ Frog.UI = (function(Frog) {
                 handler: function() {
                     var add = [], rem = [];
                     $$('#frog_add li').each(function(item) {
-                        var id = item.dataset.frog_tag_id;
+                        var id = Frog.util.getData(item, 'frog_tag_id');
                         add.push(id);
                     });
                     $$('#frog_rem li').each(function(item) {
-                        var id = item.dataset.frog_tag_id;
+                        var id = Frog.util.getData(item, 'frog_tag_id');
                         rem.push(id);
                     });
                     
@@ -376,7 +377,7 @@ Frog.UI = (function(Frog) {
         
         var ids = [];
         $$('.selected').each(function(item) {
-            ids.push(item.dataset.frog_tn_id.toInt());
+            ids.push(Frog.util.getData(item, 'frog_tn_id').toInt());
         });
         RemoveObserver.fire({ids: ids, silent: silent});
     }
@@ -471,7 +472,7 @@ Frog.UI = (function(Frog) {
 
                     guids = [];
                     selected.each(function(item) {
-                        guids.push(item.dataset.frog_guid);
+                        guids.push(Frog.util.getData(item, 'frog_guid'));
                     });
                     obj.guids = guids.join(',');
 
@@ -511,7 +512,7 @@ Frog.UI = (function(Frog) {
         var selected = $$('.thumbnail.selected');
         guids = [];
         selected.each(function(item) {
-            guids.push(item.dataset.frog_guid);
+            guids.push(Frog.util.getData(item, 'frog_guid'));
         });
         location.href = '/frog/download?guids=' + guids.join(',');
     }
@@ -689,7 +690,7 @@ Frog.UI = (function(Frog) {
         var selected = $$('.thumbnail.selected');
         guids = [];
         selected.each(function(item) {
-            guids.push(item.dataset.frog_guid);
+            guids.push(Frog.util.getData(item, 'frog_guid'));
         });
         new Request.JSON({
             url: '/frog/switchartist',
@@ -700,7 +701,7 @@ Frog.UI = (function(Frog) {
                     selected.each(function(el) {
                         var tag = el.getElement('.frog-tag');
                         tag.set('text', res.value.name.capitalize());
-                        tag.dataset.frog_tag_id = res.value.tag;
+                        Frog.util.setData(tag, 'frog_tag_id', res.value.tag);
                     });
                 }
             }
@@ -708,7 +709,7 @@ Frog.UI = (function(Frog) {
         selected.each(function(el) {
             var tag = el.getElement('.frog-tag');
             tag.set('text', name.capitalize());
-            tag.dataset.frog_tag_id = Frog.Tags.get(name.toLowerCase());
+            Frog.util.getData(tag, 'frog_tag_id', Frog.Tags.get(name.toLowerCase()));
         });
     }
 

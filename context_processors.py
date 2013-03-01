@@ -27,7 +27,7 @@ from django.conf import settings
 from common import PluginContext, getRoot
 
 
-BUILD = 1000
+BUILD = 1001
 
 def media(request):
     obj = {

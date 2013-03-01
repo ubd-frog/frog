@@ -200,8 +200,8 @@ class GalleryView(MainView):
 
         logger.debug('init: %f' % (time.clock() - NOW))
 
-        #Prefs = json.loads(UserPref.objects.get(user=request.user).data)
-        gRange = 300#Prefs['batchSize']
+        Prefs = json.loads(UserPref.objects.get(user=request.user).data)
+        gRange = Prefs['batchSize']
         request.session.setdefault('frog_range', '0:%i' % gRange)
 
         if rng:
@@ -444,7 +444,9 @@ class TagView(MainView):
             objects = getObjectsFromGuids(guids)
             ids = [o.id for o in objects]
 
-            tags = list(set(Tag.objects.filter(image__id__in=ids).exclude(artist=True)))
+            imgtags = list(Tag.objects.filter(image__id__in=ids).exclude(artist=True))
+            vidtags = list(Tag.objects.filter(video__id__in=ids).exclude(artist=True))
+            tags = list(set(imgtags + vidtags))
 
             if request.GET.get('json', False):
                 res = Result()

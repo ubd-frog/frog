@@ -38,6 +38,7 @@ Frog.Viewer = new Class({
         this.canvas = new Element('canvas', {width: window.getWidth(), height: window.getHeight()}).inject(this.element);
         this.video = new Element('div', {'class': 'leanback-player-video'}).inject(this.element);
         this.videoEl = new Element('video').inject(this.video);
+        this.img = new Element('img', {width: window.getWidth(), height: window.getHeight()}).inject(this.element, 'top');
 
         this.ctx = this.canvas.getContext('2d');
         this.image = new Image();
@@ -74,14 +75,13 @@ Frog.Viewer = new Class({
     up: function(e) {
         this.isMouseDown = false;
         this.main = this.xform;
-        this.canvas.removeClass('drag');
     },
     down: function(e) {
+        e.stop();
         if (e.event.button == 0) {
             this.isMouseDown = true;
             this.origin.x = e.client.x;
             this.origin.y = e.client.y;
-            this.canvas.addClass('drag');
             this.shelf.hide();
         }
     },
@@ -312,6 +312,7 @@ Frog.Viewer = new Class({
             [0,this.image.height,0],
             [0,0,1]
         ]);
+        this.img.src = this.image.src;
         this.axis = (this.image.width > this.image.height) ? 'x' : 'y';
         this.render();
         this.fitToWindow();
@@ -321,7 +322,7 @@ Frog.Viewer = new Class({
         this.image.src = Frog.loading.src;
         this.element.show();
 
-        this.canvas.addEvent('mousedown', this.events.down);
+        this.img.addEvent('mousedown', this.events.down);
         window.addEvent('mouseup', this.events.up);
         window.addEvent('mousemove', this.events.move);
         window.addEvent('mousewheel', this.events.zoom);
@@ -348,7 +349,7 @@ Frog.Viewer = new Class({
     hide: function() {
         this.element.hide();
 
-        this.canvas.removeEvent('mousedown', this.events.down);
+        this.img.removeEvent('mousedown', this.events.down);
         window.removeEvent('mouseup', this.events.up);
         window.removeEvent('mousemove', this.events.move);
         window.removeEvent('mousewheel', this.events.zoom);

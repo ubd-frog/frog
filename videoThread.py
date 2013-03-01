@@ -66,7 +66,7 @@ class VideoThread(Thread):
                     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
                     infoString = proc.stdout.readlines()
                     videodata = parseInfo(infoString)
-                    isH264 = videodata['video'][0]['codec'].find('h264') != -1
+                    isH264 = videodata['video'][0]['codec'].find('h264') != -1 and sourcepath.ext == 'mp4'
                     m, s = divmod(settings.SCRUB_DURATION, 60)
                     h, m = divmod(m, 60)
                     scrubstr = "%02d:%02d:%02d" % (h, m, s)

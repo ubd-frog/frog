@@ -670,6 +670,11 @@ li.frog-tag {
 #frog_viewer canvas {
     cursor: move;
 }
+#frog_viewer > img {
+    position: absolute;
+    opacity: 0.0;
+    cursor: move;
+}
 .frog-prev { background: url('../i/viewerControls.png') left top no-repeat; }
 .frog-next { background: url('../i/viewerControls.png') left -20px no-repeat; }
 .frog-window { background: url('../i/viewerControls.png') left -40px no-repeat; }

@@ -57,7 +57,7 @@ Frog.Gallery = new Class({
         window.addEvent('resize', this.resize.bind(this));
         window.addEventListener('hashchange', this.historyEvent.bind(this), false)
         this.container.addEvent('click:relay(a.frog-tag)', function(e, el) {
-            self.filter(el.dataset.frog_tag_id);
+            self.filter(Frog.util.getData(el, 'frog_tag_id'));
         });
         this.container.addEvent('click:relay(a.frog-image-link)', this.viewImages.bind(this));
         Frog.Comments.addEvent('post', function(id) {
@@ -191,6 +191,7 @@ Frog.Gallery = new Class({
                 self.requestValue = res.value;
                 if (res.isSuccess) {
                     if (!append) {
+                        window.scrollTo(0,0);
                         self.clear();
                         if (res.values.length === 0) {
                             self.container.set('text', 'Nothing Found')
@@ -206,7 +207,6 @@ Frog.Gallery = new Class({
                         t.setSize(self.tileSize);
                         self.container.grab($(t));
                     });
-                    window.scrollTo(0,0);
                     self._getScreen();
                 }
                 self.isRequesting = false;
@@ -264,7 +264,7 @@ Frog.Gallery = new Class({
     viewImages: function(e, el) {
         e.stop();
         if (this.options.altclick && e.control) {
-            var id = el.parentNode.parentNode.dataset['frog_tn_id'].toInt();
+            var id = Frog.util.getData(el.parentNode.parentNode, 'frog_tn_id').toInt();
             this.options.altclick(this.objects[id]);
 
             return true;
@@ -272,13 +272,13 @@ Frog.Gallery = new Class({
         
         this.y = window.getScroll().y;
         var selection = $$('.thumbnail.selected');
-        var id = (Browser.ie) ? el.parentNode.parentNode.getProperty('dataset-frog_tn_id') : el.parentNode.parentNode.dataset.frog_tn_id;
+        var id = Frog.util.getData(el.parentNode.parentNode, 'frog_tn_id');
         var objects = [];
         if (selection.length) {
             this.thumbnails[id].setSelected(true);
             selection = $$('.thumbnail.selected');
             selection.each(function(item, selID) {
-                var idx = (Browser.ie) ? item.getProperty('dataset-frog_tn_id') : item.dataset.frog_tn_id;
+                var idx = Frog.util.getData(item, 'frog_tn_id');
                 if (idx === id) {
                     id = selID;
                 }

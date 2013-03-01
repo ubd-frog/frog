@@ -64,14 +64,8 @@ Frog.Thumbnail = new Class({
                 }
             }
         });
-        if (Browser.ie) {
-            this.element.setProperty('dataset-frog_tn_id', this.id);
-            this.element.setProperty('dataset-frog_guid', this.guid);
-        }
-        else {
-            this.element.dataset.frog_tn_id = this.id;
-            this.element.dataset.frog_guid = this.guid;    
-        }
+        Frog.util.setData(this.element, 'frog_tn_id', this.id);
+        Frog.util.setData(this.element, 'frog_guid', this.guid);
         
         var top = new Element('div').inject(this.element);
         this.spacer = new Element('div', {styles: {
@@ -125,12 +119,7 @@ Frog.Thumbnail = new Class({
     setArtist: function(artist) {
         var id = Frog.Tags.get(artist);
         this.artist.set('text', artist.capitalize());
-        if (Browser.ie) {
-            this.artist.setProperty('dataset-frog_tag_id', id);
-        }
-        else {
-            this.artist.dataset.frog_tag_id = id;
-        }
+        Frog.util.setData(this.artist, 'frog_tag_id', id);
     },
     setSize: function(size) {
         var dim = Frog.util.fitToRect(size - this.Padding, size - this.Padding, this.width, this.height);
@@ -161,7 +150,7 @@ Frog.Thumbnail = new Class({
         if (typeOf(id.id) !== 'undefined') {
             id = id.id;
         }
-        var artistTagId = (Browser.ie) ? this.artist.getProperty('dataset-frog_tag_id') : this.artist.dataset.frog_tag_id;
+        var artistTagId = Frog.util.getData(this.artist, 'frog_tag_id');
         if (id.toString() === artistTagId) {
             return;
         }
@@ -170,12 +159,7 @@ Frog.Thumbnail = new Class({
         }
         var tag = Frog.Tags.get(id);
         var a = new Element('a', {'href': 'javascript:void(0);', text: tag.capitalize(), 'class': 'frog-tag'}).inject(this.tagList);
-        if (Browser.ie) {
-            a.setProperty('dataset-frog_tag_id', id);
-        }
-        else {
-            a.dataset.frog_tag_id = id;
-        }
+        Frog.util.setData(a, 'frog_tag_id', id);
         
         this.tags.push(id);
     },

@@ -76,6 +76,25 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
             n = Math.min(max, n);
 
             return n;
+        },
+        getData: function(element, key, defaultvalue) {
+            var value;
+            if (Browser.ie) {
+                value = element.getProperty('data-' + key);
+            }
+            else {
+                value = element.dataset[key];
+            }
+
+            return (typeof(value) === 'undefined') ? defaultvalue : value;
+        },
+        setData: function(element, key, value) {
+            if (Browser.ie) {
+                element.setProperty('data-' + key, value);
+            }
+            else {
+                element.dataset[key] = value;
+            }
         }
     }
     
@@ -199,7 +218,8 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
             if (this.isSearch) {
                 this.element.addClass('frog-tag-search');
             }
-            this.element.dataset.frog_tag_id = this.id;
+            Frog.util.setData(this.element, 'frog_tag_id', this.id);
+            
             new Element('span').inject(this.element);
             new Element('a', {href: 'javascript:void(0);', text: this.name.capitalize(), 'class': 'frog-tag'}).inject(this.element);
             this.closeButton = new Element('div', {
@@ -254,14 +274,8 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
                             e.stop();
                             this.hide();
                             var el = $('frog_comments');
-                            if (Browser.ie) {
-                                var guid = el.getProperty('dataset-frog_guid');
-                                var id = el.getProperty('dataset-frog_gallery_id');
-                            }
-                            else {
-                                var guid = el.dataset.frog_guid;
-                                var id = el.dataset.frog_gallery_id;
-                            }
+                            var guid = Frog.util.getData(el, 'frog_guid');
+                            var id = Frog.util.getData(el, 'frog_gallery_id');
                             
                             self.input.show();
                             self.input.focus();
