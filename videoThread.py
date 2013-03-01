@@ -91,9 +91,6 @@ class VideoThread(Thread):
                             ('%s' % outfile)
                         ]
 
-                        #if scrub:
-                        #    addListItems(settings.FFMPEG_ARGS,settings.FFMPEG_SCRUB_ARGS,3)
-
                         addListItems(cmds,settings.FFMPEG_ARGS,3)
 
                         proc = subprocess.Popen(cmds, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
