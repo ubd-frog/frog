@@ -23,7 +23,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 Frog.TagManager = new Class({
     initialize: function() {
         new Request.JSON({
-            url: '/frog/tag/',
+            url: '/tag/',
             onSuccess: function(res) {
                 if (res.isSuccess) {
                     Frog.Tags = {};
@@ -49,7 +49,7 @@ Frog.TagManager = new Class({
             }
             else {
                 new Request.JSON({
-                    url: '/frog/tag/',
+                    url: '/tag/',
                     async: false,
                     onSuccess: function(res) {
                         if (res.isSuccess) {

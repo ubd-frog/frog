@@ -205,7 +205,7 @@ Frog.Viewer = new Class({
     },
     download: function() {
         var guid = this.objects[this.current].guid;
-        location.href = '/frog/download?guids=' + guid;
+        location.href = '/download?guids=' + guid;
     },
     translate: function(x, y) {
         var m1, m2;
@@ -298,9 +298,11 @@ Frog.Viewer = new Class({
         var obj = this.objects[idx];
         if (obj.guid.charAt(0) === '1') {
             this.videoEl.pause();
+            this.img.removeAttribute('style');
             this.setImage(obj.image);
         }
         else {
+            this.img.setStyle('display', 'none');
             this.setVideo(obj);
         }
         

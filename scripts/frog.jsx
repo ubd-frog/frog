@@ -359,4 +359,4 @@ if (!JSON) {
     else {
         alert('Success');
     }
-})('/frog/');
+})('/');

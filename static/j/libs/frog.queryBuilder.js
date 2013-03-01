@@ -323,7 +323,7 @@ Frog.Bucket = new Class({
     },
     __build: function() {
         this.input.addEvent('keyup', this.events.keyUp);
-        new Meio.Autocomplete(this.input, '/frog/tag/search', {
+        new Meio.Autocomplete(this.input, '/tag/search', {
             filter: {
                 path: 'name',
                 formatItem: function(text, data) {

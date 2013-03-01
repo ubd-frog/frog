@@ -101,7 +101,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     Frog.Prefs = {
         init: function() {
             new Request.JSON({
-                url: '/frog/pref/',
+                url: '/pref/',
                 async: false,
                 noCache: true,
                 onSuccess: function(res) {
@@ -111,7 +111,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         },
         set: function(key, value, callback) {
             new Request.JSON({
-                url: '/frog/pref/',
+                url: '/pref/',
                 noCache: true,
                 async: false,
                 headers: {"X-CSRFToken": Cookie.read('csrftoken')},
@@ -126,7 +126,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     };
 
     new Request.JSON({
-        url: '/frog/getuser',
+        url: '/getuser',
         async: false,
         onSuccess: function(res) {
             if (res.isSuccess) {
@@ -145,7 +145,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
             var self = this;
             
             new Request.JSON({
-                url: '/frog/tag/',
+                url: '/tag/',
                 async: false,
                 onSuccess: function(res) {
                     if (res.isSuccess) {
@@ -166,7 +166,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
                 value = this.tags[arg];
                 if (!value) {
                     new Request.JSON({
-                        url: '/frog/tag/' + arg,
+                        url: '/tag/' + arg,
                         async: false,
                         onSuccess: function(res) {
                             if (res.isSuccess) {
@@ -185,7 +185,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
                 }
                 else {
                     new Request.JSON({
-                        url: '/frog/tag/',
+                        url: '/tag/',
                         async: false,
                         headers: {"X-CSRFToken": Cookie.read('csrftoken')},
                         onSuccess: function(res) {
@@ -257,7 +257,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
             this.saveButton = null;
             this.guid = '';
             this.request = new Request.HTML({
-                url: '/frog/comment/',
+                url: '/comment/',
                 evalScripts: true,
                 noCache: true,
                 onSuccess: function(tree, elements, html) {
@@ -285,7 +285,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
                                     renderTo: bot,
                                     handler: function() {
                                         new Request.JSON({
-                                            url: '/frog/comment/'
+                                            url: '/comment/'
                                         }).POST({guid: guid, comment: self.input.value});
                                         self.close();
 

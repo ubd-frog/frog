@@ -257,17 +257,32 @@ class Video(Piece):
         tags = tags or []
 
         ## -- Get info
-        cmd = '%s -i "%s"' % (settings.FFMPEG, hashPath.replace('/', '\\'))
+        cmd =  [
+            settings.FFMPEG,
+            '-i', hashPath.replace('/', '\\')
+        ]
+
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         infoString = proc.stdout.readlines()
         videodata = parseInfo(infoString)
-        
+
+        hh, mm, ss = videodata['duration'].split(':')
+        halfTime = '%02d:%02d:%02d' % (int(hh)//2, int(mm)//2, int(float(ss))//2)
+
         self.width = int(videodata['video'][0]['width'])
         self.height = int(videodata['video'][0]['height'])
 
         ## -- Save thumbnail and put into queue
         thumbnail = Path(hashPath.parent.replace('/', '\\')) / "_%s.jpg" % hashVal
-        cmd = '%s -i "%s" -ss 1 -vframes 1 "%s"' % (settings.FFMPEG, hashPath.replace('/', '\\'), thumbnail)
+
+        cmd = [
+            settings.FFMPEG,
+            '-i', hashPath.replace('/', '\\'),
+            '-ss', halfTime,
+            '-vframes', '1',
+            thumbnail
+        ]
+
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         proc.communicate()
 
