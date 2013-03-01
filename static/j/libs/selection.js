@@ -151,7 +151,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
                 }
 
                 this.element.setStyles({
-                    top: y,
+                    top: y + window.scrollY,
                     left: x,
                     width: w,
                     height: h
