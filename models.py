@@ -329,8 +329,9 @@ class Gallery(models.Model):
     videos = models.ManyToManyField(Video, blank=True, null=True)
     private = models.BooleanField(default=False)
     owner = models.ForeignKey(User, default=1)
-    description = models.TextField(default="")
+    description = models.TextField(default="", blank=True)
     uploads = models.BooleanField(default=True)
+    parent = models.ForeignKey('self', null=True, blank=True)
 
     class Meta:
         verbose_name_plural = "Galleries"
@@ -348,6 +349,9 @@ class Gallery(models.Model):
             'owner': {'id': self.owner.id, 'name': self.owner.get_full_name()},
             'description': self.description,
             'uploads': self.uploads,
+            'iconCls': 'gallery-nav',
+            'values': [g.json() for g in self.gallery_set.all()],
+            'parent': self.parent.id if self.parent else None,
         }
 
         return obj

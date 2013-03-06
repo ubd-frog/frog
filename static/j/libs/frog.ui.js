@@ -40,13 +40,27 @@ Frog.UI = (function(Frog) {
             {name: 'description'}
         ]
     });
-    Store = Ext.create('Ext.data.Store', {
+    Store = Ext.create('Ext.data.TreeStore', {
         autoLoad: true,
         autoSync: true,
         model: 'Gallery',
         proxy: {
             type: 'ajax',
             url: '/frog/gallery',
+            reader: {
+                type: 'json',
+                root: 'values'
+            }
+        }
+    });
+    Ext.create('Ext.data.Store', {
+        autoLoad: true,
+        autoSync: true,
+        model: 'Gallery',
+        storeId: 'galleries',
+        proxy: {
+            type: 'ajax',
+            url: '/frog/gallery?flat=1',
             reader: {
                 type: 'json',
                 root: 'values'
@@ -118,7 +132,12 @@ Frog.UI = (function(Frog) {
                         icon: Frog.icon('user_edit'),
                         handler: switchArtistHandler
                     });
-                    managemenu.add([menuremove, menucopy, menudownload, '-', menuswitchartist]);
+                    menuaddsubgallery = Ext.create('Ext.menu.Item', {
+                        text: 'Add Sub Gallery',
+                        icon: Frog.icon('application_view_tile'),
+                        handler: addSubGalleryHandler
+                    });
+                    managemenu.add([menuremove, menucopy, menudownload, '-', menuswitchartist, menuaddsubgallery]);
                     ToolBar.add({
                         text: 'Manage',
                         icon: Frog.icon('photos'),
@@ -182,13 +201,18 @@ Frog.UI = (function(Frog) {
 
     // Private
     function buildNav() {
-        var grid = Ext.create('Ext.grid.Panel', {
+        Store.load();
+        var grid = Ext.create('Ext.tree.Panel', {
             width: 600,
             height: 300,
             frame: true,
             title: 'Galleries',
             store: Store,
+            rootVisible: false,
+            useArrows: true,
+            singleExpand: true,
             columns: [{
+                xtype: 'treecolumn',
                 text: 'Title',
                 flex: 2,
                 sortable: true,
@@ -298,7 +322,6 @@ Frog.UI = (function(Frog) {
                         ChangeObserver.fire(Frog.Prefs);;
                     }
                 }
-                
             ]
         });
 
@@ -427,7 +450,7 @@ Frog.UI = (function(Frog) {
                     {
                         xtype: 'combobox',
                         editable: false,
-                        store: Store,
+                        store: 'galleries',
                         displayField: 'title',
                         valueField: 'id',
                         id: 'frog_gallery_id'
@@ -485,7 +508,8 @@ Frog.UI = (function(Frog) {
                         emulation: false,
                         async: false,
                         onSuccess: function(res) {
-                            Store.sync();
+                            Store.getRootNode().removeAll();
+                            Store.load();
                             Ext.MessageBox.confirm('Confirm', 'Would you like to visit this gallery now?', function(res) {
                                 if (res === 'yes') {
                                     window.location = '/frog/gallery/' + data.id;
@@ -571,6 +595,20 @@ Frog.UI = (function(Frog) {
             }
         });
         input.focus();
+    }
+    function addSubGalleryHandler() {
+        Ext.MessageBox.prompt('Name', 'Please enter a title for the new gallery:', function(res, text) {
+            if (res === 'ok') {
+                new Request.JSON({
+                    url: '/frog/gallery',
+                    onSuccess: function(res) {
+                        Ext.MessageBox.alert('Gallery', res.message);
+                        Store.getRootNode().removeAll();
+                        Store.load();
+                    }
+                }).POST({parent: ID, title: text});
+            }
+        });
     }
     function rssHandler() {
         var win = Ext.create('widget.window', {

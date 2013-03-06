@@ -194,12 +194,36 @@ Frog.Viewer = new Class({
     },
     original: function() {
         this.center();
+
+        var vid = this.objects[this.current];
+        var padTop = window.getHeight() / 2 - vid.height / 2;
+        this.video.setStyle('padding-top', padTop);
+
+        this.videoEl.setStyles({
+            width: null,
+            height: null
+        })
     },
     fitToWindow: function() {
         var padding = 40;
         var dim = Frog.util.fitToRect(window.getWidth() - padding, window.getHeight() - padding, this.image.width, this.image.height);
-        var scale = dim.width / this.image.width;
-        scale = (scale > 1.0) ? 1.0 : scale;
+
+        // -- Video
+        if (this.video.isVisible()) {
+            var dim = Frog.util.fitToRect(window.getWidth() - padding, window.getHeight() - padding, this.videoEl.width, this.videoEl.height);
+            var scale = dim.width / this.videoEl.width;
+            var padTop = window.getHeight() / 2 - (this.videoEl.height * scale) / 2;
+            this.video.setStyle('padding-top', padTop);
+            this.videoEl.setStyles({
+                width: this.videoEl.width * scale,
+                height: this.videoEl.height * scale
+            })
+        }
+        else {
+            var scale = dim.width / this.image.width;
+            scale = (scale > 1.0) ? 1.0 : scale;
+        }
+        
 
         this.center(scale);
     },
@@ -254,6 +278,7 @@ Frog.Viewer = new Class({
     setImage: function(img) {
         this.video.hide();
         this.canvas.show();
+        this.img.show();
         //this.clear();
         this.videoEl.empty();
         this.image.src = img;
@@ -263,11 +288,9 @@ Frog.Viewer = new Class({
     },
     setVideo: function(vid) {
         this.canvas.hide();
+        this.img.hide();
         this.video.show();
         this.videoEl.empty();
-
-        var padTop = window.getHeight() / 2 - vid.height / 2;
-        this.video.setStyle('padding-top', padTop);
 
         this.videoEl.width = vid.width;
         this.videoEl.height = vid.height;

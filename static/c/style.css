@@ -280,6 +280,9 @@ body > div {
 }
 a, a:visited { color: #b8d364; text-decoration: none; }
 a:hover { color: #fff; }
+.gallery-nav {
+    background-image: url('../i/application_view_tile.png');
+}
 .thumbnail {
     display: inline-block;
     position: relative;

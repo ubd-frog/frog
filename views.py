@@ -26,8 +26,7 @@ try:
 except ImportError:
     import json
 
-from django.http import HttpResponse, Http404, HttpResponseRedirect
-from django.core.exceptions import ObjectDoesNotExist
+from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.db.models import Q
 from django.contrib.contenttypes.models import ContentType
@@ -75,13 +74,21 @@ class GalleryView(MainView):
         else:
             res = Result()
             res.isSuccess = True
+            flat = bool(request.GET.get('flat'))
             if request.user.is_anonymous():
                 objects = Gallery.objects.filter(private=False)
             else:
                 objects = Gallery.objects.filter(Q(private=False) | Q(owner=request.user))
 
+            objects = objects.filter(parent__isnull=True)
+
             for n in objects:
-                res.append(n.json())
+                if flat:
+                    res.append({'title': n.title, 'id': n.id});
+                    for child in n.gallery_set.all().order_by('title'):
+                        res.append({'title': '-- %s' % child.title, 'id': child.id});
+                else:
+                    res.append(n.json())
 
             return JsonResponse(res)
 
@@ -91,7 +98,13 @@ class GalleryView(MainView):
         title = request.POST.get('title', 'New Gallery' + str(Gallery.objects.all().values_list('id', flat=True)[0] + 1))
         description = request.POST.get('description', '')
         private = json.loads(request.POST.get('private', 'false'))
-        g, created = Gallery.objects.get_or_create(title=title)
+        parentid = request.POST.get('parent')
+        if parentid:
+            parent = Gallery.objects.get(pk=int(parentid))
+            g, created = parent.gallery_set.get_or_create(title=title)
+        else:
+            g, created = Gallery.objects.get_or_create(title=title)
+
         g.description = description
         g.private = private
         g.owner = request.user
