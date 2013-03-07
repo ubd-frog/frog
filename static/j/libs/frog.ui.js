@@ -67,6 +67,15 @@ Frog.UI = (function(Frog) {
             }
         }
     });
+    Ext.create('Ext.data.Store', {
+        storeId: 'security',
+        fields: ['name', 'value'],
+        data: [
+            {name: 'Public', value: 0},
+            {name: 'Protected', value: 1},
+            {name: 'Private', value: 2}
+        ]
+    })
 
     ToolBar = Ext.create('Ext.toolbar.Toolbar');
     RemoveObserver = new Frog.Observer();
@@ -435,9 +444,14 @@ Frog.UI = (function(Frog) {
                         xtype: 'textfield',
                         name: 'description'
                     }, {
-                        fieldLabel: 'Private?',
-                        xtype: 'checkbox',
-                        name: 'private'
+                        fieldLabel: 'Security Level',
+                        xtype: 'combobox',
+                        name: 'security',
+                        editable: false,
+                        store: 'security',
+                        displayField: 'name',
+                        valueField: 'value',
+                        value: 0
                     }
                 ]
             }, {
@@ -469,7 +483,7 @@ Frog.UI = (function(Frog) {
                     var obj = {};
 
                     data.id = data['frog_gallery_id-inputEl'];
-                    if (typeof(data.id) === 'undefined') {
+                    if (typeof(data.id) === 'undefined' && data.title === '') {
                         Ext.MessageBox.show({
                             title: 'Missing Information',
                             msg: 'Please enter a title or choose an existing gallery',
@@ -481,16 +495,15 @@ Frog.UI = (function(Frog) {
                     }
 
                     // -- New Gallery
-                    if (data.title !== "") {
+                    if (data.title !== '') {
                         // -- Create the new gallery first synchronously
-                        var private = (data.private === 'on') ? true : false;
                         new Request.JSON({
                             url: '/frog/gallery',
                             async: false,
                             onSuccess: function(res) {
                                 data.id = res.value.id;
                             }
-                        }).POST({title: data.title, description: data.description, private: private});
+                        }).POST({title: data.title, description: data.description, security: data.security});
                     }
 
                     guids = [];
@@ -707,7 +720,7 @@ Frog.UI = (function(Frog) {
     }
     function addPrivateMenu() {
         var id = this.id;
-        var item = managemenu.add({
+        var makepublic = managemenu.add({
             text: 'Make public',
             icon: Frog.icon('world'),
             handler: function() {
@@ -717,13 +730,42 @@ Frog.UI = (function(Frog) {
                             url: '/frog/gallery/' + ID,
                             emulation: false,
                             headers: {"X-CSRFToken": Cookie.read('csrftoken')}
-                        }).PUT({private: false});
-                        managemenu.remove(item);
+                        }).PUT({security: 0});
+                        managemenu.remove(makepublic);
+                        managemenu.remove(makeprotected);
+                    }
+                });
+            }
+        });
+        var makeprotected = managemenu.add({
+            text: 'Make protected',
+            icon: Frog.icon('world'),
+            handler: function() {
+                Ext.MessageBox.confirm('Confirm', 'Are you sure you want to make this protected?', function(res) {
+                    if (res === 'yes') {
+                        new Request.JSON({
+                            url: '/frog/gallery/' + ID,
+                            emulation: false,
+                            headers: {"X-CSRFToken": Cookie.read('csrftoken')}
+                        }).PUT({security: 1});
+                        managemenu.remove(makepublic);
                     }
                 });
             }
         });
     }
+
+    function addLoginAction() {
+        ToolBar.add('-');
+        ToolBar.add({
+            text: 'Login',
+            icon: Frog.icon('user'),
+            handler: function() {
+                location.href = '/frog';
+            }
+        });
+    }
+
     function switchArtistCallback(name) {
         var selected = $$('.thumbnail.selected');
         guids = [];
@@ -762,6 +804,7 @@ Frog.UI = (function(Frog) {
         addTool: addTool,
         enableUploads: enableUploads,
         addPrivateMenu: addPrivateMenu,
+        addLoginAction: addLoginAction,
         isAdvancedFilterEnabled: function() { return advancedFilter; }
     };
 

@@ -67,8 +67,8 @@ class GalleryView(MainView):
     def get(self, request, obj_id=None):
         if obj_id:
             obj = self._getObject(obj_id)
-            if obj.private and request.user.is_anonymous():
-                return HttpResponseRedirect('/frog')
+            if obj.security != Gallery.PUBLIC and request.user.is_anonymous():
+                return HttpResponseRedirect('/frog/access_denied')
 
             return super(GalleryView, self).get(request, obj_id)
         else:
@@ -76,9 +76,9 @@ class GalleryView(MainView):
             res.isSuccess = True
             flat = bool(request.GET.get('flat'))
             if request.user.is_anonymous():
-                objects = Gallery.objects.filter(private=False)
+                objects = Gallery.objects.filter(security=Gallery.PUBLIC)
             else:
-                objects = Gallery.objects.filter(Q(private=False) | Q(owner=request.user))
+                objects = Gallery.objects.filter(Q(security__lt=Gallery.PRIVATE) | Q(owner=request.user))
 
             objects = objects.filter(parent__isnull=True)
 
@@ -97,16 +97,17 @@ class GalleryView(MainView):
         """ Create a Gallery """
         title = request.POST.get('title', 'New Gallery' + str(Gallery.objects.all().values_list('id', flat=True)[0] + 1))
         description = request.POST.get('description', '')
-        private = json.loads(request.POST.get('private', 'false'))
+        security = json.loads(request.POST.get('security', str(Gallery.PUBLIC)))
         parentid = request.POST.get('parent')
         if parentid:
             parent = Gallery.objects.get(pk=int(parentid))
             g, created = parent.gallery_set.get_or_create(title=title)
+            g.security = parent.security
         else:
             g, created = Gallery.objects.get_or_create(title=title)
+            g.security = security
 
         g.description = description
-        g.private = private
         g.owner = request.user
         g.save()
 
@@ -121,7 +122,7 @@ class GalleryView(MainView):
     def put(self, request, obj_id=None):
         """ Adds Image and Video objects to Gallery based on GUIDs """
         guids = filter(None, request.PUT.get('guids', '').split(','))
-        private = request.PUT.get('private')
+        security = request.PUT.get('security')
         move = request.PUT.get('move')
         object_ = self._getObject(obj_id)
         
@@ -134,9 +135,12 @@ class GalleryView(MainView):
             object_.images.add(*images)
             object_.videos.add(*videos)
         
-        if private is not None:
-            object_.private = json.loads(private)
+        if security is not None:
+            object_.security = json.loads(security)
             object_.save()
+            for child in object_.gallery_set.all():
+                child.security = object_.security
+                child.save()
 
         res = Result()
         res.append(object_.json())
@@ -169,10 +173,10 @@ class GalleryView(MainView):
         """
         obj = self._getObject(obj_id)
 
-        if request.user.is_anonymous() and obj.private:
+        if request.user.is_anonymous() and obj.security != Gallery.PUBLIC:
             res = Result()
             res.isError = True
-            res.message = 'This gallery is private'
+            res.message = 'This gallery is not public'
 
             return JsonResponse(res)
 
@@ -212,9 +216,11 @@ class GalleryView(MainView):
         data = {}
 
         logger.debug('init: %f' % (time.clock() - NOW))
-
-        Prefs = json.loads(UserPref.objects.get(user=request.user).data)
-        gRange = Prefs['batchSize']
+        if request.user.is_anonymous():
+            gRange = 300
+        else:
+            Prefs = json.loads(UserPref.objects.get(user=request.user).data)
+            gRange = Prefs['batchSize']
         request.session.setdefault('frog_range', '0:%i' % gRange)
 
         if rng:
@@ -771,6 +777,9 @@ def frogLogout(request):
     logout(request)
 
     return HttpResponseRedirect('/frog')
+
+def frogAccessDenied(request):
+    return render(request, 'frog/access_denied.html')
 
 @login_required
 def switchArtist(request):

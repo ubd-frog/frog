@@ -27,7 +27,6 @@ import re
 
 from django.db import models
 from django.contrib.auth.models import User
-from django.core.exceptions import ObjectDoesNotExist
 from django.conf import settings
 
 from videoThread import VideoThread, parseInfo
@@ -324,10 +323,16 @@ class VideoQueue(models.Model):
 
 
 class Gallery(models.Model):
+    PUBLIC, PROTECTED, PRIVATE = (0, 1, 2)
+    SECURITY_LEVEL = (
+        (PUBLIC, 'Public'),
+        (PROTECTED, 'Protected'),
+        (PRIVATE, 'Private'),
+    )
     title = models.CharField(max_length=128)
     images = models.ManyToManyField(Image, blank=True, null=True)
     videos = models.ManyToManyField(Video, blank=True, null=True)
-    private = models.BooleanField(default=False)
+    security = models.SmallIntegerField(default=PUBLIC, choices=SECURITY_LEVEL)
     owner = models.ForeignKey(User, default=1)
     description = models.TextField(default="", blank=True)
     uploads = models.BooleanField(default=True)
@@ -343,7 +348,7 @@ class Gallery(models.Model):
         obj = {
             'id': self.id,
             'title': self.title,
-            'private': self.private,
+            'security': self.security,
             'image_count': self.images.count(),
             'video_count': self.videos.count(),
             'owner': {'id': self.owner.id, 'name': self.owner.get_full_name()},

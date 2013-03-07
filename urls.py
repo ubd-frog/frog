@@ -20,11 +20,10 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 
 
-from django.conf.urls import patterns, include, url
+from django.conf.urls import patterns, url
 
-from views import gallery, tag, image, video, comment, downloadView, index, pref, frogLogin, frogLogout, switchArtist, isUnique, helpMe, artistLookup, getUser
+from views import gallery, tag, image, video, comment, downloadView, index, pref, frogLogin, frogLogout, switchArtist, isUnique, helpMe, artistLookup, getUser, frogAccessDenied
 from rss import Daily, Weekly
-from uploader import uploader
 
 # Uncomment the next two lines to enable the admin:
 # from django.contrib import admin
@@ -57,6 +56,7 @@ urlpatterns = patterns('',
 
     url(r'^login$', frogLogin),
     url(r'^logout$', frogLogout),
+    url(r'^access_denied', frogAccessDenied),
 
     url(r'^switchartist$', switchArtist),
     url(r'^artistlookup$', artistLookup),

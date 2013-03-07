@@ -25,7 +25,7 @@ from django.contrib import admin
 from models import Gallery, Image, Video, Tag
 
 class GalleryAdmin(admin.ModelAdmin):
-    pass
+    list_display = ('title', 'parent', 'owner', 'security')
 
 
 class ImageAdmin(admin.ModelAdmin):

@@ -23,37 +23,37 @@
             window.addEvent('domready', function() {
                 Frog.StaticRoot = '{{MEDIA_URL}}';
 
-                {% if object.private %}
+                {% if object.security == 0 %}
+                new Frog.Gallery(undefined, {{object.id}}, {
+                    private: false,
+                    upload: {{object.uploads|yesno:'true,false'}}{% if plugins.altclick %},
+                    altclick: {{plugins.altclick}}{% endif %}
+                });
+                {% elif object.security == 1 %}
+                new Frog.Gallery(undefined, {{object.id}}, {
+                    private: false,
+                    upload: {{object.uploads|yesno:'true,false'}}{% if plugins.altclick %},
+                    altclick: {{plugins.altclick}}{% endif %}
+                });
+                {% elif object.security == 2 %}
                     {% if user == object.owner %}
-                        new Frog.Gallery(undefined, {{object.id}}, {
-                            private: {{object.private|yesno:'true,false'}},
-                            upload: {{object.uploads|yesno:'true,false'}}{% if plugins.altclick %},
-                            altclick: {{plugins.altclick}}{% endif %}
-                        });
-                        {% for button in plugins.buttons %}
-                        Frog.UI.addTool(
-                            '{{button.0}}',
-                            '{{MEDIA_URL}}{{button.1}}',
-                            {{button.2}}
-                        );
-                        {% endfor %}
-                    {% else %}
-                        $('main').set('html', '<h1>Gallery is private</h1>');
+                new Frog.Gallery(undefined, {{object.id}}, {
+                    private: {{object.parent|yesno:'false,true'}},
+                    upload: {{object.uploads|yesno:'true,false'}}{% if plugins.altclick %},
+                    altclick: {{plugins.altclick}}{% endif %}
+                });
                     {% endif %}
-                {% else %}
-                    new Frog.Gallery(undefined, {{object.id}}, {
-                        private: {{object.private|yesno:'true,false'}},
-                        upload: {{object.uploads|yesno:'true,false'}}{% if plugins.altclick %},
-                        altclick: {{plugins.altclick}}{% endif %}
-                    });
-                    {% for button in plugins.buttons %}
-                    Frog.UI.addTool(
-                        '{{button.0}}',
-                        '{{MEDIA_URL}}{{button.1}}',
-                        {{button.2}}
-                    );
-                    {% endfor %}
                 {% endif %}
+                {% if user.is_anonymous %}
+                Frog.UI.addLoginAction();
+                {% endif %}
+                {% for button in plugins.buttons %}
+                Frog.UI.addTool(
+                    '{{button.0}}',
+                    '{{MEDIA_URL}}{{button.1}}',
+                    {{button.2}}
+                );
+                {% endfor %}
             });
             {% endblock %}
         </script>
@@ -61,7 +61,12 @@
     <body>
         {% block content %}
         <div id="main">
-            
+            {% if object.security == 2 and user != object.owner %}
+            <div style='width: 500px;margin: 300px auto;text-align: center;'>
+                <h1>Access Denied</h1>
+                <h3>This gallery is private and can only be viewed by it's owner</h3>
+            </div>
+            {% endif %}
         </div>
         {% endblock %}
         <!-- JavaScript at the bottom for fast page loading -->
