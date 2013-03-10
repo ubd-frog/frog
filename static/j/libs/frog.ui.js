@@ -23,7 +23,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 Frog.UI = (function(Frog) {
     var ID, Store, ToolBar;
     var navmenu = Ext.create('Ext.menu.Menu');
-    var managemenu =  Ext.create('Ext.menu.Menu');
+    
     var uploadEnabled = false;
     var advancedFilter = Frog.Prefs.advanced_filter;
 
@@ -72,8 +72,8 @@ Frog.UI = (function(Frog) {
         fields: ['name', 'value'],
         data: [
             {name: 'Public', value: 0},
-            {name: 'Protected', value: 1},
-            {name: 'Private', value: 2}
+            {name: 'Private', value: 1},
+            {name: 'Personal', value: 2}
         ]
     })
 
@@ -120,33 +120,69 @@ Frog.UI = (function(Frog) {
                         icon: Frog.icon('tag_orange'),
                         handler: editTagsHandler
                     });
-                    // Manage Menu
-                    menuremove = Ext.create('Ext.menu.Item', {
-                        text: 'Remove Selected',
-                        icon: Frog.icon('cross'),
-                        handler: removeHandler
-                    });
-                    menucopy = Ext.create('Ext.menu.Item', {
-                        text: 'Copy to Gallery',
-                        icon: Frog.icon('page_white_copy'),
-                        handler: copyHandler
-                    });
-                    menudownload = Ext.create('Ext.menu.Item', {
-                        text: 'Download Sources',
-                        icon: Frog.icon('compress'),
-                        handler: downloadHandler
-                    });
-                    menuswitchartist = Ext.create('Ext.menu.Item', {
-                        text: 'Switch Artist',
-                        icon: Frog.icon('user_edit'),
-                        handler: switchArtistHandler
-                    });
-                    menuaddsubgallery = Ext.create('Ext.menu.Item', {
-                        text: 'Add Sub Gallery',
-                        icon: Frog.icon('application_view_tile'),
-                        handler: addSubGalleryHandler
-                    });
-                    managemenu.add([menuremove, menucopy, menudownload, '-', menuswitchartist, menuaddsubgallery]);
+                    var menuconfig = {
+                        items: [
+                            {
+                                text: 'Remove Selected',
+                                icon: Frog.icon('cross'),
+                                handler: removeHandler
+                            },
+                            {
+                                text: 'Copy to Gallery',
+                                icon: Frog.icon('page_white_copy'),
+                                handler: copyHandler
+                            },
+                            {
+                                text: 'Download Sources',
+                                icon: Frog.icon('compress'),
+                                handler: downloadHandler
+                            },
+                            '-',
+                            {
+                                text: 'Switch Artist',
+                                icon: Frog.icon('user_edit'),
+                                handler: switchArtistHandler
+                            },
+                            {
+                                text: 'Add Sub Gallery',
+                                icon: Frog.icon('application_view_tile'),
+                                handler: addSubGalleryHandler
+                            }
+                        ]
+                    }
+                    if (res.value !== null) {
+                        menuconfig.items.push('-');
+                        menuconfig.items.push(
+                            {
+                                text: 'Security',
+                                icon: Frog.icon('lock'),
+                                menu: {
+                                    items: [
+                                        {
+                                            text: 'Public',
+                                            group: 'security',
+                                            checked: res.value.security === 0,
+                                            handler: securityHandler
+                                        },
+                                        {
+                                            text: 'Private',
+                                            group: 'security',
+                                            checked: res.value.security === 1,
+                                            handler: securityHandler
+                                        },
+                                        {
+                                            text: 'Personal',
+                                            group: 'security',
+                                            checked: res.value.security === 2,
+                                            handler: securityHandler
+                                        }
+                                    ]
+                                }
+                            }
+                        );
+                    }
+                    var managemenu =  Ext.create('Ext.menu.Menu', menuconfig);
+                    
                     ToolBar.add({
                         text: 'Manage',
                         icon: Frog.icon('photos'),
@@ -175,9 +211,14 @@ Frog.UI = (function(Frog) {
                         icon: Frog.icon('cog'),
                         menu: buildPrefMenu()
                     });
+
+                    
+                }
+                else {
+                    addLoginAction();
                 }
             }
-        }).GET();
+        }).GET({gallery: ID});
         
         // -- RSS button
         ToolBar.add({
@@ -718,6 +759,14 @@ Frog.UI = (function(Frog) {
         });
         win.add(fp)
     }
+    function securityHandler(item, event) {
+        var store = Ext.getStore('security');
+        new Request.JSON({
+            url: '/frog/gallery/' + ID,
+            emulation: false,
+            headers: {"X-CSRFToken": Cookie.read('csrftoken')}
+        }).PUT({security: store.findRecord('name', item.text).data.value});
+    }
     function addPrivateMenu() {
         var id = this.id;
         var makepublic = managemenu.add({
@@ -803,8 +852,6 @@ Frog.UI = (function(Frog) {
         addEvent: addEvent,
         addTool: addTool,
         enableUploads: enableUploads,
-        addPrivateMenu: addPrivateMenu,
-        addLoginAction: addLoginAction,
         isAdvancedFilterEnabled: function() { return advancedFilter; }
     };
 

@@ -323,11 +323,11 @@ class VideoQueue(models.Model):
 
 
 class Gallery(models.Model):
-    PUBLIC, PROTECTED, PRIVATE = (0, 1, 2)
+    PUBLIC, PRIVATE, PERSONAL = (0, 1, 2)
     SECURITY_LEVEL = (
         (PUBLIC, 'Public'),
-        (PROTECTED, 'Protected'),
         (PRIVATE, 'Private'),
+        (PERSONAL, 'Personal'),
     )
     title = models.CharField(max_length=128)
     images = models.ManyToManyField(Image, blank=True, null=True)

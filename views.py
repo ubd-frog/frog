@@ -859,6 +859,11 @@ def getUser(request):
         res.isError = True
         res.append(DefaultPrefs)
     else:
+        galleryid = request.GET.get('gallery')
+        if galleryid is not None:
+            gallery = Gallery.objects.filter(pk=galleryid, owner=request.user)
+            if gallery:
+                res.append(gallery[0].json())
         res.isSuccess = True
 
     return JsonResponse(res)

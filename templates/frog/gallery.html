@@ -23,29 +23,18 @@
             window.addEvent('domready', function() {
                 Frog.StaticRoot = '{{MEDIA_URL}}';
 
-                {% if object.security == 0 %}
+                {% if object.security < 2 %}
                 new Frog.Gallery(undefined, {{object.id}}, {
-                    private: false,
-                    upload: {{object.uploads|yesno:'true,false'}}{% if plugins.altclick %},
-                    altclick: {{plugins.altclick}}{% endif %}
-                });
-                {% elif object.security == 1 %}
-                new Frog.Gallery(undefined, {{object.id}}, {
-                    private: false,
                     upload: {{object.uploads|yesno:'true,false'}}{% if plugins.altclick %},
                     altclick: {{plugins.altclick}}{% endif %}
                 });
                 {% elif object.security == 2 %}
                     {% if user == object.owner %}
                 new Frog.Gallery(undefined, {{object.id}}, {
-                    private: {{object.parent|yesno:'false,true'}},
                     upload: {{object.uploads|yesno:'true,false'}}{% if plugins.altclick %},
                     altclick: {{plugins.altclick}}{% endif %}
                 });
                     {% endif %}
-                {% endif %}
-                {% if user.is_anonymous %}
-                Frog.UI.addLoginAction();
                 {% endif %}
                 {% for button in plugins.buttons %}
                 Frog.UI.addTool(

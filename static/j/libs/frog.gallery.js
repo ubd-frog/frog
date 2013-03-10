@@ -23,7 +23,6 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 Frog.Gallery = new Class({
     Implements: [Events, Options],
     options: {
-        private: false,
         upload: true,
         altclick: false
     },
@@ -73,9 +72,6 @@ Frog.Gallery = new Class({
             self.tileSize = Math.floor((window.getWidth() - 2) / self.tilesPerRow);
             self.request();
         });
-        if (options.private) {
-            Frog.UI.addPrivateMenu();
-        }
         if (this.options.upload) {
             Frog.UI.enableUploads();
         }
