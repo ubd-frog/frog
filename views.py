@@ -18,7 +18,7 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION 
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-import os
+
 import time
 import logging
 try:
@@ -53,10 +53,10 @@ from common import MainView, Result, JsonResponse, getObjectsFromGuids, commentT
 from uploader import uploader
 from signals import frog_auth_check
 
-from sendFile import send_file, send_zipfile
+from sendFile import send_zipfile
 
 
-logger = logging.getLogger('dev.frog')
+logger = logging.getLogger('frog')
 LoginRequired = method_decorator(login_required)
 
 

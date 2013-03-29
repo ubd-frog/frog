@@ -22,10 +22,8 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 import logging
 import re
-import json
 import time
 import subprocess
-import shutil
 from threading import Thread
 
 from django.conf import settings
@@ -34,7 +32,7 @@ from path import path as Path
 
 TIMEOUT = 1
 ROOT = Path(settings.MEDIA_ROOT.replace('\\', '/'))
-logger = logging.getLogger('dev.frog')
+logger = logging.getLogger('frog')
 
 
 class VideoThread(Thread):
@@ -63,7 +61,7 @@ class VideoThread(Thread):
                     sourcepath = ROOT / item.source.name
 
                     ## -- Get the video information
-                    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,)
                     infoString = proc.stdout.readlines()
                     videodata = parseInfo(infoString)
                     isH264 = videodata['video'][0]['codec'].find('h264') != -1 and sourcepath.ext == 'mp4'
@@ -84,7 +82,7 @@ class VideoThread(Thread):
                             args=settings.SCRUB_FFMPEG_ARGS if scrub else settings.FFMPEG_ARGS,
                             outfile=outfile,
                         )
-                        proc = subprocess.Popen(cmds, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                        proc = subprocess.Popen(cmds, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
                         proc.communicate()
 
                     ## -- Set the video to the result
@@ -100,15 +98,12 @@ class VideoThread(Thread):
 
 def parseInfo(strings):
     data = {}
-    stream_video = re.compile("""Stream #\d:(?P<index>\d+).*: (?P<type>\w+): (?P<codec>.*), (?P<pixel_format>\w+), (?P<width>\d+)x(?P<height>\d+)""")
-    stream_audio = re.compile("""Stream #\d:(?P<index>\d+).*: (?P<type>\w+): (?P<codec>.*), (?P<hertz>\d+) Hz, .*, .*, (?P<bitrate>\d+) kb/s$""")
-    input_ = re.compile(""" '([a-zA-Z0-9\. ]+)':$""")
+    stream_video = re.compile("""Stream #\d[:.](?P<index>\d+).*: (?P<type>\w+): (?P<codec>.*), (?P<pixel_format>\w+), (?P<width>\d+)x(?P<height>\d+)""")
+    stream_audio = re.compile("""Stream #\d[:.](?P<index>\d+).*: (?P<type>\w+): (?P<codec>.*), (?P<hertz>\d+) Hz, .*, .*, (?P<bitrate>\d+) kb/s$""")
     duration = re.compile("""Duration: (?P<duration>\d+:\d+:\d+.\d+), start: (?P<start>\d+.\d+), bitrate: (?P<bitrate>\d+) kb/s$""")
 
     for n in strings:
         n = n.strip()
-        #if n.startswith('Input'):
-            #data['name'] = input_.findall(n)[0]
         if n.startswith('Duration'):
             r = duration.search(n)
             data.update(r.groupdict())

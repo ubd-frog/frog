@@ -130,12 +130,6 @@ class Uploader(object):
                 res.message = 'Filetype not supported'
                 
                 return JsonResponse(res)
-            
-            except Exception, e:
-                res.isError = True
-                res.message = str(e)
-
-                return JsonResponse(res)
 
         else:
             res.isError = True
