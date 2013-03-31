@@ -292,7 +292,7 @@ class Video(Piece):
 
         ## -- Set the temp video while processing
         self.video = 'frog/i/queued.mp4'
-        queuedvideo = VideoQueue(video=self)
+        queuedvideo = VideoQueue.objects.get_or_create(video=self)[0]
         queuedvideo.save()
 
         self.save()
@@ -309,12 +309,16 @@ class Video(Piece):
 
 
 class VideoQueue(models.Model):
-    Queued = 0
-    Processing = 1
-    Completed = 2
+    QUEUED, PROCESSING, COMPLETED, ERROR = (0, 1, 2, 3)
+    STATUS = (
+        (QUEUED, 'Queued'),
+        (PROCESSING, 'Processing'),
+        (COMPLETED, 'Completed'),
+        (ERROR, 'Error'),
+    )
 
     video = models.OneToOneField(Video, related_name='queue')
-    status = models.SmallIntegerField(default=0)
+    status = models.SmallIntegerField(default=QUEUED, choices=STATUS)
     message = models.TextField(blank=True, null=True)
 
     def setStatus(self, status):

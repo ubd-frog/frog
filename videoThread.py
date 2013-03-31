@@ -49,11 +49,11 @@ class VideoThread(Thread):
                     ## -- Get the video object to work on
                     item = self.queue.get()
                     ## -- Set the video to processing
-                    logger.info('processing')
+                    logger.info('Processing video: %s' % item.guid)
                     item.video = 'frog/i/processing.mp4'
                     item.save()
                     ## -- Set the status of the queue item
-                    item.queue.setStatus(item.queue.Processing)
+                    item.queue.setStatus(item.queue.PROCESSING)
                     item.queue.setMessage('Processing video...')
                     
                     infile = "%s%s" % (ROOT, item.source.name)
@@ -64,7 +64,7 @@ class VideoThread(Thread):
                     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,)
                     infoString = proc.stdout.readlines()
                     videodata = parseInfo(infoString)
-                    isH264 = videodata['video'][0]['codec'].find('h264') != -1 and sourcepath.ext == 'mp4'
+                    isH264 = videodata['video'][0]['codec'].lower().find('h264') != -1 and sourcepath.ext == '.mp4'
                     m, s = divmod(settings.SCRUB_DURATION, 60)
                     h, m = divmod(m, 60)
                     scrubstr = "%02d:%02d:%02d" % (h, m, s)
@@ -76,19 +76,27 @@ class VideoThread(Thread):
                     if not isH264 or scrub:
                         item.queue.setMessage('Converting to MP4...')
                         
-                        cmds = '{exe} -i "{infile}" {args} "{outfile}"'.format(
+                        cmd = '{exe} -i "{infile}" {args} "{outfile}"'.format(
                             exe=settings.FFMPEG,
                             infile=infile,
                             args=settings.SCRUB_FFMPEG_ARGS if scrub else settings.FFMPEG_ARGS,
                             outfile=outfile,
                         )
-                        proc = subprocess.Popen(cmds, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
-                        proc.communicate()
+                        try:
+                            subprocess.call(cmd, shell=True)
+                        except subprocess.CalledProcessError:
+                            logger.error('Failed to convert video: %s' % item.guid)
+                            item.queue.setStatus(item.queue.ERROR)
+                            continue
+                        
+                        item.video = outfile.replace('\\', '/').replace(ROOT, '')
+                    else:
+                        ## -- No further processing
+                        item.video = item.source.name
 
                     ## -- Set the video to the result
-                    logger.info('Done')
-                    item.video = outfile.replace('\\', '/').replace(ROOT, '')
-                    item.queue.setStatus(item.queue.Completed)
+                    logger.info('Finished processing video: %s' % item.guid)
+                    item.queue.setStatus(item.queue.COMPLETED)
                     item.save()
                 except Exception, e:
                     logger.error(str(e))
