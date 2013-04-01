@@ -61,7 +61,7 @@ class VideoThread(Thread):
                     sourcepath = ROOT / item.source.name
 
                     ## -- Get the video information
-                    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,)
+                    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
                     infoString = proc.stdout.readlines()
                     videodata = parseInfo(infoString)
                     isH264 = videodata['video'][0]['codec'].lower().find('h264') != -1 and sourcepath.ext == '.mp4'
