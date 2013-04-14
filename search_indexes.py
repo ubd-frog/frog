@@ -20,7 +20,6 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 
 
-import datetime
 from haystack import indexes
 from haystack import site
 from frog.models import Image, Video
@@ -34,6 +33,9 @@ class ImageIndex(indexes.SearchIndex):
     def get_model(self):
         return Image
 
+    def get_updated_field(self):
+        return 'modified'
+
 
 class VideoIndex(indexes.SearchIndex):
     text = indexes.CharField(document=True, use_template=True)
@@ -42,6 +44,9 @@ class VideoIndex(indexes.SearchIndex):
 
     def get_model(self):
         return Video
+
+    def get_updated_field(self):
+        return 'modified'
 
 
 site.register(Image, ImageIndex)

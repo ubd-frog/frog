@@ -243,6 +243,7 @@ Frog.Bucket = new Class({
         this.li = new Element('li').inject(this.element);
         this.input = new Element('input', {placeholder: "Search"}).inject(this.li);
         this.tags = [];
+        this.completer = null;
 
         this.events = {
             keyUp: this.keyUpEvent.bind(this),
@@ -292,6 +293,7 @@ Frog.Bucket = new Class({
     destroy: function() {
         this.element.getElements('.frog-tag').dispose();
         this.element.destroy();
+        this.completer.elements.list.node.destroy();
     },
     keyUpEvent: function(e) {
         if (e.code === 13 && this.input.value !== "") {
@@ -306,7 +308,7 @@ Frog.Bucket = new Class({
                 tag = new Frog.Tag(value.id, name);
             }
             else {
-                name = this.input.value;
+                name = this.input.value.toLowerCase().replace('search for: ', '');
                 tag = new Frog.Tag(name, name);
             }
             this.input.value = "";
@@ -323,7 +325,7 @@ Frog.Bucket = new Class({
     },
     __build: function() {
         this.input.addEvent('keyup', this.events.keyUp);
-        new Meio.Autocomplete(this.input, '/frog/tag/search', {
+        this.completer = new Meio.Autocomplete(this.input, '/frog/tag/search', {
             filter: {
                 path: 'name',
                 formatItem: function(text, data) {

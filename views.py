@@ -272,7 +272,7 @@ class GalleryView(MainView):
                                 o |= Q(title__icontains=item)
                     if HAYSTACK and searchQuery != "":
                         ## -- once all tags have been filtered, filter by search
-                        searchIDs = self._search(searchQuery)
+                        searchIDs = self._search(searchQuery, m.model_class())
                         if searchIDs:
                             if not o:
                                 o = Q()
@@ -357,11 +357,14 @@ class GalleryView(MainView):
             else:
                 return 0
 
-    def _search(self, query):
+    def _search(self, query, model):
         """ Performs a search query and returns the object ids """
-        query = query.strip()
+        query = '%s*' % query.strip()
         logger.debug(query)
-        return [o.object.id for o in SearchQuerySet().auto_query(query).load_all()]
+        sqs = SearchQuerySet()
+        sqs = sqs.filter(content=query).models(model)
+
+        return [o.pk for o in sqs]
 
 
 class TagView(MainView):

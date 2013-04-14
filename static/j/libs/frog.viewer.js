@@ -56,7 +56,7 @@ Frog.Viewer = new Class({
             events: {
                 'left': function(e) { e.stop(); this.prev(); }.bind(this),
                 'right': function(e) { e.stop(); this.next(); }.bind(this),
-                'escape': function(e) { 
+                'esc': function(e) { 
                     e.stop(); this.hide(); 
                 }.bind(this)
             }

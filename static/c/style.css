@@ -496,8 +496,7 @@ li.frog-tag {
 }
 #frog_upload {
     display: none;
-    position: absolute;
-    top: 0;
+    position: fixed;
     left: 0;
     width: 100%;
     height: 100%;
