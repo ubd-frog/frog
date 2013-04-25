@@ -20,22 +20,16 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 
 
-import shutil
-import hashlib
-import traceback
 try:
     import ujson as json
 except ImportError:
     import json
 
-from django.http import HttpResponse, Http404
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.models import User
 
 from models import Piece, Image, Video, Gallery
-from common import JsonResponse, Result, uniqueID, getHashForFile, getRoot
-
-from django.conf import settings
+from common import JsonResponse, Result, getHashForFile, getRoot
 
 from path import path as Path
 

@@ -208,7 +208,6 @@ class Image(Piece):
         for i,n in enumerate(formats):
             if workImage.size[0] > n[1] or workImage.size[1] > n[1]:
                 workImage.thumbnail((n[1], n[1]), pilImage.ANTIALIAS)
-                dest = self.source.name.replace(hashVal, '_' * i + hashVal)
                 setattr(self, n[0], self.source.name.replace(hashVal, '_' * i + hashVal))
                 workImage.save(ROOT + getattr(self, n[0]).name)
             else:

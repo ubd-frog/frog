@@ -20,8 +20,6 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 
 
-from path import path as Path
-
 from django.conf import settings
 
 from common import PluginContext, getRoot

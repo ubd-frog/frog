@@ -314,6 +314,13 @@ Frog.Viewer = new Class({
         this.objects = images;
         this.setIndex(id.toInt());
         this.shelf.populate(this.objects);
+        
+        var hash = location.hash.split('#')[1];
+        if (typeof hash !== 'undefined') {
+            var data = JSON.parse(unescape(hash));
+            data.viewer = this.objects.map(function(item) { return item.id; });
+            location.hash = JSON.stringify(data);
+        }
     },
     setIndex: function(idx) {
         idx = idx.toInt();
@@ -356,12 +363,12 @@ Frog.Viewer = new Class({
 
         this.keyboard.activate();
 
-        var hash = location.hash.split('#')[1];
-        if (typeof hash !== 'undefined') {
-            var data = JSON.parse(unescape(hash));
-            data.viewer = true;
-            location.hash = JSON.stringify(data);
-        }
+        // var hash = location.hash.split('#')[1];
+        // if (typeof hash !== 'undefined') {
+        //     var data = JSON.parse(unescape(hash));
+        //     data.viewer = true;
+        //     location.hash = JSON.stringify(data);
+        // }
 
         this.element.setStyle('background-color', Frog.Prefs.backgroundColor);
 

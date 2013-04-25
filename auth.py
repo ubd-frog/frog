@@ -20,8 +20,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 
 
-from django.conf import settings
-from django.contrib.auth.models import User, check_password
+from django.contrib.auth.models import User
 
 class SimpleAuthBackend(object):
     """
