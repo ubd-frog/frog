@@ -182,7 +182,7 @@ class GalleryView(MainView):
         
         tags = json.loads(request.GET.get('filters', '[[]]'))
         rng = request.GET.get('rng', None)
-        more = request.GET.get('more', False)
+        more = json.loads(request.GET.get('more', 'false'))
         models = request.GET.get('models', 'image,video')
         if models == '':
             models = 'image,video'
