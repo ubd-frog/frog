@@ -21,8 +21,8 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
 Frog.UI = (function(Frog) {
-    var ID, Store, ToolBar;
-    var navmenu = Ext.create('Ext.menu.Menu');
+    var ID, Store, ToolBar, SwitchArtistWindow;
+    var navmenu = Ext.create('Ext.menu.Menu', {hideMode: 'display'});
     
     var uploadEnabled = false;
     var advancedFilter = Frog.Prefs.advanced_filter;
@@ -39,6 +39,10 @@ Frog.UI = (function(Frog) {
             {name: 'owner'},
             {name: 'description'}
         ]
+    });
+    Ext.define('Artist', {
+        extend: 'Ext.data.Model',
+        fields: ['id', 'name', 'username', 'email']
     });
     Store = Ext.create('Ext.data.TreeStore', {
         autoLoad: true,
@@ -75,7 +79,19 @@ Frog.UI = (function(Frog) {
             {name: 'Private', value: 1},
             {name: 'Personal', value: 2}
         ]
-    })
+    });
+    Ext.create('Ext.data.Store', {
+        model: 'Artist',
+        storeId: 'artists',
+        proxy: {
+            type: 'ajax',
+            url: '/frog/artistlookup',
+            reader: {
+                type: 'json',
+                root: 'values'
+            }
+        }
+    });
 
     ToolBar = Ext.create('Ext.toolbar.Toolbar');
     RemoveObserver = new Frog.Observer();
@@ -121,6 +137,7 @@ Frog.UI = (function(Frog) {
                         handler: editTagsHandler
                     });
                     var menuconfig = {
+                        hideMode: 'display',
                         items: [
                             {
                                 text: 'Remove Selected',
@@ -257,6 +274,7 @@ Frog.UI = (function(Frog) {
             height: 300,
             frame: true,
             title: 'Galleries',
+            hideMode: 'display',
             store: Store,
             rootVisible: false,
             useArrows: true,
@@ -319,6 +337,7 @@ Frog.UI = (function(Frog) {
         });
 
         var menu = Ext.create('Ext.menu.Menu', {
+            hideMode: 'display',
             items: [
                 {
                     text: 'Viewer Background',
@@ -602,60 +621,8 @@ Frog.UI = (function(Frog) {
         location.href = '/frog/download?guids=' + guids.join(',');
     }
     function switchArtistHandler() {
-        var win = Ext.create('widget.window', {
-            title: 'Switch Artist',
-            closable: true,
-            closeAction: 'hide',
-            resizable: false,
-            modal: true,
-            width: 400,
-            height: 200,
-            bodyStyle: 'padding: 5px;'
-        });
+        var win = Frog.UI.SwitchArtist();
         win.show();
-        var input = new Element('input', {autofocus: 'autofocus', placeholder: "Search"});
-
-        var fp = Ext.create('Ext.FormPanel', {
-            items: [{
-                xtype: 'label',
-                text: "Start typing the name of an artist or if this is a new artist, type in the first and last name and click Send"
-            }, {
-                xtype: 'textfield',
-                fieldLabel: 'Artist Name',
-                id: 'frog_switch_artist'
-            }],
-            buttons: [{
-                text: 'Send',
-                handler: function() {
-                    switchArtistCallback(input.value);
-                    win.close();
-                }
-            },{
-                text: 'Cancel',
-                handler: function() {
-                    win.close();
-                }
-            }]
-        });
-        win.add(fp);
-        var input = $('frog_switch_artist-inputEl');
-        new Meio.Autocomplete(input, '/frog/artistlookup', {
-            requestOptions: {
-                headers: {"X-CSRFToken": Cookie.read('csrftoken')},
-            },
-            filter: {
-                path: 'name',
-                formatItem: function(text, data) {
-                    if (data.id === 0) {
-                        return '<span class="search"></span>' + data.name
-                    }
-                    else {
-                        return '<span></span>' + data.name
-                    }
-                }
-            }
-        });
-        input.focus();
     }
     function addSubGalleryHandler() {
         Ext.MessageBox.prompt('Name', 'Please enter a title for the new gallery:', function(res, text) {
@@ -859,9 +826,55 @@ Frog.UI = (function(Frog) {
         addEvent: addEvent,
         addTool: addTool,
         enableUploads: enableUploads,
-        isAdvancedFilterEnabled: function() { return advancedFilter; }
+        isAdvancedFilterEnabled: function() { return advancedFilter; },
+        editTags: editTagsHandler
     };
 
     return api;
 
 })(window.Frog);
+
+
+Frog.UI.SwitchArtist = function() {
+    var win = Ext.create('widget.window', {
+        title: 'Switch Artist',
+        closable: true,
+        closeAction: 'hide',
+        resizable: false,
+        modal: true,
+        width: 400,
+        height: 200,
+        bodyStyle: 'padding: 5px;'
+    });
+
+    var fp = Ext.create('Ext.FormPanel', {
+        items: [{
+            xtype: 'label',
+            text: "Start typing the name of an artist or if this is a new artist, type in the first and last name and click Send"
+        }, {
+            xtype: 'combobox',
+            fieldLabel: 'Artist Name',
+            store: 'artists',
+            queryMode: 'remote',
+            minChars: 3,
+            displayField: 'name',
+            name: 'artist_name'
+        }],
+        buttons: [{
+            text: 'Send',
+            handler: function() {
+                var value = this.up('form').getForm().getFieldValues();
+                switchArtistCallback(value.artist_name);
+                win.close();
+            }
+        },{
+            text: 'Cancel',
+            handler: function() {
+                win.close();
+            }
+        }]
+    });
+    win.add(fp);
+    
+    return win;
+}

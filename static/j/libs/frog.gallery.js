@@ -103,7 +103,8 @@ Frog.Gallery = new Class({
             active: true,
             events: {
                 'ctrl+a': function(e) { e.stop(); $$('.thumbnail').addClass('selected'); },
-                'ctrl+d': function(e) { e.stop(); $$('.thumbnail').removeClass('selected'); }
+                'ctrl+d': function(e) { e.stop(); $$('.thumbnail').removeClass('selected'); },
+                'tab': function(e) { e.stop(); Frog.UI.editTags(); }
             }
         });
 

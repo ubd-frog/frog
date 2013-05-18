@@ -812,7 +812,7 @@ def switchArtist(request):
 @login_required
 def artistLookup(request):
     res = Result()
-    query = request.GET.get('q', False)
+    query = request.GET.get('query', False)
     if query:
         for n in User.objects.filter(first_name__icontains=query.lower()):
             res.append(userToJson(n))
