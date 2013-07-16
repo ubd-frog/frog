@@ -21,11 +21,10 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
 from haystack import indexes
-from haystack import site
 from frog.models import Image, Video
 
 
-class ImageIndex(indexes.SearchIndex):
+class ImageIndex(indexes.SearchIndex, indexes.Indexable):
     text = indexes.CharField(document=True, use_template=True)
     author = indexes.CharField(model_attr='author')
     pub_date = indexes.DateTimeField(model_attr='created')
@@ -37,7 +36,7 @@ class ImageIndex(indexes.SearchIndex):
         return 'modified'
 
 
-class VideoIndex(indexes.SearchIndex):
+class VideoIndex(indexes.SearchIndex, indexes.Indexable):
     text = indexes.CharField(document=True, use_template=True)
     author = indexes.CharField(model_attr='author')
     pub_date = indexes.DateTimeField(model_attr='created')
@@ -47,7 +46,3 @@ class VideoIndex(indexes.SearchIndex):
 
     def get_updated_field(self):
         return 'modified'
-
-
-site.register(Image, ImageIndex)
-site.register(Video, VideoIndex)
