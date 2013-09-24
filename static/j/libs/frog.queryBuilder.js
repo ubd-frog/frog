@@ -41,49 +41,10 @@ Frog.QueryBuilder = new Class({
 
         // -- Add our main element
         this.element = new Element('div', {id: 'frog_builder'});
-        var frog = new Image();
+        var froglink = new Element('a', {href: 'https://github.com/theiviaxx/Frog'}).inject(this.element);
+        var frog = new Image().inject(froglink);
         frog.addClass('frog-logo');
-        frog.onload = function() {
-            this.element.grab(frog);
-        }.bind(this)
         frog.src = Frog.icon('frog');
-
-
-        // this.sortables = new Sortables($$('.frog-bucket'), {
-        //     clone: true,
-        //     revert: true,
-        //     opacity: 0.7
-        // });
-        // this.sortables.addEvent('start', function(el) {
-        //     this.sourcebucket = el.parentNode;
-        // }.bind(this));
-        // this.sortables.addEvent('complete', function(el) {
-        //     var tag, bucket, source;
-        //     var bucketElement = el.parentNode;
-        //     var id = el.dataset.frog_tag_id.toInt();
-        //     if (bucketElement !== this.sourcebucket) {
-        //         if (typeOf(id) === 'null') {
-        //             tag = new Frog.Tag(el.dataset.frog_tag_id, el.dataset.frog_tag_id);
-        //         }
-        //         for(var i=0;i<this.buckets.length;i++) {
-        //             if (bucketElement === $(this.buckets[i])) {
-        //                 bucket = this.buckets[i];
-        //                 break;
-        //             }
-        //         }
-        //         for(var i=0;i<this.buckets.length;i++) {
-        //             if (this.sourcebucket === $(this.buckets[i])) {
-        //                 source = this.buckets[i];
-        //                 break;
-        //             }
-        //         }
-        //         if (bucket && source) {
-        //             bucket.addTag(tag);
-        //             source.removeTag(tag);
-        //         }
-        //     }
-            
-        // }.bind(this));
 
         // -- Remove empty buckets
         this.clean(data);
@@ -139,7 +100,6 @@ Frog.QueryBuilder = new Class({
         }.bind(this));
         
         this.buckets.push(bucket);
-        //this.sortables.addLists($(bucket));
 
         this.fireEvent('add', this);
         
@@ -166,9 +126,7 @@ Frog.QueryBuilder = new Class({
     _historyEvent: function(e) {
         var self = this;
         if (!this.__isInit) {
-            //var key = (typeOf(e) === 'string') ? e : e.newURL;
-            var key = location.href;
-            var data = JSON.parse(unescape(key.split('#')[1]));
+            var data = Frog.util.hashData();
             this.data = data.filters;
         }
         
@@ -206,8 +164,6 @@ Frog.QueryBuilder = new Class({
             }
             this.fireEvent('onChange', [data]);
         }
-        
-        //this.sortables.addItems($$('.frog-tag'));
     },
     _filter: function(state) {
         var bucket;

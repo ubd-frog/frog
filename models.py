@@ -1,23 +1,23 @@
-"""
-Copyright (c) 2012 Brett Dixon
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in 
-the Software without restriction, including without limitation the rights to use,
-copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the 
-Software, and to permit persons to whom the Software is furnished to do so, 
-subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all 
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS 
-FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR 
-COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER 
-IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION 
-WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-"""
+##################################################################################################
+# Copyright (c) 2012 Brett Dixon
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy of
+# this software and associated documentation files (the "Software"), to deal in 
+# the Software without restriction, including without limitation the rights to use,
+# copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the 
+# Software, and to permit persons to whom the Software is furnished to do so, 
+# subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all 
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS 
+# FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR 
+# COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER 
+# IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION 
+# WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+##################################################################################################
 
 
 import json
@@ -34,9 +34,11 @@ from videoThread import VideoThread, parseInfo
 from path import path as Path
 from PIL import Image as pilImage
 
-gMaxSize = settings.IMAGE_SIZE_CAP
-gSmallSize = settings.IMAGE_SMALL_SIZE
-gThumbSize = settings.THUMB_SIZE
+FROG_IMAGE_SIZE_CAP = getattr(settings, 'FROG_IMAGE_SIZE_CAP', 5120)
+FROG_IMAGE_SMALL_SIZE = getattr(settings, 'FROG_IMAGE_SMALL_SIZE', 600)
+FROG_THUMB_SIZE = getattr(settings, 'FROG_THUMB_SIZE', 256)
+FROG_UNIQUE_ID = getattr(settings, 'FROG_UNIQUE_ID', None)
+FROG_PATH = getattr(settings, 'FROG_PATH', None)
 
 gQueue = Queue.Queue()
 gVideoThread = VideoThread(gQueue)
@@ -49,6 +51,7 @@ DefaultPrefs = {
     'includeImage': True,
     'includeVideo': True,
 }
+
 ROOT = Path(settings.MEDIA_ROOT.replace('\\', '/'))
 
 
@@ -99,11 +102,31 @@ class Piece(models.Model):
     def __unicode__(self):
         return self.title
 
+    def thumbnail_tag(self):
+        if self.thumbnail:
+            if self.width / self.height > 1:
+                return u'<img src="%s" width="256" />' % self.thumbnail.url
+            else:
+                return u'<img src="%s" height="256" />' % self.thumbnail.url
+
+        return ''
+    thumbnail_tag.allow_tags = True
+    thumbnail_tag.short_description = 'Image'
+
     @staticmethod
     def getUniqueID(path, user):
-        path = Path(path)
-        username = 'Anonymous' if user.is_anonymous() else user.username
-        return '%s_%s' % (username, path.name)
+        if FROG_UNIQUE_ID:
+            modparts = FROG_UNIQUE_ID.split('.')
+            func = modparts.pop()
+            mod = '.'.join(modparts)
+            imported = __import__(mod, globals(), locals(), [func])
+            uid = getattr(imported, func)(path, user)
+        else:
+            path = Path(path)
+            username = 'Anonymous' if user.is_anonymous() else user.username
+            uid = '%s_%s' % (username, path.name)
+
+        return uid
 
     def getGuid(self):
         return Guid(self.id, self.AssetType)
@@ -201,9 +224,9 @@ class Image(Piece):
             self.source = png.replace(ROOT, '')
 
         formats = [
-            ('image', gMaxSize),
-            ('small', gSmallSize),
-            ('thumbnail', gThumbSize),
+            ('image', FROG_IMAGE_SIZE_CAP),
+            ('small', FROG_IMAGE_SMALL_SIZE),
+            ('thumbnail', FROG_THUMB_SIZE),
         ]
         for i,n in enumerate(formats):
             if workImage.size[0] > n[1] or workImage.size[1] > n[1]:

@@ -159,13 +159,15 @@ Frog.UI = (function(Frog) {
                                 text: 'Switch Artist',
                                 icon: Frog.icon('user_edit'),
                                 handler: switchArtistHandler
-                            },
-                            {
-                                text: 'Add Sub Gallery',
-                                icon: Frog.icon('application_view_tile'),
-                                handler: addSubGalleryHandler
                             }
                         ]
+                    };
+                    if (res.value.parent === null) {
+                        menuconfig.items.push({
+                            text: 'Add Sub Gallery',
+                            icon: Frog.icon('application_view_tile'),
+                            handler: addSubGalleryHandler
+                        });
                     }
                     if (res.value !== null) {
                         menuconfig.items.push('-');
@@ -567,6 +569,7 @@ Frog.UI = (function(Frog) {
                         new Request.JSON({
                             url: '/frog/gallery',
                             async: false,
+                            headers: {"X-CSRFToken": Cookie.read('csrftoken')},
                             onSuccess: function(res) {
                                 data.id = res.value.id;
                             }
@@ -587,8 +590,8 @@ Frog.UI = (function(Frog) {
                         url: '/frog/gallery/' + data.id,
                         emulation: false,
                         async: false,
+                        headers: {"X-CSRFToken": Cookie.read('csrftoken')},
                         onSuccess: function(res) {
-                            Store.getRootNode().removeAll();
                             Store.load();
                             Ext.MessageBox.confirm('Confirm', 'Would you like to visit this gallery now?', function(res) {
                                 if (res === 'yes') {
@@ -629,9 +632,9 @@ Frog.UI = (function(Frog) {
             if (res === 'ok') {
                 new Request.JSON({
                     url: '/frog/gallery',
+                    headers: {"X-CSRFToken": Cookie.read('csrftoken')},
                     onSuccess: function(res) {
                         Ext.MessageBox.alert('Gallery', res.message);
-                        Store.getRootNode().removeAll();
                         Store.load();
                     }
                 }).POST({parent: ID, title: text});

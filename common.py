@@ -1,23 +1,23 @@
-"""
-Copyright (c) 2012 Brett Dixon
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in 
-the Software without restriction, including without limitation the rights to use,
-copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the 
-Software, and to permit persons to whom the Software is furnished to do so, 
-subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all 
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS 
-FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR 
-COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER 
-IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION 
-WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-"""
+##################################################################################################
+# Copyright (c) 2012 Brett Dixon
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy of
+# this software and associated documentation files (the "Software"), to deal in 
+# the Software without restriction, including without limitation the rights to use,
+# copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the 
+# Software, and to permit persons to whom the Software is furnished to do so, 
+# subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all 
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS 
+# FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR 
+# COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER 
+# IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION 
+# WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+##################################################################################################
 
 import urlparse
 import random
@@ -30,12 +30,7 @@ try:
 except ImportError:
     import json
 
-from django.http import HttpResponse, Http404
-from django.shortcuts import render
-from django.contrib.contenttypes.models import ContentType
-from django.contrib.auth.models import User
-from django.views.decorators.csrf import csrf_exempt
-from django.core.exceptions import ObjectDoesNotExist
+from django.http import HttpResponse
 from django.conf import settings
 
 from frog.models import Image, Video
@@ -44,7 +39,33 @@ from frog.plugin import FrogPluginRegistry
 from path import path as Path
 
 
-def userToJson(user, context=None, **kwargs):
+class Result(object):
+    """Standardized result for ajax requests"""
+    def __init__(self):
+        self.message = ''
+        self.value = None
+        self.values = []
+        self.isError = False
+        self.isSuccess = False
+
+    def append(self, val):
+        """Appends the object to the end of the values list.  Will also set the value to the first
+        item in the values list
+
+        :param val: Object to append
+        :type val: primitive
+        """
+        self.values.append(val)
+        self.value = self.values[0]
+
+
+def userToJson(user):
+    """Returns a serializable User dict
+
+    :param user: User to get info for
+    :type user: User
+    :returns: dict
+    """
     obj = {
         'id': user.id,
         'username': user.username,
@@ -54,7 +75,29 @@ def userToJson(user, context=None, **kwargs):
 
     return obj
 
+def commentToJson(comment):
+    """Returns a serializable Comment dict
+
+    :param comment: Comment to get info for
+    :type comment: Comment
+    :returns: dict
+    """
+    obj = {
+        'id': comment.id,
+        'comment': comment.comment,
+        'user': userToJson(comment.user),
+        'date': comment.submit_date.isoformat(),
+    }
+
+    return obj
+
 def JsonResponse(obj=None, status=200):
+    """Returns an HttpResponse of the object serliazed to json
+
+    :param obj: Object to serialize
+    :type obj: any
+    :returns: HttpResponse
+    """
     obj = obj or {}
     try:
         data = json.dumps(obj, indent=4)
@@ -62,126 +105,30 @@ def JsonResponse(obj=None, status=200):
         data = json.dumps(obj.__dict__, indent=4)
     return HttpResponse(data, mimetype='application/json', status=status)
 
+def getPutData(request):
+    """Adds raw post to the PUT and DELETE querydicts on the request so they behave like post
 
-class MainView(object):
+    :param request: Request object to add PUT/DELETE to
+    :type request: Request
+    """
+    dataDict = {}
+    for n in urlparse.parse_qsl(request.raw_post_data):
+        dataDict[n[0]] = n[1]
 
-    def __init__(self, model=None):
-        if model:
-            self.model = model
-            self._ctype = ContentType.objects.get_for_model(self.model)
-            self.template = '%s/%s.html' % (self._ctype.app_label, self._ctype.model)
-        self.context = {}
-
-    def _processRequest(self, request, obj_id=None):
-        obj = {'request': request, 'context': {}}
-        try:
-            self.id = int(obj_id)
-            obj['id'] = int(obj_id)
-        except TypeError:
-            pass
-
-        dataDict = {}
-        for n in urlparse.parse_qsl(request.raw_post_data):
-            dataDict[n[0]] = n[1]
-        obj['DELETE'] = obj['PUT'] = dataDict
-
-        if obj_id:
-            obj['object'] = self.model.objects.get(pk=obj_id)
-            obj['context']['object'] = obj['object']
-            obj['context']['obj'] = None if not obj['object'] or isinstance(obj['object'], User) else json.dumps(obj['object'].json())
-            try:
-                obj['context']['title'] = obj['object'].name
-            except AttributeError:
-                pass
-        
-        obj['context']['ajax'] = request.is_ajax()
-
-        return obj
-
-    def _getData(self, request):
-        dataDict = {}
-        for n in urlparse.parse_qsl(request.raw_post_data):
-            dataDict[n[0]] = n[1]
-        
-        return dataDict
-
-    def _getObject(self, id):
-        try:
-            obj = self.model.objects.get(pk=id)
-
-            return obj
-        except ObjectDoesNotExist:
-            raise Http404
-    
-    @csrf_exempt
-    def index(self, request, *args, **kwargs):
-        if kwargs.has_key('obj_id'):
-            return self.view(request, kwargs['obj_id'])
-        else:
-            if request.method == 'GET':
-                return self.get(request)
-            elif request.method == 'POST':
-                return self.post(request)
-            elif request.method == 'PUT':
-                setattr(request, 'PUT', self._getData(request))
-                return self.put(request)
-            elif request.method == 'DELETE':
-                setattr(request, 'DELETE', self._getData(request))
-                return self.delete(request)
-
-    @csrf_exempt
-    def view(self, request, obj_id=None):
-        if request.method == 'GET':
-            if request.GET.get('json', False):
-                res = Result()
-                res.isSuccess = True
-                res.append(self.object.json())
-
-                return JsonResponse(res)
-            return self.get(request, obj_id)
-        elif request.method == 'POST':
-            return self.post(request, obj_id)
-        elif request.method == 'PUT':
-            setattr(request, 'PUT', self._getData(request))
-            return self.put(request, obj_id)
-        elif request.method == 'DELETE':
-            setattr(request, 'DELETE', self._getData(request))
-            return self.delete(request, obj_id)
-    
-    def get(self, request, *args, **kwargs):
-        obj = self._getObject(args[0])
-        return self.render(request, {'object': obj})
-    
-    def post(self, request, *args, **kwargs):
-        return HttpResponse()
-    
-    def put(self, request, *args, **kwargs):
-        return HttpResponse()
-    
-    def delete(self, request, *args, **kwargs):
-        return HttpResponse()
-
-    def render(self, request, context):
-        return render(request, self.template, context)
-
-
-class Result(object):
-    def __init__(self):
-        self.message = ''
-        self.value = None
-        self.values = []
-        self.isError = False
-        self.isSuccess = False
-
-    def append(self, val):
-        self.values.append(val)
-        self.value = self.values[0]
-
+    setattr(request, 'PUT', dataDict)
+    setattr(request, 'DELETE', dataDict)
 
 def getRoot():
+    """Convenience to return the media root with forward slashes"""
     return Path(settings.MEDIA_ROOT.replace('\\', '/'))
 
 def getHashForFile(f):
+    """Returns a hash value for a file
+
+    :param f: File to hash
+    :type f: str
+    :returns: str
+    """
     hashVal = hashlib.sha1()
     while True:
         r = f.read(1024)
@@ -193,24 +140,21 @@ def getHashForFile(f):
     return hashVal.hexdigest()
 
 def uniqueID(size=6, chars=string.ascii_uppercase + string.digits):
+    """A quick and dirty way to get a unique string"""
     return ''.join(random.choice(chars) for x in xrange(size))
 
 def getObjectsFromGuids(guids):
+    """Gets the model objects based on a guid list
+
+    :param guids: Guids to get objects for
+    :type guids: list
+    :returns: list
+    """
     img = list(Image.objects.filter(guid__in=guids))
     vid = list(Video.objects.filter(guid__in=guids))
     objects = img + vid
 
     return objects
-
-def commentToJson(comment):
-    obj = {
-        'id': comment.id,
-        'comment': comment.comment,
-        'user': userToJson(comment.user),
-        'date': comment.submit_date.isoformat(),
-    }
-
-    return obj
 
 def getPluginContext():
     plugins = __discoverPlugins()
@@ -256,11 +200,6 @@ def __discoverPlugins():
     """ Discover the plugin classes contained in Python files, given a
         list of directory names to scan. Return a list of plugin classes.
     """
-    # ROOT = Path(sys.path[0])
-    # for pyfile in ROOT.walk('frog_plugin.py'):
-    #     file_, path, descr = imp.find_module(pyfile.namebase, [pyfile.parent])
-    #     if file_:
-    #         imp.load_module(pyfile.namebase, file_, path, descr)
     for app in settings.INSTALLED_APPS:
         if not app.startswith('django'):
             module = __import__(app)

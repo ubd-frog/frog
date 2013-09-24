@@ -22,6 +22,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 Frog.Viewer = new Class({
     Implements: Events,
+    LIMIT: 100,
     initialize: function() {
         this.origin = {x: 0, y: 0};
         this.xform = Matrix.I(3);
@@ -130,6 +131,7 @@ Frog.Viewer = new Class({
         this.bOriginal = new Element('li', {'class': 'frog-original'}).inject(buttons);
         this.bWindow = new Element('li', {'class': 'frog-window'}).inject(buttons);
         this.bDownload = new Element('li', {'class': 'frog-download'}).inject(buttons);
+        this.bCopy = new Element('li', {'id': 'frog_clip', 'class': 'frog-url'}).inject(buttons);
 
         this.countLabel = new Element('div', {'class': 'image-count', 'text': '1/1'}).inject(controls);
 
@@ -255,18 +257,6 @@ Frog.Viewer = new Class({
         m2 = this.xform.x(m1);
         this.xform = m2.dup();
     },
-    rotate: function(angle) {
-        var m1, m2;
-
-        m1 = $M([
-            [Math.cos(angle), -Math.sin(angle), 0],
-            [Math.sin(angle), Math.cos(angle), 0],
-            [0, 0, 1]
-        ]);
-
-        m2 = this.xform.x(m1);
-        this.xform = m2.dup();
-    },
     resize: function(e) {
         this.canvas.width = window.getWidth();
         this.canvas.height = window.getHeight();
@@ -279,7 +269,7 @@ Frog.Viewer = new Class({
         this.video.hide();
         this.canvas.show();
         this.img.show();
-        //this.clear();
+        
         this.videoEl.empty();
         this.image.src = img;
         if (this.image.complete) {
@@ -306,35 +296,34 @@ Frog.Viewer = new Class({
             type: 'video/mp4; codecs="avc1.42E01E, mp4a.40.2"'
         }).inject(this.videoEl);
         this.videoEl.play();
-
-        //LBP.setup();
     },
     setImages: function(images, id) {
-        id = id || 0;
+        id = id || this.current;
         this.objects = images;
         this.setIndex(id.toInt());
         this.shelf.populate(this.objects);
         
-        var hash = location.hash.split('#')[1];
-        if (typeof hash !== 'undefined') {
-            var data = JSON.parse(unescape(hash));
-            data.viewer = this.objects.map(function(item) { return item.id; });
-            location.hash = JSON.stringify(data);
-        }
+        var data = Frog.util.hashData();
+        data.viewer = this.objects.slice(0, this.LIMIT).map(function(item) { return item.guid; });
+        location.hash = JSON.stringify(data);
     },
     setIndex: function(idx) {
         idx = idx.toInt();
         this.current = idx;
         var obj = this.objects[idx];
+        var url = location.protocol + location.host;
         if (obj.guid.charAt(0) === '1') {
             this.videoEl.pause();
             this.img.removeAttribute('style');
             this.setImage(obj.image);
+            this.bCopy.setProperty('data-clipboard-text', url + '/frog/image/' + obj.id);
         }
         else {
             this.img.setStyle('display', 'none');
             this.setVideo(obj);
+            this.bCopy.setProperty('data-clipboard-text', url + '/frog/video/' + obj.id);
         }
+        Frog.Clip.glue(this.bCopy);
         
         this.countLabel.set('text', (idx + 1) + '/' + this.objects.length);
     },
@@ -360,20 +349,10 @@ Frog.Viewer = new Class({
         window.addEvent('mousewheel', this.events.zoom);
         window.addEvent('resize', this.events.resize);
         document.body.addClass('noscroll');
-
-        this.keyboard.activate();
-
-        // var hash = location.hash.split('#')[1];
-        // if (typeof hash !== 'undefined') {
-        //     var data = JSON.parse(unescape(hash));
-        //     data.viewer = true;
-        //     location.hash = JSON.stringify(data);
-        // }
-
+        document.body.addClass('noselect');
         this.element.setStyle('background-color', Frog.Prefs.backgroundColor);
 
-        document.body.addClass('noselect');
-        
+        this.keyboard.activate();
         this.fireEvent('onShow', [this]);
         this.isOpen = true;
         this.resize();
@@ -386,20 +365,15 @@ Frog.Viewer = new Class({
         window.removeEvent('mousemove', this.events.move);
         window.removeEvent('mousewheel', this.events.zoom);
         document.body.removeClass('noscroll');
+        document.body.removeClass('noselect');
 
         this.keyboard.relinquish();
 
-        var hash = location.hash.split('#')[1];
-        if (typeof hash !== 'undefined') {
-            var data = JSON.parse(unescape(hash));
-            delete data.viewer;
-            location.hash = JSON.stringify(data);
-        }
+        var data = Frog.util.hashData();
+        delete data.viewer;
+        location.hash = JSON.stringify(data);
 
         this.videoEl.pause();
-
-        document.body.removeClass('noselect');
-
         this.fireEvent('onHide', [this]);
         this.isOpen = false;
         this.resize();

@@ -43,6 +43,7 @@ Frog.Gallery = new Class({
         this.tileSize = Math.floor((window.getWidth() - 2) / this.tilesPerRow);
         this.objects = [];
         this.thumbnails = [];
+        this.objectMap = [];
         this.y = 0;
         this.timer = this._scrollTimer.periodical(30, this);
         this.dirty = true;
@@ -115,7 +116,7 @@ Frog.Gallery = new Class({
         
         var builderData;
         if (location.hash !== "") {
-            data = JSON.parse(location.hash.split('#')[1]);
+            var data = Frog.util.hashData();
             builderData = data.filters;
         }
         var bucketHeight = 50;
@@ -140,6 +141,7 @@ Frog.Gallery = new Class({
     clear: function() {
         this.objects = [];
         this.thumbnails = [];
+        this.objectMap = [];
         this.container.empty();
     },
     filter: function(id) {
@@ -150,7 +152,11 @@ Frog.Gallery = new Class({
         this.builder.addTag(0, val);
     },
     setFilters: function(obj) {
+        var curretdata = Frog.util.hashData();
         var data = {};
+        if (typeof curretdata.viewer !== 'undefined') {
+            data.viewer = curretdata.viewer;
+        }
         data.filters = (obj) ? obj : [];
         var oldHash = location.hash;
         location.hash = JSON.stringify(data);
@@ -194,6 +200,7 @@ Frog.Gallery = new Class({
                     }
                     res.values.each(function(o) {
                         self.objects.push(o);
+                        self.objectMap.push(o.guid);
                         var t = new Frog.Thumbnail(self.objects.length - 1, o, {
                             artist: o.author.first + ' ' + o.author.last,
                             imageID: o.id
@@ -206,6 +213,11 @@ Frog.Gallery = new Class({
                 }
                 self.isRequesting = false;
                 self.spinner.hide();
+
+                var data = Frog.util.hashData();
+                if (data.viewer && !self.viewer.isOpen) {
+                    self.openViewer(data.viewer);
+                }
             }
         }).GET(this.requestData);
     },
@@ -217,12 +229,13 @@ Frog.Gallery = new Class({
         this._getScreen();
     },
     historyEvent: function(e) {
-        //var key = (typeOf(e) === 'string') ? e : e.newURL;
-        var key = location.href;
-        var data = JSON.parse(unescape(key.split('#')[1]));
+        var data = Frog.util.hashData();
         data.filters = JSON.stringify(data.filters);
         if (typeof data.viewer === 'undefined' && this.viewer.isOpen) {
             this.viewer.hide();
+        }
+        else if (data.viewer && this.objects.length && !this.viewer.isOpen) {
+            this.openViewer(data.viewer);
         }
         if (data.filters !== this.requestData.filters || !this.requestData.filters) {
             this.request(data)
@@ -284,11 +297,35 @@ Frog.Gallery = new Class({
             this.viewer.setImages(objects, id);
         }
         else {
-            var objects = Array.clone(this.objects);
+            objects = Array.clone(this.objects);
             this.viewer.show();
             this.viewer.setImages(objects, id);
 
         }
+    },
+    openViewer: function(guids) {
+        this.y = window.getScroll().y;
+        var objects = [];
+        guids.each(function(guid) {
+            var obj = this.getObjectFromGuid(guid);
+            if (obj) {
+                objects.push(obj);
+            }
+        }, this);
+        
+        this.viewer.show();
+        this.viewer.setImages(objects);
+    },
+    selectByIndex: function(index) {
+
+    },
+    getObjectFromGuid: function(guid) {
+        var idx = this.objectMap.indexOf(guid);
+        if (idx !== -1) {
+            return this.objects[idx];
+        }
+
+        return null;
     },
     _getScreen: function() {
         var s, e, t, row, endRow;

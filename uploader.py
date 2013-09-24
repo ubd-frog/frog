@@ -1,35 +1,30 @@
-"""
-Copyright (c) 2012 Brett Dixon
+##################################################################################################
+# Copyright (c) 2012 Brett Dixon
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy of
+# this software and associated documentation files (the "Software"), to deal in 
+# the Software without restriction, including without limitation the rights to use,
+# copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the 
+# Software, and to permit persons to whom the Software is furnished to do so, 
+# subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all 
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS 
+# FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR 
+# COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER 
+# IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION 
+# WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+##################################################################################################
 
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in 
-the Software without restriction, including without limitation the rights to use,
-copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the 
-Software, and to permit persons to whom the Software is furnished to do so, 
-subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all 
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS 
-FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR 
-COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER 
-IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION 
-WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-"""
-
-
-try:
-    import ujson as json
-except ImportError:
-    import json
 
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.models import User
 
-from models import Piece, Image, Video, Gallery
-from common import JsonResponse, Result, getHashForFile, getRoot
+from models import Piece, Image, Video, Gallery, ROOT, FROG_PATH
+from common import JsonResponse, Result, getHashForFile
 
 from path import path as Path
 
@@ -43,101 +38,98 @@ class MediaTypeError(Exception):
     pass
 
 
-class Uploader(object):
-    def __init__(self):
-        pass
+@csrf_exempt
+def upload(request):
+    res = Result()
+    if request.FILES.has_key('file'):
+        try:
+            f = request.FILES['file']
+            filename = f.name
 
-    @csrf_exempt
-    def post(self, request):
-        res = Result()
-        if request.FILES.has_key('file'):
-            try:
-                f = request.FILES['file']
-                filename = f.name
+            path = request.POST.get('path', None)
+            if path:
+                foreignPath = path.replace("'", "\"")
+            else:
+                foreignPath = filename
 
-                path = request.POST.get('path', None)
-                if path:
-                    foreignPath = path.replace("'", "\"")
-                else:
-                    foreignPath = filename
+            galleries = request.POST.get('galleries', '1').split(',')
+            tags = filter(None, request.POST.get('tags', '').split(','))
 
-                galleries = request.POST.get('galleries', '1').split(',')
-                tags = filter(None, request.POST.get('tags', '').split(','))
-
-                username = request.POST.get('user', False)
-                if username:
+            username = request.POST.get('user', False)
+            if username:
+                user = User.objects.get(username=username)
+            else:
+                if request.user.is_anonymous():
+                    username = 'noauthor'
                     user = User.objects.get(username=username)
                 else:
-                    if request.user.is_anonymous():
-                        username = 'noauthor'
-                        user = User.objects.get(username=username)
-                    else:
-                        user = request.user
-                
-                uniqueName = Piece.getUniqueID(foreignPath, user)
-                
-                if f.content_type.startswith('image'):
-                    if Path(filename).ext.lower() not in EXT['image']:
-                        raise MediaTypeError
-                    model = Image
-                else:
-                    if Path(filename).ext not in EXT['video']:
-                        raise MediaTypeError
-                    model = Video
+                    user = request.user
+            
+            uniqueName = request.POST.get('uid', Piece.getUniqueID(foreignPath, user))
+            
+            if f.content_type.startswith('image'):
+                if Path(filename).ext.lower() not in EXT['image']:
+                    raise MediaTypeError
+                model = Image
+            else:
+                if Path(filename).ext not in EXT['video']:
+                    raise MediaTypeError
+                model = Video
 
-                obj, created = model.objects.get_or_create(unique_id=uniqueName, defaults={'author': user})
-                guid = obj.getGuid()
-                hashVal = getHashForFile(f)
+            obj, created = model.objects.get_or_create(unique_id=uniqueName, defaults={'author': user})
+            guid = obj.getGuid()
+            hashVal = getHashForFile(f)
 
-                if hashVal == obj.hash:
-                    for gal in galleries:
-                        g = Gallery.objects.get(pk=int(gal))
-                        obj.gallery_set.add(g)
-                    res.isSuccess = True
-                    res.message = "Files were the same"
-
-                    return JsonResponse(res)
-
-                objPath = getRoot() / guid.guid[-2:] / guid.guid / filename
-                hashPath = objPath.parent / hashVal + objPath.ext
-                
-                if not objPath.parent.exists():
-                    objPath.parent.makedirs()
-
-                self.handle_uploaded_file(hashPath, f)
-
-                obj.hash = hashVal
-                obj.foreign_path = foreignPath
-                obj.title = objPath.namebase
-                obj.export(hashVal, hashPath, tags=tags, galleries=galleries)
-
-                res.append(obj.json())
-
-                for key,f in request.FILES.iteritems():
-                    if key != 'file':
-                        dest = objPath.parent / f.name
-                        self.handle_uploaded_file(dest, f)
-
+            if hashVal == obj.hash:
+                for gal in galleries:
+                    g = Gallery.objects.get(pk=int(gal))
+                    obj.gallery_set.add(g)
                 res.isSuccess = True
-            except MediaTypeError:
-                res.isError = True
-                res.message = 'Filetype not supported'
-                
+                res.message = "Files were the same"
+
                 return JsonResponse(res)
 
-        else:
+            objPath = ROOT
+            if FROG_PATH:
+                objPath = objPath / FROG_PATH
+            objPath = objPath / guid.guid[-2:] / guid.guid / filename
+            print objPath
+            hashPath = objPath.parent / hashVal + objPath.ext
+            
+            if not objPath.parent.exists():
+                objPath.parent.makedirs()
+
+            handle_uploaded_file(hashPath, f)
+
+            obj.hash = hashVal
+            obj.foreign_path = foreignPath
+            obj.title = objPath.namebase
+            obj.export(hashVal, hashPath, tags=tags, galleries=galleries)
+
+            res.append(obj.json())
+
+            for key,f in request.FILES.iteritems():
+                if key != 'file':
+                    dest = objPath.parent / f.name
+                    handle_uploaded_file(dest, f)
+
+            res.isSuccess = True
+        except MediaTypeError:
             res.isError = True
-            res.message = "No file found"
+            res.message = 'Filetype not supported'
+            
+            return JsonResponse(res)
 
-        return JsonResponse(res)
+    else:
+        res.isError = True
+        res.message = "No file found"
 
-    def handle_uploaded_file(self, dest, f):
-        destination = open(dest, 'wb+')
-        for chunk in f.chunks():
-            destination.write(chunk)
-        destination.close()
+    return JsonResponse(res)
 
-        return True
+def handle_uploaded_file(dest, f):
+    destination = open(dest, 'wb+')
+    for chunk in f.chunks():
+        destination.write(chunk)
+    destination.close()
 
-
-uploader = Uploader()
+    return True

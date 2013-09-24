@@ -95,6 +95,13 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
             else {
                 element.dataset[key] = value;
             }
+        },
+        isGuid: function(value) {
+            return value.length === 14;
+        },
+        hashData: function() {
+            var str = unescape(location.href.split('#')[1]);
+            return (str !== 'undefined') ? JSON.parse(str) : {};
         }
     }
     
@@ -254,7 +261,8 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
             }).inject(document.body);
             this.element = new Element('div', {id: 'frog_comments_block'}).inject(this.container);
             this.container.hide();
-            this.saveButton = null;
+            this.bSave = null;
+            this.bCancel = null;
             this.guid = '';
             this.request = new Request.HTML({
                 url: '/frog/comment/',
@@ -265,7 +273,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
                 }.bind(this)
             });
             this.top = new Element('div').inject(this.element);
-            var bot = new Element('div').inject(this.element);
+            var bot = new Element('form').inject(this.element);
             if (Frog.user !== null) {
                 this.fakeInput = new Element('input', {
                     'placeholder': 'Comment...',
@@ -279,8 +287,12 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
                             
                             self.input.show();
                             self.input.focus();
-                            if (!self.saveButton) {
-                                self.saveButton = Ext.create('Ext.Button', {
+                            if (self.bSave) {
+                                self.bSave.show();
+                                self.bCancel.show();
+                            }
+                            else {
+                                self.bSave = Ext.create('Ext.Button', {
                                     text: 'Save',
                                     renderTo: bot,
                                     handler: function() {
@@ -292,7 +304,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
                                         self.fireEvent('onPost', [id]);
                                     }
                                 });
-                                Ext.create('Ext.Button', {
+                                self.bCancel = Ext.create('Ext.Button', {
                                     text: 'Cancel',
                                     renderTo: bot,
                                     handler: function() {
@@ -304,7 +316,6 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
                     }
                 }).inject(bot);
             }
-            
             
             this.input = new Element('textarea').inject(bot);
             this.input.hide();
@@ -334,6 +345,8 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         },
         close: function() {
             this.container.hide();
+            this.bSave.hide();
+            this.bCancel.hide();
             if (Frog.user !== null) {
                 this.fakeInput.show();
             }
@@ -344,5 +357,8 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         }
     });
     Frog.Comments = new Frog.CommentManager();
+    Frog.Clip = new ZeroClipboard(document.getElementById("frog_clip"), {
+        moviePath: "/static/frog/j/libs/ZeroClipboard.swf"
+    });
 
 })(window);
