@@ -100,9 +100,9 @@ def JsonResponse(obj=None, status=200):
     """
     obj = obj or {}
     try:
-        data = json.dumps(obj, indent=4)
+        data = json.dumps(obj)
     except TypeError:
-        data = json.dumps(obj.__dict__, indent=4)
+        data = json.dumps(obj.__dict__)
     return HttpResponse(data, mimetype='application/json', status=status)
 
 def getPutData(request):

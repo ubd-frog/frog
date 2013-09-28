@@ -20,13 +20,16 @@
 ##################################################################################################
 
 """
-API :: Gallery
-GET     /        Lists the galleries currently visible by the current user
-POST    /        Creates a gallery object
-GET     /id      Gallery object if visible by the current user
-PUT     /id      Adds image or video objects to the gallery
-DELETE  /id      Removes image or video objects from the gallery
-GET     /filter  Returns a filtered list of image and video objects
+Gallery API
+
+::
+
+    GET     /        Lists the galleries currently visible by the current user
+    POST    /        Creates a gallery object
+    GET     /id      Gallery object if visible by the current user
+    PUT     /id      Adds image or video objects to the gallery
+    DELETE  /id      Removes image or video objects from the gallery
+    GET     /filter  Returns a filtered list of image and video objects
 """
 
 import time
@@ -37,6 +40,7 @@ except ImportError:
     import json
 
 from django.http import HttpResponseRedirect
+from django.core.exceptions import ImproperlyConfigured
 from django.shortcuts import render
 from django.db.models import Q
 from django.contrib.contenttypes.models import ContentType
@@ -46,7 +50,7 @@ from django.contrib.auth.decorators import login_required
 try:
     from haystack.query import SearchQuerySet
     HAYSTACK = True
-except ImportError:
+except (ImportError, ImproperlyConfigured):
     HAYSTACK = False
 
 from frog.views import LOGGER

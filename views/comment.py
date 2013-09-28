@@ -20,11 +20,14 @@
 ##################################################################################################
 
 """
-API :: Comment
-GET     /        Returns a rendered list of comments
-GET     /id      Returns a serialized comment
-POST    /id      Creates a comment for an object
-PUT     /id      Updates the content of the comment
+Comment API
+
+::
+
+    GET     /        Returns a rendered list of comments
+    GET     /id      Returns a serialized comment
+    POST    /id      Creates a comment for an object
+    PUT     /id      Updates the content of the comment
 """
 
 from django.shortcuts import render

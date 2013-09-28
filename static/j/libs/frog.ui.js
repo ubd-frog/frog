@@ -162,12 +162,14 @@ Frog.UI = (function(Frog) {
                             }
                         ]
                     };
-                    if (res.value.parent === null) {
-                        menuconfig.items.push({
-                            text: 'Add Sub Gallery',
-                            icon: Frog.icon('application_view_tile'),
-                            handler: addSubGalleryHandler
-                        });
+                    if (res.value) {
+                        if (res.value.parent === null) {
+                            menuconfig.items.push({
+                                text: 'Add Sub Gallery',
+                                icon: Frog.icon('application_view_tile'),
+                                handler: addSubGalleryHandler
+                            });
+                        }
                     }
                     if (res.value !== null) {
                         menuconfig.items.push('-');
@@ -445,6 +447,9 @@ Frog.UI = (function(Frog) {
                                 var thumbid = (Browser.ie) ? element.getProperty('data-frog_tn_id') : element.dataset.frog_tn_id;
                                 var thumbnail = Frog.GalleryObject.thumbnails[thumbid.toInt()];
                                 add.each(function(tag) {
+                                    if (typeof(tag) === 'string') {
+                                        tag = Frog.Tags.get(tag);
+                                    }
                                     thumbnail.addTag({id: tag.toInt()});
                                 });
                                 rem.each(function(tag) {

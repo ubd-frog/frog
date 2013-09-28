@@ -20,13 +20,16 @@
 ##################################################################################################
 
 """
-API :: Piece
-GET     /image/id  Returns a rendered page displaying the requested image
-GET     /video/id  Returns a rendered page displaying the requested video
-POST    /image/id  Add tags to an image object
-POST    /video/id  Add tags to an video object
-DELETE  /image/id  Flags the image as deleted in the database
-DELETE  /video/id  Flags the video as deleted in the database
+Piece API
+
+::
+
+    GET     /image/id  Returns a rendered page displaying the requested image
+    GET     /video/id  Returns a rendered page displaying the requested video
+    POST    /image/id  Add tags to an image object
+    POST    /video/id  Add tags to an video object
+    DELETE  /image/id  Flags the image as deleted in the database
+    DELETE  /video/id  Flags the video as deleted in the database
 """
 
 from django.shortcuts import render

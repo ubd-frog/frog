@@ -20,14 +20,17 @@
 ##################################################################################################
 
 """
-API :: Tag
-GET     /        Lists all tags
-POST    /        Creates a Tag object
-PUT     /        Adds tags to guids
-DELETE  /        Removes tags from guids
-GET     /search  Search tag list
-GET     /manage  Renders a form for adding/removing tags
-POST    /manage  Adds and removes tags from guids and commits data
+Tag API
+
+::
+
+    GET     /        Lists all tags
+    POST    /        Creates a Tag object
+    PUT     /        Adds tags to guids
+    DELETE  /        Removes tags from guids
+    GET     /search  Search tag list
+    GET     /manage  Renders a form for adding/removing tags
+    POST    /manage  Adds and removes tags from guids and commits data
 """
 
 from django.shortcuts import render, get_object_or_404
