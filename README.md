@@ -12,7 +12,9 @@ Some portions of Frog utilize GPL or LGPL code or apps:
 Frog is a Server and Client solution for hosting and serving media files.  The initial build was intended for creative studios, but could be used for anything, even a home solution.  It was not meant for a front facing tool as the bandwidth costs would be outrageous.
 
 [Documentation](http://frog.readthedocs.org/en/latest/index.html)
+
 [Quickstart](http://frog.readthedocs.org/en/latest/admin/quickstart.html)
+
 [Demo Video](http://www.youtube.com/watch?v=Brfzw7CyuGo)
 
 With Frog there are a few key points that make it a perfect solution for your team(s) creative uses.
