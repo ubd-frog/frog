@@ -6,6 +6,11 @@
 Welcome to frog's documentation!
 ================================
 
+.. raw:: html
+
+    <div style='width: 100%;text-align: center;'><iframe width="560" height="315" src="http://www.youtube.com/embed/Brfzw7CyuGo" frameborder="0" allowfullscreen></iframe></div>
+
+
 User Guide
 ==========
 
@@ -44,6 +49,44 @@ Admin Guide
    admin/server
    admin/existing
    admin/troubleshooting
+
+Frog Settings
+-------------
+
+.. data:: FROG_IMAGE_SIZE_CAP
+
+    The maximum image size to allow for uploads.  Anything larger will be scaled proportionally to fit into a square of this value.
+
+    Default is 5120
+
+.. data:: FROG_IMAGE_SMALL_SIZE
+
+    This value determines what is considered a "small" version of the image
+
+    Default is 600
+
+.. data:: FROG_THUMB_SIZE
+
+    The value to scale thumbnails down to
+
+    Default is 256
+
+.. data:: FROG_UNIQUE_ID
+
+    A string to a module function that will be called to determine a unique value for the image.  This will be used to find and overwrite existing images.  The function should take two arguments, a path and user.  The `path` arg will have as much of the filename as possible and the `user` arg will be a standard Django User instance.  The default is
+
+    ::
+
+        def uniqueid(path, user)
+            username = 'Anonymous' if user.is_anonymous() else user.username
+            return '%s_%s' % (username, os.path.split(path)[1])
+
+.. data:: FROG_PATH
+
+    A path relative to our MEDIA_ROOT setting where Frog will store it's image and video files
+
+    Default is ''
+
 
 Indices and tables
 ==================
