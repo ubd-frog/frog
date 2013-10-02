@@ -39,6 +39,10 @@ FROG_IMAGE_SMALL_SIZE = getattr(settings, 'FROG_IMAGE_SMALL_SIZE', 600)
 FROG_THUMB_SIZE = getattr(settings, 'FROG_THUMB_SIZE', 256)
 FROG_UNIQUE_ID = getattr(settings, 'FROG_UNIQUE_ID', None)
 FROG_PATH = getattr(settings, 'FROG_PATH', None)
+try:
+    FROG_SITE_URL = getattr(settings, 'FROG_SITE_URL')
+except AttributeError:
+    raise ImproperlyConfigured, 'FROG_SITE_URL is required'
 
 gQueue = Queue.Queue()
 gVideoThread = VideoThread(gQueue)

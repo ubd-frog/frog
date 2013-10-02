@@ -39,6 +39,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.template.loader import render_to_string
 
 from frog.common import Result, JsonResponse, commentToJson, getObjectsFromGuids, getPutData
+from frog.models import FROG_SITE_URL
 
 
 def index(request, obj_id):
@@ -147,6 +148,7 @@ def __email(comment, obj):
     html = render_to_string('frog/comment_email.html', {
         'comment': comment,
         'object': obj,
+        'SITE_URL': FROG_SITE_URL,
     })
     subject, from_email, to = 'Comment from %s' % comment.user_name, '%s (%s)' % (comment.user_name, comment.user_email), obj.author.email
     text_content = 'This is an important message.'

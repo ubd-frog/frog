@@ -27,12 +27,22 @@ import subprocess
 from threading import Thread
 
 from django.conf import settings
+from django.core.exceptions import ImproperlyConfigured
 
 from path import path as Path
 
 TIMEOUT = 1
 ROOT = Path(settings.MEDIA_ROOT.replace('\\', '/'))
 logger = logging.getLogger('frog')
+
+try:
+    FROG_FFMPEG = getattr(settings, 'FROG_FFMPEG')
+except AttributeError:
+    raise ImproperlyConfigured, 'FROG_FFMPEG is required'
+
+FROG_SCRUB_DURATION = getattr(settings, 'FROG_SCRUB_DURATION', 60)
+FROG_FFMPEG_ARGS = getattr(settings, 'FROG_FFMPEG_ARGS', '-vcodec libx264 -b:v 2500k -acodec libvo_aacenc -b:a 56k -ac 2 -y')
+FROG_SCRUB_FFMPEG_ARGS = getattr(settings, 'FROG_SCRUB_FFMPEG_ARGS', '-vcodec libx264 -b:v 2500k -x264opts keyint=1:min-keyint=8 -acodec libvo_aacenc -b:a 56k -ac 2 -y')
 
 
 class VideoThread(Thread):
@@ -57,7 +67,7 @@ class VideoThread(Thread):
                     item.queue.setMessage('Processing video...')
                     
                     infile = "%s%s" % (ROOT, item.source.name)
-                    cmd = '%s -i "%s"' % (settings.FFMPEG, infile)
+                    cmd = '%s -i "%s"' % (FROG_FFMPEG, infile)
                     sourcepath = ROOT / item.source.name
 
                     ## -- Get the video information
@@ -65,7 +75,7 @@ class VideoThread(Thread):
                     infoString = proc.stdout.readlines()
                     videodata = parseInfo(infoString)
                     isH264 = videodata['video'][0]['codec'].lower().find('h264') != -1 and sourcepath.ext == '.mp4'
-                    m, s = divmod(settings.SCRUB_DURATION, 60)
+                    m, s = divmod(FROG_SCRUB_DURATION, 60)
                     h, m = divmod(m, 60)
                     scrubstr = "%02d:%02d:%02d" % (h, m, s)
                     scrub = videodata['duration'] <= scrubstr
@@ -77,9 +87,9 @@ class VideoThread(Thread):
                         item.queue.setMessage('Converting to MP4...')
                         
                         cmd = '{exe} -i "{infile}" {args} "{outfile}"'.format(
-                            exe=settings.FFMPEG,
+                            exe=FROG_FFMPEG,
                             infile=infile,
-                            args=settings.SCRUB_FFMPEG_ARGS if scrub else settings.FFMPEG_ARGS,
+                            args=FROG_SCRUB_FFMPEG_ARGS if scrub else FROG_FFMPEG_ARGS,
                             outfile=outfile,
                         )
                         try:

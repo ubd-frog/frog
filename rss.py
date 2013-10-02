@@ -24,9 +24,8 @@ import json
 
 from django.contrib.syndication.views import Feed
 from django.template.loader import render_to_string
-from django.conf import settings
 
-from frog.models import Gallery, RSSStorage, Image, Video
+from frog.models import Gallery, RSSStorage, Image, Video, FROG_SITE_URL
 
 
 class Daily(Feed):
@@ -38,7 +37,7 @@ class Daily(Feed):
         return "Frog Gallery :: %s (Daily)" % obj.title
 
     def link(self, obj):
-        return '%s/needLink' % settings.SITE_URL
+        return '%s/needLink' % FROG_SITE_URL
 
     def items(self, obj):
         return RSSStorage.objects.filter(gallery=obj, interval='daily')
@@ -52,10 +51,10 @@ class Daily(Feed):
         i = list(Image.objects.filter(id__in=data['image']))
         v = list(Video.objects.filter(id__in=data['video']))
 
-        return render_to_string('frog/rss.html', {'images': i, 'videos': v})
+        return render_to_string('frog/rss.html', {'images': i, 'videos': v, 'SITE_URL': FROG_SITE_URL})
 
     def item_link(self, item):
-        return '%s/item/%i' % (settings.SITE_URL, item.id)
+        return '%s/item/%i' % (FROG_SITE_URL, item.id)
 
 
 class Weekly(Daily):

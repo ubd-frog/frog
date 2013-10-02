@@ -6,13 +6,44 @@
 Welcome to frog's documentation!
 ================================
 
-.. raw:: html
+Frog Media Server is a server-client solution for sharing and maintaining large collections of images and videos
 
-    <div style='width: 100%;text-align: center;'><iframe width="560" height="315" src="http://www.youtube.com/embed/Brfzw7CyuGo" frameborder="0" allowfullscreen></iframe></div>
+Accessibility
+-------------
+
+.. image:: /_static/acc_info.png
+    :align: left
+    :height: 300
+
+First and foremost, Frog is easy to use and easy to add media files to. It has a straight forward API so integrating it into any other app or tool is trivial. Users can upload and view media instantly and the entire team benefits. For example, an artist could be working in Photoshop and simply hit a hotkey or panel button that would send a PNG and layered source PSD to Frog. The artist doesn't have to break his workflow just to share images with the rest of the team.
+
+Since Frog is web based, everyone can get to it wherever they are. The viewer is done in HTML5 canvas which makes it even more accessible as no plugins are required.
+
+
+Visibility
+----------
+
+.. image:: /_static/vis_info.png
+    :align: left
+    :height: 300
+
+One of the biggest problems I see in creative studios is that their media is usually hosted on a network drive somewhere and, if you're lucky, organized in folders. Searching is slow, browsing is near impossible, and sharing is a nightmare. A major benefit with Frog is just having everything visible at one time. Being able to browse all media in one place makes discovery a snap. There is also a sense of progress as users can see a history of the project's art over time.
+
+
+Discovery
+---------
+
+To find images or videos, there is a search bar at the top just as there should be.  You can do full text searches or filter by tags. Adding or removing tags to an image or a group of images is dead simple with a nice drag and drop interface anyone can use. Users can quickly search and filter a set of images, then send that link to others. For example, you could have a set of filters for a certain artist and a specific character. Share that link and you'll always have an up-to-date set of images meeting that criteria.
+
+As mentioned before, when media is stored in a network folder, browsing is cumbersome. If Google has tought us anything, its that search is the only means of finding something when the number of items gets too large. No matter how organized a folder structure may be, search will always be faster and more accessible to users.
 
 
 User Guide
 ==========
+
+.. raw:: html
+
+    <div style='width: 100%;text-align: center;'><iframe width="560" height="315" src="http://www.youtube.com/embed/Brfzw7CyuGo" frameborder="0" allowfullscreen></iframe></div>
 
 The user guide is for those actually using an instllation of Frog.  It goes over the UI and how to interact and add content.
 
@@ -52,6 +83,8 @@ Admin Guide
 
 Frog Settings
 -------------
+
+.. note:: If you are installing Frog 1.0 from a previous version, please make sure you change any previous setting to the new ones below.
 
 .. data:: FROG_IMAGE_SIZE_CAP
 

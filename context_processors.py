@@ -21,8 +21,14 @@
 
 
 from django.conf import settings
+from django.core.exceptions import ImproperlyConfigured
 
 from common import PluginContext, getRoot
+
+try:
+    FROG_SITE_URL = getattr(settings, 'FROG_SITE_URL')
+except AttributeError:
+    raise ImproperlyConfigured, 'FROG_SITE_URL is required'
 
 
 BUILD = 1003
@@ -34,6 +40,7 @@ def media(request):
         'isAjax': request.is_ajax(),
         'plugins': PluginContext,
         'build': BUILD,
+        'SITE_URL': FROG_SITE_URL,
     }
-
+    print obj
     return obj
