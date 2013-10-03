@@ -357,8 +357,5 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         }
     });
     Frog.Comments = new Frog.CommentManager();
-    Frog.Clip = new ZeroClipboard(document.getElementById("frog_clip"), {
-        moviePath: "/static/frog/j/libs/ZeroClipboard.swf"
-    });
 
 })(window);

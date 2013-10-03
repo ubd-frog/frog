@@ -131,7 +131,6 @@ Frog.Viewer = new Class({
         this.bOriginal = new Element('li', {'class': 'frog-original'}).inject(buttons);
         this.bWindow = new Element('li', {'class': 'frog-window'}).inject(buttons);
         this.bDownload = new Element('li', {'class': 'frog-download'}).inject(buttons);
-        this.bCopy = new Element('li', {'id': 'frog_clip', 'class': 'frog-url'}).inject(buttons);
 
         this.countLabel = new Element('div', {'class': 'image-count', 'text': '1/1'}).inject(controls);
 
@@ -316,14 +315,11 @@ Frog.Viewer = new Class({
             this.videoEl.pause();
             this.img.removeAttribute('style');
             this.setImage(obj.image);
-            this.bCopy.setProperty('data-clipboard-text', url + '/frog/image/' + obj.id);
         }
         else {
             this.img.setStyle('display', 'none');
             this.setVideo(obj);
-            this.bCopy.setProperty('data-clipboard-text', url + '/frog/video/' + obj.id);
         }
-        Frog.Clip.glue(this.bCopy);
         
         this.countLabel.set('text', (idx + 1) + '/' + this.objects.length);
     },
