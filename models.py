@@ -27,6 +27,7 @@ import re
 
 from django.db import models
 from django.contrib.auth.models import User
+from django.core.exceptions import ImproperlyConfigured
 from django.conf import settings
 
 from videoThread import VideoThread, parseInfo

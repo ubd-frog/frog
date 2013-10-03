@@ -109,9 +109,6 @@ Frog.Uploader = new Class({
     },
     setupUI: function() {
         var self = this;
-        if (this.uploaderList) {
-            return this.uploaderList;
-        }
         
         var store = Ext.create('Ext.data.ArrayStore', {
             fields: [
@@ -123,85 +120,112 @@ Frog.Uploader = new Class({
                 {name: 'date', type: 'date'}
             ]
         });
-        var grid = Ext.create('Ext.grid.Panel', {
+
+        if (this.uploaderList) {
+            return this.uploaderList;
+        }
+
+        var win = Ext.create('Ext.window.Window', {
+            height: 450,
+            width: 800,
+            y: 100,
+            closable: false,
+            draggable: false,
+            title: 'Files to Upload',
+            renderTo: 'frog_upload_files',
+            layout: {
+                type: 'vbox',
+                align: 'stretch'
+            },
             store: store,
-            columns: [
+            items: [
                 {
-                    text     : 'File',
-                    flex     : 6,
-                    sortable : false,
-                    dataIndex: 'file'
-                },
-                {
-                    text     : 'Size',
-                    flex     : 1,
-                    sortable : false,
-                    dataIndex: 'size'
-                },
-                {
-                    text: 'Created',
-                    flex: 2,
-                    sortable: false,
-                    dataIndex: 'date',
-                    xtype: 'datecolumn',
-                    format:'Y-m-d'
-                },
-                {
-                    text     : '%',
-                    flex     : 1,
-                    sortable : false,
-                    dataIndex: 'percent'
-                },
-                {
-                    xtype: 'actioncolumn',
+                    xtype: 'grid',
+                    store: store,
+                    columns: [
+                        {
+                            text     : 'File',
+                            flex     : 6,
+                            sortable : false,
+                            dataIndex: 'file'
+                        },
+                        {
+                            text     : 'Size',
+                            flex     : 1,
+                            sortable : false,
+                            dataIndex: 'size'
+                        },
+                        {
+                            text: 'Created',
+                            flex: 2,
+                            sortable: false,
+                            dataIndex: 'date',
+                            xtype: 'datecolumn',
+                            format:'Y-m-d'
+                        },
+                        {
+                            text     : '%',
+                            flex     : 1,
+                            sortable : false,
+                            dataIndex: 'percent'
+                        },
+                        {
+                            xtype: 'actioncolumn',
+                            flex: 1,
+                            sortable: false,
+                            items: [
+                                {
+                                    text: 'remove',
+                                    icon: '/static/frog/i/delete.png',
+                                    handler: function(grid, rowIndex, colIndex) {
+                                        var rec = store.getAt(rowIndex);
+                                        var file = self.uploader.getFile(rec.get('id'));
+                                        self.uploader.removeFile(file);
+                                        store.remove([rec]);
+                                    }
+                                }
+                            ]
+                        }
+                    ],
                     flex: 1,
-                    sortable: false,
+                    viewConfig: {
+                        stripeRows: true,
+                        getRowClass: function(record) {
+                            var c = record.get('unique');
+                            return (c) ? '' : 'red';
+                        }
+                    }
+                },
+                {
+                    xtype: 'container',
+                    layout: {
+                        type: 'hbox',
+                        pack: 'center'
+                    },
                     items: [
                         {
-                            text: 'remove',
-                            icon: '/static/frog/i/delete.png',
-                            handler: function(grid, rowIndex, colIndex) {
-                                var rec = store.getAt(rowIndex);
-                                var file = self.uploader.getFile(rec.get('id'));
-                                self.uploader.removeFile(file);
-                                store.remove([rec]);
+                            xtype: 'button',
+                            scale: 'medium',
+                            text: 'Upload Files',
+                            handler: function() {
+                                self.uploader.start();
+                            }
+                        },
+                        {
+                            xtype: 'button',
+                            scale: 'medium',
+                            text: 'Cancel',
+                            handler: function() {
+                                self.element.hide();
+                                self.uploaderList.store.removeAll();
+                                self.uploaderList.hide();
                             }
                         }
                     ]
                 }
-            ],
-            height: 350,
-            width: '100%',
-            title: 'Files to Upload',
-            renderTo: 'frog_upload_files',
-            viewConfig: {
-                stripeRows: true,
-                getRowClass: function(record) {
-                    var c = record.get('unique');
-                    return (c) ? '' : 'red';
-                }
-            }
-        });
+            ]
+        }).show();
 
-        var uploadButton = Ext.create('Ext.Button', {
-            text: 'Upload Files',
-            renderTo: 'frog_upload_files',
-            scale: 'large',
-            handler: function() {
-                self.uploader.start();
-            }
-        });
-        var uploadButton = Ext.create('Ext.Button', {
-            text: 'Cancel',
-            renderTo: 'frog_upload_files',
-            scale: 'large',
-            handler: function() {
-                self.element.hide();
-                self.uploaderList.store.removeAll();
-                self.uploaderList.hide();
-            }
-        });
-
-        this.uploaderList = grid;
+        this.uploaderList = win;
     },
 })

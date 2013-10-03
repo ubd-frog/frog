@@ -116,7 +116,7 @@ def switchArtist(request):
         first, last = artist.lower().split(' ')
         author = User.objects.get_or_create(first_name=first, last_name=last, defaults={
             'username': '%s%s' % (first[0], last),
-            'email': '%s%s@%s' % (first[0], last, settings.DOMAIN),
+            'email': '%s%s@%s' % (first[0], last, FROG_DOMAIN),
         })[0]
         tag = Tag.objects.get_or_create(name=artist.lower(), defaults={'artist': True})[0]
         objects = getObjectsFromGuids(guids)
