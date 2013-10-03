@@ -3,8 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to frog's documentation!
-================================
+Frog Media Server
+=================
 
 Frog Media Server is a server-client solution for sharing and maintaining large collections of images and videos
 
