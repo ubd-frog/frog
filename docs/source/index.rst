@@ -131,11 +131,13 @@ Frog Settings
     Default is 60
 
 .. data:: FROG_FFMPEG_ARGS
+
     The argument string sent to ffmpeg to convert a video to a web compatible format.  For advanced use only.
 
     Default is `-vcodec libx264 -b:v 2500k -acodec libvo_aacenc -b:a 56k -ac 2 -y`
 
 .. data:: FROG_SCRUB_FFMPEG_ARGS
+
     The argument string sent to ffmpeg to convert a video to a scrubbable, web compatible format.  For advanced use only.
 
     Default is `-vcodec libx264 -b:v 2500k -x264opts keyint=1:min-keyint=8 -acodec libvo_aacenc -b:a 56k -ac 2 -y`
@@ -147,12 +149,3 @@ Frog Settings
 .. data:: FROG_DOMAIN
 
     This is used to automatically create users.
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-
