@@ -90,7 +90,8 @@ Frog.UI = (function(Frog) {
                 type: 'json',
                 root: 'values'
             }
-        }
+        },
+        autoLoad: true
     });
 
     ToolBar = Ext.create('Ext.toolbar.Toolbar');
@@ -218,6 +219,12 @@ Frog.UI = (function(Frog) {
                             advancedFilter = btn.pressed;
                             Frog.Prefs.set('advanced_filter', advancedFilter);
                             FilterObserver.fire(advancedFilter);
+                            if (advancedFilter) {
+                                msg('You are now using the Advanced Filter', 'alert-info');
+                            }
+                            else {
+                                msg('You are now using the Standard Filter', 'alert-success');
+                            }
                         }
                     });
                     ToolBar.add('-');
@@ -447,6 +454,7 @@ Frog.UI = (function(Frog) {
                                 var thumbid = (Browser.ie) ? element.getProperty('data-frog_tn_id') : element.dataset.frog_tn_id;
                                 var thumbnail = Frog.GalleryObject.thumbnails[thumbid.toInt()];
                                 add.each(function(tag) {
+                                    tag = Ext.Number.from(tag, tag);
                                     if (typeof(tag) === 'string') {
                                         tag = Frog.Tags.get(tag);
                                     }
@@ -456,6 +464,7 @@ Frog.UI = (function(Frog) {
                                     thumbnail.removeTag(tag.toInt());
                                 });
                             });
+                            msg('Tags modified', 'alert-success');
                         }
                     }).POST({
                         add: add.join(','),
@@ -797,6 +806,20 @@ Frog.UI = (function(Frog) {
         });
     }
 
+    function createBox(text, cls){
+       return '<div class="msg ' + cls + '"><p>' + text + '</p></div>';
+    }
+    var msgCt;
+    function msg(text, cls){
+        if (!msgCt) {
+            msgCt = Ext.core.DomHelper.insertFirst(document.body, {id:'msg-div'}, true);
+        }
+        var s = Ext.String.format.apply(String, Array.prototype.slice.call(arguments, 1));
+        var m = Ext.core.DomHelper.append(msgCt, createBox(text, cls), true);
+        m.hide();
+        m.slideIn('t').ghost("t", { delay: 1000, remove: true});
+    }
+
     // -- API
     var api = {
         render: render,
@@ -806,7 +829,8 @@ Frog.UI = (function(Frog) {
         addTool: addTool,
         enableUploads: enableUploads,
         isAdvancedFilterEnabled: function() { return advancedFilter; },
-        editTags: editTagsHandler
+        editTags: editTagsHandler,
+        alert: msg
     };
 
     return api;
@@ -828,7 +852,7 @@ Frog.UI.SwitchArtist = function() {
 
     function switchArtistCallback(name) {
         var selected = $$('.thumbnail.selected');
-        guids = [];
+        var guids = [];
         selected.each(function(item) {
             guids.push(Frog.util.getData(item, 'frog_guid'));
         });
@@ -837,16 +861,20 @@ Frog.UI.SwitchArtist = function() {
             headers: {"X-CSRFToken": Cookie.read('csrftoken')},
             onSuccess: function(res) {
                 if (res.isSuccess) {
+                    Frog.UI.alert('Artist successfully switched', 'alert-success');
                     selected.each(function(el) {
-                        var tag = el.getElement('.frog-tag');
+                        var tag = el.getElement('span + div a.frog-tag');
                         tag.set('text', res.value.name.capitalize());
                         Frog.util.setData(tag, 'frog_tag_id', res.value.tag);
                     });
                 }
+                else {
+                    Frog.UI.alert('An error occurred, artist was not switched', 'alert-danger');
+                }
             }
         }).POST({'artist': name.toLowerCase(), guids: guids.join(',')});
         selected.each(function(el) {
-            var tag = el.getElement('.frog-tag');
+            var tag = el.getElement('span + div a.frog-tag');
             tag.set('text', name.capitalize());
             Frog.util.getData(tag, 'frog_tag_id', Frog.Tags.get(name.toLowerCase()));
         });

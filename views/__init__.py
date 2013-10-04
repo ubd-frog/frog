@@ -131,8 +131,12 @@ def artistLookup(request):
     res = Result()
     query = request.GET.get('query', False)
     if query:
-        for n in User.objects.filter(first_name__icontains=query.lower()):
-            res.append(userToJson(n))
+        users = User.objects.filter(first_name__icontains=query.lower())
+    else:
+        users = User.objects.all()
+
+    for user in users:
+        res.append(userToJson(user))
 
     return JsonResponse(res.values)
 

@@ -92,6 +92,7 @@ Frog.Uploader = new Class({
             self.uploaderList.store.removeAll();
             self.uploaderList.hide();
             self.fireEvent('onComplete', [this]);
+            Frog.UI.alert('Files uploaded successfully', 'alert-success');
         });
 
         this.uploader = uploader;

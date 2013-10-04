@@ -74,7 +74,7 @@ def post(request):
     val = request.POST.get('val', None)
     res = Result()
     if key and val:
-        obj, created = UserPref.get_or_create(user=request.user)
+        obj, created = UserPref.objects.get_or_create(user=request.user)
         if created:
             obj.data = json.dumps(DefaultPrefs.copy())
             obj.save()
