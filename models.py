@@ -58,7 +58,6 @@ DefaultPrefs = {
 }
 
 ROOT = Path(settings.MEDIA_ROOT.replace('\\', '/'))
-GALLERIES = [1]
 
 
 class Tag(models.Model):
@@ -215,7 +214,7 @@ class Image(Piece):
         '''
         
         self.source = hashPath.replace('\\', '/').replace(ROOT, '')
-        galleries = GALLERIES + (galleries or [])
+        galleries = galleries or []
         tags = tags or []
 
         imagefile = Path(ROOT + self.source.name)
@@ -280,7 +279,7 @@ class Video(Piece):
         '''
 
         self.source = hashPath.replace('\\', '/').replace(ROOT, '')
-        galleries = GALLERIES + (galleries or [])
+        galleries = galleries or []
         tags = tags or []
 
         ## -- Get info

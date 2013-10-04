@@ -797,35 +797,6 @@ Frog.UI = (function(Frog) {
         });
     }
 
-    function switchArtistCallback(name) {
-        var selected = $$('.thumbnail.selected');
-        guids = [];
-        selected.each(function(item) {
-            guids.push(Frog.util.getData(item, 'frog_guid'));
-        });
-        new Request.JSON({
-            url: '/frog/switchartist',
-            headers: {"X-CSRFToken": Cookie.read('csrftoken')},
-            //async: false,
-            onSuccess: function(res) {
-                if (res.isSuccess) {
-                    selected.each(function(el) {
-                        var tag = el.getElement('.frog-tag');
-                        tag.set('text', res.value.name.capitalize());
-                        Frog.util.setData(tag, 'frog_tag_id', res.value.tag);
-                    });
-                }
-            }
-        }).POST({'artist': name.toLowerCase(), guids: guids.join(',')});
-        selected.each(function(el) {
-            var tag = el.getElement('.frog-tag');
-            tag.set('text', name.capitalize());
-            Frog.util.getData(tag, 'frog_tag_id', Frog.Tags.get(name.toLowerCase()));
-        });
-    }
-
-    
-
     // -- API
     var api = {
         render: render,
@@ -854,6 +825,32 @@ Frog.UI.SwitchArtist = function() {
         height: 200,
         bodyStyle: 'padding: 5px;'
     });
+
+    function switchArtistCallback(name) {
+        var selected = $$('.thumbnail.selected');
+        guids = [];
+        selected.each(function(item) {
+            guids.push(Frog.util.getData(item, 'frog_guid'));
+        });
+        new Request.JSON({
+            url: '/frog/switchartist',
+            headers: {"X-CSRFToken": Cookie.read('csrftoken')},
+            onSuccess: function(res) {
+                if (res.isSuccess) {
+                    selected.each(function(el) {
+                        var tag = el.getElement('.frog-tag');
+                        tag.set('text', res.value.name.capitalize());
+                        Frog.util.setData(tag, 'frog_tag_id', res.value.tag);
+                    });
+                }
+            }
+        }).POST({'artist': name.toLowerCase(), guids: guids.join(',')});
+        selected.each(function(el) {
+            var tag = el.getElement('.frog-tag');
+            tag.set('text', name.capitalize());
+            Frog.util.getData(tag, 'frog_tag_id', Frog.Tags.get(name.toLowerCase()));
+        });
+    }
 
     var fp = Ext.create('Ext.FormPanel', {
         items: [{

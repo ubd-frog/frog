@@ -345,8 +345,11 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         },
         close: function() {
             this.container.hide();
-            this.bSave.hide();
-            this.bCancel.hide();
+            if (this.bSave !== null) {
+                this.bSave.hide();
+                this.bCancel.hide();
+            }
+            
             if (Frog.user !== null) {
                 this.fakeInput.show();
             }

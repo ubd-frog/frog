@@ -145,7 +145,3 @@ Frog Settings
 .. data:: FROG_SITE_URL
 
     The absolute URL for the host.  This is used in RSS feeds and comments to give absolute URLs to content
-
-.. data:: FROG_DOMAIN
-
-    This is used to automatically create users.

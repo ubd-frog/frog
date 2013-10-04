@@ -28,7 +28,6 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.mail import send_mail
-from django.core.exceptions import ImproperlyConfigured
 from django.conf import settings
 
 from frog.models import Gallery, Image, Video, Tag, Piece, DefaultPrefs
@@ -41,11 +40,6 @@ from frog.sendFile import send_zipfile
 
 
 LOGGER = logging.getLogger('frog')
-
-try:
-    FROG_DOMAIN = getattr(settings, 'FROG_DOMAIN')
-except AttributeError:
-    raise ImproperlyConfigured, 'FROG_DOMAIN is required'
 
 
 @csrf_exempt
@@ -116,7 +110,6 @@ def switchArtist(request):
         first, last = artist.lower().split(' ')
         author = User.objects.get_or_create(first_name=first, last_name=last, defaults={
             'username': '%s%s' % (first[0], last),
-            'email': '%s%s@%s' % (first[0], last, FROG_DOMAIN),
         })[0]
         tag = Tag.objects.get_or_create(name=artist.lower(), defaults={'artist': True})[0]
         objects = getObjectsFromGuids(guids)

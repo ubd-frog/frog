@@ -118,6 +118,9 @@ Now we need to modify the default settings to include Frog and add some other st
         'frog.auth.SimpleAuthBackend',
     )
 
+    FROG_FFMPEG = 'c:/ffmpeg/ffmpeg.exe'
+    FROG_SITE_URL = 'http://127.0.0.1:8000'
+
 URLs
 ----
 

@@ -301,6 +301,8 @@ Frog.Viewer = new Class({
         this.objects = images;
         this.setIndex(id.toInt());
         this.shelf.populate(this.objects);
+
+        this.countLabel.set('text', id + '/' + images.length);
         
         var data = Frog.util.hashData();
         data.viewer = this.objects.slice(0, this.LIMIT).map(function(item) { return item.guid; });
