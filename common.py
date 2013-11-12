@@ -112,7 +112,8 @@ def getPutData(request):
     :type request: Request
     """
     dataDict = {}
-    for n in urlparse.parse_qsl(request.raw_post_data):
+    data = getattr(request.raw_post_data, request.body)
+    for n in urlparse.parse_qsl(data):
         dataDict[n[0]] = n[1]
 
     setattr(request, 'PUT', dataDict)
