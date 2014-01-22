@@ -30,7 +30,7 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ImproperlyConfigured
 from django.conf import settings
 
-from videoThread import VideoThread, parseInfo
+from videoThread import VideoThread, parseInfo, FROG_FFMPEG
 
 from path import path as Path
 from PIL import Image as pilImage
@@ -283,7 +283,7 @@ class Video(Piece):
         tags = tags or []
 
         ## -- Get info
-        cmd = '%s -i "%s"' % (settings.FFMPEG, hashPath)
+        cmd = '%s -i "%s"' % (FROG_FFMPEG, hashPath)
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
         infoString = proc.stdout.readlines()
         videodata = parseInfo(infoString)
@@ -294,7 +294,7 @@ class Video(Piece):
         ## -- Save thumbnail and put into queue
         thumbnail = hashPath.parent / ("_%s.jpg" % hashVal)
         cmd = '%s -i "%s" -ss 1 -vframes 1 "%s"' % (
-            settings.FFMPEG,
+            FROG_FFMPEG,
             hashPath,
             thumbnail
         )

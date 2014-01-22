@@ -44,6 +44,10 @@ FROG_SCRUB_DURATION = getattr(settings, 'FROG_SCRUB_DURATION', 60)
 FROG_FFMPEG_ARGS = getattr(settings, 'FROG_FFMPEG_ARGS', '-vcodec libx264 -b:v 2500k -acodec libvo_aacenc -b:a 56k -ac 2 -y')
 FROG_SCRUB_FFMPEG_ARGS = getattr(settings, 'FROG_SCRUB_FFMPEG_ARGS', '-vcodec libx264 -b:v 2500k -x264opts keyint=1:min-keyint=8 -acodec libvo_aacenc -b:a 56k -ac 2 -y')
 
+RE_VIDEO = re.compile("""Stream #\d[:.](?P<index>\d+).*: (?P<type>\w+): (?P<codec>.*), (?P<pixel_format>\w+), (?P<width>\d+)x(?P<height>\d+)""")
+RE_AUDIO = re.compile("""Stream #\d[:.](?P<index>\d+).*: (?P<type>\w+): (?P<codec>.*), (?P<hertz>\d+) Hz, .*, .*, (?P<bitrate>\d+) kb/s$""")
+RE_DURATION = re.compile("""Duration: (?P<duration>\d+:\d+:\d+.\d+), start: (?P<start>\d+.\d+), bitrate: (?P<bitrate>\d+) kb/s$""")
+
 
 class VideoThread(Thread):
     def __init__(self, queue, *args, **kwargs):
@@ -116,23 +120,20 @@ class VideoThread(Thread):
 
 def parseInfo(strings):
     data = {}
-    stream_video = re.compile("""Stream #\d[:.](?P<index>\d+).*: (?P<type>\w+): (?P<codec>.*), (?P<pixel_format>\w+), (?P<width>\d+)x(?P<height>\d+)""")
-    stream_audio = re.compile("""Stream #\d[:.](?P<index>\d+).*: (?P<type>\w+): (?P<codec>.*), (?P<hertz>\d+) Hz, .*, .*, (?P<bitrate>\d+) kb/s$""")
-    duration = re.compile("""Duration: (?P<duration>\d+:\d+:\d+.\d+), start: (?P<start>\d+.\d+), bitrate: (?P<bitrate>\d+) kb/s$""")
 
     for n in strings:
         n = n.strip()
         if n.startswith('Duration'):
-            r = duration.search(n)
+            r = RE_DURATION.search(n)
             data.update(r.groupdict())
         elif n.startswith('Stream'):
-            if n.find('Video') != -1:
+            if 'Video' in n:
                 data.setdefault('video', [])
-                r = stream_video.search(n)
+                r = RE_VIDEO.search(n)
                 data['video'].append(r.groupdict())
-            elif n.find('Audio') != -1:
+            elif 'Audio' in n:
                 data.setdefault('audio', [])
-                r = stream_audio.search(n)
+                r = RE_AUDIO.search(n)
                 data['audio'].append(r.groupdict())
 
     return data
