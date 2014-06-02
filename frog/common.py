@@ -38,7 +38,6 @@ from frog.plugin import FrogPluginRegistry
 
 from path import path as Path
 
-
 class Result(object):
     """Standardized result for ajax requests"""
     def __init__(self):
@@ -118,10 +117,6 @@ def getPutData(request):
 
     setattr(request, 'PUT', dataDict)
     setattr(request, 'DELETE', dataDict)
-
-def getRoot():
-    """Convenience to return the media root with forward slashes"""
-    return Path(settings.MEDIA_ROOT.replace('\\', '/'))
 
 def getHashForFile(f):
     """Returns a hash value for a file
