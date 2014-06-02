@@ -31,11 +31,10 @@ from django.core.exceptions import ImproperlyConfigured
 
 from path import path as Path
 
-#from frog.common import getRoot
+from frog import getRoot
 
 TIMEOUT = 1
-#ROOT = getRoot()
-ROOT = ''
+ROOT = getRoot()
 logger = logging.getLogger('frog')
 
 try:

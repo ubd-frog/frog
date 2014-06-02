@@ -44,7 +44,7 @@ Open
 Frog is all open sourced and under the MIT license.  So feel free to modify it to fit your specific needs.  Because it uses Django, it is easy to add features.  The auth system included with Frog is pretty simple.  In fact it's almost 100% honor system due to the site's internal focus.  But adding a more sophisticated authentication system is trivial that to Django.
 
 Hacking on Frog
-_______________
+---------------
 
 Frog uses setuptools to build and generate a python package. The easiest way to hack on Frog is to use the develop mode shipped with setuptools.
 
