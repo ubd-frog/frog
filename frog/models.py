@@ -35,6 +35,8 @@ from videoThread import VideoThread, parseInfo, FROG_FFMPEG
 from path import path as Path
 from PIL import Image as pilImage
 
+from frog import getRoot
+
 FROG_IMAGE_SIZE_CAP = getattr(settings, 'FROG_IMAGE_SIZE_CAP', 5120)
 FROG_IMAGE_SMALL_SIZE = getattr(settings, 'FROG_IMAGE_SMALL_SIZE', 600)
 FROG_THUMB_SIZE = getattr(settings, 'FROG_THUMB_SIZE', 256)
@@ -57,8 +59,7 @@ DefaultPrefs = {
     'includeVideo': True,
 }
 
-ROOT = Path(settings.MEDIA_ROOT.replace('\\', '/'))
-
+ROOT = getRoot()
 
 class Tag(models.Model):
     name = models.CharField(max_length=255, unique=True)
