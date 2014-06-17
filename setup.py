@@ -10,7 +10,7 @@ setup(
     description='Media server built on django',
     long_description=('A server and client solution to viewing '
                       ' and filtering large image and video collections'),
-    version='1.0.1',
+    version='1.0.2',
     author='Brett Dixon',
     author_email='theiviaxx@gmail.com',
     license='MIT',
