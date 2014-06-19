@@ -1,0 +1,4 @@
+include README.md
+recursive-include frog/static *
+recursive-include frog/templates/frog *
+recursive-include frog/fixtures *
