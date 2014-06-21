@@ -394,7 +394,7 @@ Frog.UI = (function(Frog) {
                     }
                 }, {
                     xtype: 'menucheckitem',
-                    text: 'Incude Video',
+                    text: 'Include Video',
                     checked: Frog.Prefs.include_video,
                     checkHandler: function(item, checked) {
                         Frog.Prefs.set('include_video', checked);
