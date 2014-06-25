@@ -23,22 +23,7 @@ setup(
         'frog.management',
         'frog.management.commands',
         'frog.templatetags',
-        ],
-    package_data={
-        'frog': [
-            'templates/frog/*',
-            'fixtures/*',
-            'video.json',
-            'README.md',
-            'static/j/*.js',
-            'static/j/libs/*.js',
-            'static/i/*.png',
-            'static/i/*.mp4',
-            'static/i/*.ico',
-            'static/i/gray/*/*/*',
-            'static/c/*.css'
-        ],
-    },
+    ],
     classifiers=[
         'Environment :: Web Environment',
         'Framework :: Django',
