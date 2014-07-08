@@ -10,13 +10,13 @@ setup(
     description='Media server built on django',
     long_description=('A server and client solution to viewing '
                       ' and filtering large image and video collections'),
-    version='1.0.2',
+    version='1.0.3',
     author='Brett Dixon',
     author_email='theiviaxx@gmail.com',
     license='MIT',
     url='https://github.com/theiviaxx/frog',
     platforms='any',
-    install_requires=['Django >=1.4', 'South >=0.7', 'django-haystack >=2.0.0'],
+    install_requires=['Django >=1.6', 'South >=0.7', 'django-haystack >=2.0.0'],
     packages=[
         'frog',
         'frog.views',
