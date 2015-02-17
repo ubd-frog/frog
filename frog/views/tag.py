@@ -88,7 +88,7 @@ def post(request):
 
         return JsonResponse(res)
     
-    tag, created = Tag.objects.get_or_create(name=name)
+    tag, created = Tag.objects.get_or_create(name=name.lower())
 
     res.isSuccess = True
     if created:
@@ -175,7 +175,7 @@ def search(request):
 def manage(request):
     if request.method == 'GET':
         guids = request.GET.get('guids', '').split(',')
-        guids = filter(None, guids)
+        guids = [guid for guid in guids if guid]
 
         objects = getObjectsFromGuids(guids)
         ids = [o.id for o in objects]
@@ -202,15 +202,15 @@ def manage(request):
         rem = request.POST.get('rem', '').split(',')
         guids = request.POST.get('guids', '').split(',')
 
-        add = filter(None, add)
-        rem = filter(None, rem)
+        add = [a for a in add if a]
+        rem = [r for r in rem if r]
         addList = []
 
         for t in add:
             try:
                 addList.append(int(t))
             except ValueError:
-                tag, created = Tag.objects.get_or_create(name=t)
+                tag = Tag.objects.get_or_create(name=t.lower())[0]
                 tag.save()
                 addList.append(tag.id)
 
@@ -238,7 +238,7 @@ def _manageTags(tagList, guids, add=True):
         try:
             t = Tag.objects.get(pk=int(tag))
         except ValueError:
-            t, created = Tag.objects.get_or_create(name=tag)
+            t = Tag.objects.get_or_create(name=tag.lower())[0]
         tags.append(t)
 
     if add:

@@ -117,10 +117,14 @@ Frog.UI = (function(Frog) {
             icon: Frog.icon('compass'),
             menu: navmenu
         });
+        // -- RSS button
+        ToolBar.add({
+            icon: Frog.icon('feed'),
+            handler: rssHandler
+        });
         // -- Check for user
         new Request.JSON({
             url: '/frog/getuser',
-            async: false,
             onSuccess: function(res) {
                 if (res.isSuccess) {
                     if (uploadEnabled) {
@@ -238,21 +242,13 @@ Frog.UI = (function(Frog) {
                     ToolBar.add({
                         icon: Frog.icon('cog'),
                         menu: buildPrefMenu()
-                    });
-
-                    
+                    });                    
                 }
                 else {
                     addLoginAction();
                 }
             }
         }).GET({gallery: ID});
-        
-        // -- RSS button
-        ToolBar.add({
-            icon: Frog.icon('feed'),
-            handler: rssHandler
-        });
     }
     function addEvent(event, fn) {
         switch(event) {
@@ -582,7 +578,6 @@ Frog.UI = (function(Frog) {
                         // -- Create the new gallery first synchronously
                         new Request.JSON({
                             url: '/frog/gallery',
-                            async: false,
                             headers: {"X-CSRFToken": Cookie.read('csrftoken')},
                             onSuccess: function(res) {
                                 data.id = res.value.id;
@@ -603,7 +598,6 @@ Frog.UI = (function(Frog) {
                     new Request.JSON({
                         url: '/frog/gallery/' + data.id,
                         emulation: false,
-                        async: false,
                         headers: {"X-CSRFToken": Cookie.read('csrftoken')},
                         onSuccess: function(res) {
                             Store.load();

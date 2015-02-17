@@ -33,6 +33,7 @@ Gallery API
 """
 
 import time
+import functools
 
 try:
     import ujson as json
@@ -47,6 +48,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import connection
 from django.contrib.auth.decorators import login_required
 
+import six
 try:
     from haystack.query import SearchQuerySet
     HAYSTACK = True
@@ -178,7 +180,6 @@ def filterObjects(request, obj_id):
     Filters Gallery for the requested ImageVideo objects.  Returns a Result object with 
     serialized objects
     """
-    print obj_id
     obj = Gallery.objects.get(pk=obj_id)
 
     if request.user.is_anonymous() and obj.security != Gallery.PUBLIC:
@@ -196,7 +197,7 @@ def filterObjects(request, obj_id):
     if models == '':
         models = 'image,video'
 
-    tags = filter(None, tags)
+    tags = [t for t in tags if t]
 
     models = [ContentType.objects.get(app_label='frog', model=x) for x in models.split(',')]
 
@@ -267,7 +268,7 @@ def _filter(request, object_, tags=None, models=(Image, Video), rng=None, more=F
                 o = None
                 for item in bucket:
                     ## -- filter by tag
-                    if isinstance(item, int) or isinstance(item, long):
+                    if isinstance(item, six.integer_types):
                         if not o:
                             o = Q()
                         o |= Q(tags__id=item)
@@ -349,7 +350,10 @@ def _sortObjects(**args):
         for l in iter(m):
             o.append(l)
     o = list(set(o))
-    o.sort(_sortByCreated)
+    if six.PY2:
+        o.sort(_sortByCreated)
+    else:
+        o.sort(key=functools.cmp_to_key(_sortByCreated))
 
     return o
 

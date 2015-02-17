@@ -165,9 +165,11 @@ Frog.Gallery = new Class({
         }
     },
     request: function(data, append) {
-        if (this.isRequesting) {
+        if (this.isRequesting || !Frog.Prefs.tileCount) {
             return;
         }
+        this.tilesPerRow = Frog.Prefs.tileCount;
+        this.tileSize = Math.floor((window.getWidth() - 2) / this.tilesPerRow);
         append = (typeof(append) === 'undefined') ? false : append;
         this.requestData = data || this.requestData;
         this.requestData.more = append;

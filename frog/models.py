@@ -21,19 +21,23 @@
 
 
 import json
-import Queue
 import subprocess
 import re
+try:
+    from Queue import Queue
+except ImportError:
+    from queue import Queue
 
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.exceptions import ImproperlyConfigured
 from django.conf import settings
 
-from videoThread import VideoThread, parseInfo, FROG_FFMPEG
+from frog.videoThread import VideoThread, parseInfo, FROG_FFMPEG
 
 from path import path as Path
 from PIL import Image as pilImage
+import six
 
 from frog import getRoot
 
@@ -45,9 +49,9 @@ FROG_PATH = getattr(settings, 'FROG_PATH', None)
 try:
     FROG_SITE_URL = getattr(settings, 'FROG_SITE_URL')
 except AttributeError:
-    raise ImproperlyConfigured, 'FROG_SITE_URL is required'
+    raise ImproperlyConfigured('FROG_SITE_URL is required')
 
-gQueue = Queue.Queue()
+gQueue = Queue()
 gVideoThread = VideoThread(gQueue)
 gVideoThread.start()
 
@@ -424,14 +428,14 @@ class UserPref(models.Model):
 
 class Guid(object):
     AssetTypes = {
-        1: 1152921504606846976L,
-        2: 2305843009213693952L,
+        1: 1152921504606846976,
+        2: 2305843009213693952,
     }
     def __init__(self, obj_id, type_id=1):
         if isinstance(obj_id, str):
             self.int = int(obj_id, 16)
             self.guid = obj_id[2:] if obj_id[1] == 'x' else obj_id
-        elif isinstance(obj_id, long) or isinstance(obj_id, int):
+        elif isinstance(obj_id, six.integer_types):
             self.int = self.AssetTypes[type_id] + obj_id
             self.guid = hex(self.int)[2:-1]
         else:

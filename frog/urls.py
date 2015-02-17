@@ -21,9 +21,9 @@
 
 from django.conf.urls import patterns, url
 
-import views
-from views import gallery, tag, userpref, comment, piece
-from rss import Daily, Weekly
+# import views
+from frog.views import gallery, tag, userpref, comment, piece
+from frog.rss import Daily, Weekly
 
 urlpatterns = patterns('',
     ## -- Gallery
@@ -47,16 +47,16 @@ urlpatterns = patterns('',
     url(r'^rss/(?P<obj_id>\d+)/daily$', Daily()),
     url(r'^rss/(?P<obj_id>\d+)/weekly$', Weekly()),
     ## -- Misc functions
-    url(r'^download$', views.download),
-    url(r'^help/', views.helpMe),
-    url(r'^switchartist$', views.switchArtist),
-    url(r'^artistlookup$', views.artistLookup),
-    url(r'^isunique$', views.isUnique),
-    url(r'^getuser$', views.getUser),
+    url(r'^download$', 'frog.views.download'),
+    url(r'^help/', 'frog.views.helpMe'),
+    url(r'^switchartist$', 'frog.views.switchArtist'),
+    url(r'^artistlookup$', 'frog.views.artistLookup'),
+    url(r'^isunique$', 'frog.views.isUnique'),
+    url(r'^getuser$', 'frog.views.getUser'),
     ## -- Authentication
-    url(r'^login$', views.login_),
-    url(r'^logout$', views.logout_),
-    url(r'^access_denied', views.accessDenied),
+    url(r'^login$', 'frog.views.login_'),
+    url(r'^logout$', 'frog.views.logout_'),
+    url(r'^access_denied', 'frog.views.accessDenied'),
 
-    url(r'^$', views.index),
+    url(r'^$', 'frog.views.index'),
 )

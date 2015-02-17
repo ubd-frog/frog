@@ -15,21 +15,22 @@
                     <form method='post' action='/frog/login'>
                         {% csrf_token %}
                         <p>
-                            <label for='frog_login_email'>Email:</label>
-                            <input id='frog_login_email' type='email' name='email' autofocus='autofocus' required='required' />
+                            <label for='frog_login_email'>Username:</label>
+                            <input id='frog_login_email' type='text' name='email' autofocus='autofocus' required='required' />
                         </p>
                         <p>
-                            <label for='frog_login_first_name'>First:</label>
-                            <input id='frog_login_first_name' type='text' name='first_name' required='required' />
-                        </p>
-                        <p>
-                            <label for='frog_login_last_name'>Last:</label>
-                            <input id='frog_login_last_name' type='text' name='last_name' required='required' />
+                            <label for='frog_login_first_name'>Password:</label>
+                            <input id='frog_login_first_name' type='password' name='password' required='required' />
                         </p>
                         <p>
                             <input id='frog_login_button' type='submit' value='Login' class='disabled1' />
                         </p>
                     </form>
+                    {% if message %}
+                    <div id='msg-div' style='position: relative; top: -8px;'>
+                        <div class='msg alert-danger'>{{message}}</div>
+                    </div>
+                    {% endif %}
                 </section>
             </div>
         </div>

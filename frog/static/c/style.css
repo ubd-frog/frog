@@ -759,9 +759,9 @@ li.frog-tag {
     font-size: 24px;
     text-align: right;
 }
-#frog_login input[type='text'], #frog_login input[type='email'] {
+#frog_login input[type='text'], #frog_login input[type='email'], #frog_login input[type='password'] {
     float: right;
-    width: 420px;
+    width: 360px;
     height: 24px;
     padding: 4px;
     background: #cdced0;

@@ -40,6 +40,7 @@ from frog.sendFile import send_zipfile
 
 
 LOGGER = logging.getLogger('frog')
+INDEX_HTML = getattr(settings, 'FROG_INDEX', 'frog/index.html')
 
 
 @csrf_exempt
@@ -49,7 +50,7 @@ def index(request):
 
         if not request.user.is_anonymous():
             return HttpResponseRedirect('/frog/gallery/1')
-        return render(request, 'frog/index.html', {'title': 'Frog Login'})
+        return render(request, INDEX_HTML)
     else:
         return upload(request)
 
@@ -59,22 +60,34 @@ def login_(request):
     res.isSuccess = True
     email = request.POST.get('email', 'noauthor@domain.com').lower()
     username = email.split('@')[0]
-    first_name = request.POST.get('first_name', 'no').lower()
-    last_name = request.POST.get('last_name', 'author').lower()
-
-    user = authenticate(username=username)
-    user.first_name = first_name
-    user.last_name = last_name
-    user.email = email
-    user.save()
-
-    Tag.objects.get_or_create(name=first_name + ' ' + last_name, defaults={'artist': True})
-
-    if user.is_active:
-        login(request, user)
-        return HttpResponseRedirect('/frog/gallery/1')
+    password = request.POST.get('password')
+    
+    if password is None:
+        ## -- SimpleAuth
+        first_name = request.POST.get('first_name', 'no').lower()
+        last_name = request.POST.get('last_name', 'author').lower()
+        user = authenticate(username=username)
+        user.first_name = first_name
+        user.last_name = last_name
+        user.email = email
+        user.save()
     else:
-        return render(request, 'frog/index.html', {'message': 'User account not active'})
+        ## -- LDAP
+        user = authenticate(username=username, password=password)
+        
+        if user is None:
+            return render(request, 'frog/index.html', {'message': 'Invalid Credentials'})
+
+        if not user.is_active:
+            return render(request, 'frog/index.html', {'message': 'User account not active'})
+
+    ## -- Create an artist tag for them
+    Tag.objects.get_or_create(name=user.first_name + ' ' + user.last_name, defaults={'artist': True})
+
+    ## -- Log them in
+    login(request, user)
+
+    return HttpResponseRedirect('/frog/gallery/1')
 
 def logout_(request):
     logout(request)

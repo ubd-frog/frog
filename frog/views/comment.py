@@ -32,14 +32,15 @@ Comment API
 
 from django.shortcuts import render
 from django.contrib.comments.models import Comment
-from django.core.mail import EmailMultiAlternatives
+from django.core.mail import send_mail
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.contenttypes.models import ContentType
 from django.template.loader import render_to_string
+from django.conf import settings
 
 from frog.common import Result, JsonResponse, commentToJson, getObjectsFromGuids, getPutData
-from frog.models import FROG_SITE_URL
+from frog.models import Image, FROG_SITE_URL
 
 
 def index(request, obj_id):
@@ -146,13 +147,15 @@ def __email(comment, obj):
     :type obj_id: object
     """
     html = render_to_string('frog/comment_email.html', {
+        'user': comment.user,
         'comment': comment,
         'object': obj,
+        'image': isinstance(obj, Image),
         'SITE_URL': FROG_SITE_URL,
     })
-    subject, from_email, to = 'Comment from %s' % comment.user_name, '%s (%s)' % (comment.user_name, comment.user_email), obj.author.email
+    from_email = '{0}@wargaming.net'.format(settings.EMAIL_HOST_USER)
+    subject, to = 'Comment from %s' % comment.user_name, obj.author.email
     text_content = 'This is an important message.'
     html_content = html
-    msg = EmailMultiAlternatives(subject, text_content, from_email, [to])
-    msg.attach_alternative(html_content, "text/html")
-    msg.send()
+
+    send_mail(subject, text_content, from_email, [to], html_message=html_content)

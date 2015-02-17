@@ -23,8 +23,8 @@
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.models import User
 
-from models import Piece, Image, Video, Gallery, ROOT, FROG_PATH
-from common import JsonResponse, Result, getHashForFile
+from frog import models
+from frog.common import JsonResponse, Result, getHashForFile
 
 from path import path as Path
 
@@ -41,20 +41,21 @@ class MediaTypeError(Exception):
 @csrf_exempt
 def upload(request):
     res = Result()
-    if request.FILES.has_key('file'):
+    f = request.FILES.get('file')
+
+    if f:
+        filename = f.name
+
+        path = request.POST.get('path', None)
+        if path:
+            foreignPath = path.replace("'", "\"")
+        else:
+            foreignPath = filename
+
+        galleries = request.POST.get('galleries', '1').split(',')
+        tags = filter(None, request.POST.get('tags', '').split(','))
+
         try:
-            f = request.FILES['file']
-            filename = f.name
-
-            path = request.POST.get('path', None)
-            if path:
-                foreignPath = path.replace("'", "\"")
-            else:
-                foreignPath = filename
-
-            galleries = request.POST.get('galleries', '1').split(',')
-            tags = filter(None, request.POST.get('tags', '').split(','))
-
             username = request.POST.get('user', False)
             if username:
                 user = User.objects.get(username=username)
@@ -65,16 +66,16 @@ def upload(request):
                 else:
                     user = request.user
             
-            uniqueName = request.POST.get('uid', Piece.getUniqueID(foreignPath, user))
+            uniqueName = request.POST.get('uid', models.Piece.getUniqueID(foreignPath, user))
             
             if f.content_type.startswith('image'):
                 if Path(filename).ext.lower() not in EXT['image']:
                     raise MediaTypeError
-                model = Image
+                model = models.Image
             else:
                 if Path(filename).ext not in EXT['video']:
                     raise MediaTypeError
-                model = Video
+                model = models.Video
 
             obj, created = model.objects.get_or_create(unique_id=uniqueName, defaults={'author': user})
             guid = obj.getGuid()
@@ -82,18 +83,18 @@ def upload(request):
 
             if hashVal == obj.hash:
                 for gal in galleries:
-                    g = Gallery.objects.get(pk=int(gal))
+                    g = models.Gallery.objects.get(pk=int(gal))
                     obj.gallery_set.add(g)
                 res.isSuccess = True
                 res.message = "Files were the same"
 
                 return JsonResponse(res)
 
-            objPath = ROOT
-            if FROG_PATH:
-                objPath = objPath / FROG_PATH
+            objPath = models.ROOT
+            if models.FROG_PATH:
+                objPath = objPath / models.FROG_PATH
             objPath = objPath / guid.guid[-2:] / guid.guid / filename
-            print objPath
+            
             hashPath = objPath.parent / hashVal + objPath.ext
             
             if not objPath.parent.exists():
@@ -108,7 +109,7 @@ def upload(request):
 
             res.append(obj.json())
 
-            for key,f in request.FILES.iteritems():
+            for key, f in request.FILES.items():
                 if key != 'file':
                     dest = objPath.parent / f.name
                     handle_uploaded_file(dest, f)

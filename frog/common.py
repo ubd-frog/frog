@@ -19,11 +19,15 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ##################################################################################################
 
-import urlparse
 import random
 import string
 import hashlib
 import imp
+
+try:
+    import urlparse
+except ImportError:
+    from urllib.parse import urlparse
 
 try:
     import ujson as json
@@ -102,7 +106,7 @@ def JsonResponse(obj=None, status=200):
         data = json.dumps(obj)
     except TypeError:
         data = json.dumps(obj.__dict__)
-    return HttpResponse(data, mimetype='application/json', status=status)
+    return HttpResponse(data, content_type='application/json', status=status)
 
 def getPutData(request):
     """Adds raw post to the PUT and DELETE querydicts on the request so they behave like post
@@ -135,6 +139,10 @@ def getHashForFile(f):
     f.seek(0)
 
     return hashVal.hexdigest()
+
+def getRoot():
+    """Convenience to return the media root with forward slashes"""
+    return Path(settings.MEDIA_ROOT.replace('\\', '/'))
 
 def uniqueID(size=6, chars=string.ascii_uppercase + string.digits):
     """A quick and dirty way to get a unique string"""

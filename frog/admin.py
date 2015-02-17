@@ -22,7 +22,7 @@
 
 from django.contrib import admin
 
-from models import Gallery, Image, Video, Tag
+from frog.models import Gallery, Image, Video, Tag
 
 class GalleryAdmin(admin.ModelAdmin):
     list_display = ('title', 'parent', 'owner', 'security')

@@ -25,6 +25,8 @@ import json
 from optparse import make_option
 from django.core.management.base import BaseCommand
 
+import pytz
+
 from frog.models import Gallery, RSSStorage
 
 
@@ -38,7 +40,7 @@ class Command(BaseCommand):
     )
 
     def handle(self, *args, **kwargs):
-        thisDay = datetime.date.today()
+        thisDay = datetime.datetime.now(pytz.utc)
         if kwargs['intervalType'] == 'daily':
             delta = 1
         else:
@@ -65,3 +67,4 @@ class Command(BaseCommand):
             rss.interval = kwargs['intervalType']
             rss.data = json.dumps(obj)
             rss.save()
+            self.stdout.write('Added %s\n' % rss)

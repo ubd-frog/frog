@@ -1,7 +1,17 @@
 <p>
-    {{user}} commented on your image <a href="{{SITE_URL}}/frog/image/{{object.id}}">{{object.title}}</a>
+    {% if image %}
+    {{user}} commented on your image <a href='{{SITE_URL}}/frog/image/{{object.id}}'>{{object.title}}</a>
+    {% else %}
+    {{user}} commented on your image <a href='{{SITE_URL}}/frog/video/{{object.id}}'>{{object.title}}</a>
+    {% endif %}
 </p>
 <p>
-    <img src="{{object.thumbnail.url}}" {% if img.width > img.height %}width="200"{% else %}height="200"{% endif %} />
+    {% if image %}
+    <a href='{{SITE_URL}}/frog/image/{{object.id}}'>
+    {% else %}
+    <a href='{{SITE_URL}}/frog/video/{{object.id}}'>
+    {% endif %}
+        <img src="{{SITE_URL}}{{object.thumbnail.url}}" {% if img.width > img.height %}width="200"{% else %}height="200"{% endif %} />
+    </a>
 </p>
-{{comment.content}}
+{{comment.comment}}

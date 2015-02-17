@@ -45,6 +45,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     // -- Set the loading image
     Frog.loading = new Image();
     Frog.loading.src = '/static/frog/i/loading.png';
+
     Frog.icon = function(icon) {
         return Frog.StaticRoot + '/frog/i/' + icon + '.png'
     }
@@ -109,10 +110,10 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         init: function() {
             new Request.JSON({
                 url: '/frog/pref/',
-                async: false,
                 noCache: true,
                 onSuccess: function(res) {
                     Object.append(this, res.value);
+                    Frog.GalleryObject.request();
                 }.bind(this)
             }).GET();
         },
@@ -120,7 +121,6 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
             new Request.JSON({
                 url: '/frog/pref/',
                 noCache: true,
-                async: false,
                 headers: {"X-CSRFToken": Cookie.read('csrftoken')},
                 onSuccess: function(res) {
                     Object.append(this, res.value);
@@ -134,7 +134,6 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
     new Request.JSON({
         url: '/frog/getuser',
-        async: false,
         onSuccess: function(res) {
             if (res.isSuccess) {
                 Frog.Prefs.init();
@@ -143,6 +142,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
             else {
                 Object.append(Frog.Prefs, res.value);
             }
+            Frog.Comments.build();
         }
     }).GET();
 
@@ -153,11 +153,10 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
             
             new Request.JSON({
                 url: '/frog/tag/',
-                async: false,
                 onSuccess: function(res) {
                     if (res.isSuccess) {
                         res.values.each(function(tag) {
-                            self.tags[tag.id] = tag.name;
+                            self.tags[tag.id] = tag.name.toLowerCase();
                         });
                     }
                     else if (res.isError) {
@@ -174,11 +173,10 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
                 if (!value) {
                     new Request.JSON({
                         url: '/frog/tag/' + arg,
-                        async: false,
                         onSuccess: function(res) {
                             if (res.isSuccess) {
                                 value = res.value.name;
-                                self.tags[value] = res.value.name;
+                                self.tags[value] = res.value.name.toLowerCase();
                             }
                         }
                     }).GET({json:true});
@@ -193,7 +191,6 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
                 else {
                     new Request.JSON({
                         url: '/frog/tag/',
-                        async: false,
                         headers: {"X-CSRFToken": Cookie.read('csrftoken')},
                         onSuccess: function(res) {
                             if (res.isSuccess) {
@@ -248,6 +245,22 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     Frog.CommentManager = new Class({
         Implements: Events,
         initialize: function() {
+            this.guid = '';
+            this.bSave = null;
+            this.bCancel = null;
+            this.request = new Request.HTML({
+                url: '/frog/comment/',
+                evalScripts: true,
+                noCache: true,
+                onSuccess: function(tree, elements, html) {
+                    this.open(html);
+                }.bind(this)
+            });
+            this.scrollEvent = function(e) {
+                e.stop();
+            }
+        },
+        build: function() {
             var self = this;
             this.container = new Element('div', {
                 id: 'frog_comments_container',
@@ -261,17 +274,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
             }).inject(document.body);
             this.element = new Element('div', {id: 'frog_comments_block'}).inject(this.container);
             this.container.hide();
-            this.bSave = null;
-            this.bCancel = null;
-            this.guid = '';
-            this.request = new Request.HTML({
-                url: '/frog/comment/',
-                evalScripts: true,
-                noCache: true,
-                onSuccess: function(tree, elements, html) {
-                    this.open(html);
-                }.bind(this)
-            });
+            
             this.top = new Element('div').inject(this.element);
             var bot = new Element('form').inject(this.element);
             if (Frog.user !== null) {
@@ -282,7 +285,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
                             e.stop();
                             this.hide();
                             var el = $('frog_comments');
-                            var guid = Frog.util.getData(el, 'frog_guid');
+                            self.guid = Frog.util.getData(el, 'frog_guid');
                             var id = Frog.util.getData(el, 'frog_gallery_id');
                             
                             self.input.show();
@@ -298,7 +301,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
                                     handler: function() {
                                         new Request.JSON({
                                             url: '/frog/comment/'
-                                        }).POST({guid: guid, comment: self.input.value});
+                                        }).POST({guid: self.guid, comment: self.input.value});
                                         self.close();
 
                                         self.fireEvent('onPost', [id]);
@@ -319,9 +322,6 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
             
             this.input = new Element('textarea').inject(bot);
             this.input.hide();
-            this.scrollEvent = function(e) {
-                e.stop();
-            }
         },
         get: function(guid, id) {
             this.guid = guid;

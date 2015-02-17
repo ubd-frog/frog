@@ -40,14 +40,14 @@ logger = logging.getLogger('frog')
 try:
     FROG_FFMPEG = getattr(settings, 'FROG_FFMPEG')
 except AttributeError:
-    raise ImproperlyConfigured, 'FROG_FFMPEG is required'
+    raise ImproperlyConfigured('FROG_FFMPEG is required')
 
 FROG_SCRUB_DURATION = getattr(settings, 'FROG_SCRUB_DURATION', 60)
-FROG_FFMPEG_ARGS = getattr(settings, 'FROG_FFMPEG_ARGS', '-vcodec libx264 -b:v 2500k -acodec libvo_aacenc -b:a 56k -ac 2 -y')
-FROG_SCRUB_FFMPEG_ARGS = getattr(settings, 'FROG_SCRUB_FFMPEG_ARGS', '-vcodec libx264 -b:v 2500k -x264opts keyint=1:min-keyint=8 -acodec libvo_aacenc -b:a 56k -ac 2 -y')
+FROG_FFMPEG_ARGS = getattr(settings, 'FROG_FFMPEG_ARGS', '-vcodec libx264 -b:v 2500k -acodec libfdk_aac -b:a 56k -ac 2 -y')
+FROG_SCRUB_FFMPEG_ARGS = getattr(settings, 'FROG_SCRUB_FFMPEG_ARGS', '-vcodec libx264 -b:v 2500k -x264opts keyint=1:min-keyint=8 -acodec libfdk_aac -b:a 56k -ac 2 -y')
 
-RE_VIDEO = re.compile("""Stream #\d[:.](?P<index>\d+).*: (?P<type>\w+): (?P<codec>.*), (?P<pixel_format>\w+), (?P<width>\d+)x(?P<height>\d+)""")
-RE_AUDIO = re.compile("""Stream #\d[:.](?P<index>\d+).*: (?P<type>\w+): (?P<codec>.*), (?P<hertz>\d+) Hz, .*, .*, (?P<bitrate>\d+) kb/s$""")
+RE_VIDEO = re.compile("""Stream #\d[:.](?P<index>\d+).*: (?P<type>\w+): (?P<codec>.*), (?P<pixel_format>[\w\(\)]+), (?P<width>\d+)x(?P<height>\d+)""")
+RE_AUDIO = re.compile("""Stream #\d[:.](?P<index>\d+).*: (?P<type>\w+): (?P<codec>.*), (?P<hertz>\d+) Hz, .*, .*, (?P<bitrate>\d+) kb/s""")
 RE_DURATION = re.compile("""Duration: (?P<duration>\d+:\d+:\d+.\d+), start: (?P<start>\d+.\d+), bitrate: (?P<bitrate>\d+) kb/s$""")
 
 
@@ -114,10 +114,10 @@ class VideoThread(Thread):
                     logger.info('Finished processing video: %s' % item.guid)
                     item.queue.setStatus(item.queue.COMPLETED)
                     item.save()
-                except Exception, e:
+                except Exception as e:
                     logger.error(str(e))
 
-                time.sleep(TIMEOUT)
+            time.sleep(TIMEOUT)
 
 
 def parseInfo(strings):
