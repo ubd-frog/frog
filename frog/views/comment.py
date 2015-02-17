@@ -153,8 +153,7 @@ def __email(comment, obj):
         'image': isinstance(obj, Image),
         'SITE_URL': FROG_SITE_URL,
     })
-    from_email = '{0}@wargaming.net'.format(settings.EMAIL_HOST_USER)
-    subject, to = 'Comment from %s' % comment.user_name, obj.author.email
+    subject, from_email, to = 'Comment from %s' % comment.user_name, '%s (%s)' % (comment.user_name, comment.user_email), obj.author.email
     text_content = 'This is an important message.'
     html_content = html
 
