@@ -157,10 +157,10 @@ Frog.Viewer = new Class({
 
         this.ctx.drawImage(
             this.image, 
-            this.xform.elements[2][0],
-            this.xform.elements[2][1],
-            this.xform.elements[0][0],
-            this.xform.elements[1][1]
+            parseInt(this.xform.elements[2][0]),
+            parseInt(this.xform.elements[2][1]),
+            parseInt(this.xform.elements[0][0]),
+            parseInt(this.xform.elements[1][1])
         );
     },
     center: function(scale) {
