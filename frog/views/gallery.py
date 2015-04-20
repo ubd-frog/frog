@@ -77,7 +77,7 @@ def get(request, obj_id=None):
     if obj_id:
         obj = Gallery.objects.get(pk=obj_id)
         if obj.security != Gallery.PUBLIC and request.user.is_anonymous():
-            return HttpResponseRedirect('frogaccess_denied')
+            return HttpResponseRedirect('/frog/access_denied')
 
         return render(request, 'frog/gallery.html', {'object': obj})
     else:

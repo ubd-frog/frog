@@ -44,6 +44,7 @@ Frog.Viewer = new Class({
         this.ctx = this.canvas.getContext('2d');
         this.image = new Image();
         this.image.onload = this._loadCallback.bind(this);
+        this.image.onprogress = this._progressCallback.bind(this);
 
         this.events = {
             up: this.up.bind(this),
@@ -259,6 +260,8 @@ Frog.Viewer = new Class({
     resize: function(e) {
         this.canvas.width = window.getWidth();
         this.canvas.height = window.getHeight();
+        this.img.width = window.getWidth();
+        this.img.height = window.getHeight();
 
         this.shelf.hide();
 
@@ -297,7 +300,9 @@ Frog.Viewer = new Class({
         this.videoEl.play();
     },
     setImages: function(images, id) {
-        id = id || this.current;
+        if (typeof(id) === 'undefined') {
+            id = this.current;
+        }
         this.objects = images;
         this.setIndex(id.toInt());
         this.shelf.populate(this.objects);
@@ -327,14 +332,17 @@ Frog.Viewer = new Class({
     },
     _loadCallback: function() {
         this.xform = this.main = $M([
-            [this.image.width,0,0],
-            [0,this.image.height,0],
+            [this.objects[this.current].width,0,0],
+            [0,this.objects[this.current].height,0],
             [0,0,1]
         ]);
         this.img.src = this.image.src;
         this.axis = (this.image.width > this.image.height) ? 'x' : 'y';
         this.render();
         this.fitToWindow();
+    },
+    _progressCallback: function() {
+        console.log(arguemnts);
     },
     show: function() {
         this.clear();

@@ -174,6 +174,10 @@ Frog.Gallery = new Class({
         this.requestData = data || this.requestData;
         this.requestData.more = append;
         this.requestData.models = [];
+        if (typeof(this.requestData.filters) === 'undefined') {
+            this.requestData.filters = "[[]]";
+        }
+        this.requestData.filters
         if (Frog.Prefs.include_image) {
             this.requestData.models.push('image');
         }

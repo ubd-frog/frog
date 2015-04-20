@@ -249,7 +249,7 @@ Frog.Bucket = new Class({
     destroy: function() {
         this.element.getElements('.frog-tag').dispose();
         this.element.destroy();
-        this.completer.elements.list.node.destroy();
+        //this.completer.elements.list.node.destroy();
     },
     keyUpEvent: function(e) {
         if (e.code === 13 && this.input.value !== "") {
