@@ -4,7 +4,10 @@ try:
     from setuptools import setup
 except ImportError:
     from distutils.core import setup
+
+import os
 from pip.req import parse_requirements
+
 install_reqs = parse_requirements(os.path.abspath(os.path.dirname(__file__)) + '/requirements.txt')
 reqs = [str(ir.req) for ir in install_reqs]
 
