@@ -4,19 +4,22 @@ try:
     from setuptools import setup
 except ImportError:
     from distutils.core import setup
+from pip.req import parse_requirements
+install_reqs = parse_requirements(os.path.abspath(os.path.dirname(__file__)) + '/requirements.txt')
+reqs = [str(ir.req) for ir in install_reqs]
 
 setup(
     name='django-frog',
     description='Media server built on django',
     long_description=('A server and client solution to viewing '
                       ' and filtering large image and video collections'),
-    version='1.0.6',
+    version='1.0.7',
     author='Brett Dixon',
     author_email='theiviaxx@gmail.com',
     license='MIT',
     url='https://github.com/theiviaxx/frog',
     platforms='any',
-    install_requires=['Django >=1.6', 'South >=0.7', 'django-haystack >=2.0.0'],
+    install_requires=reqs,
     packages=[
         'frog',
         'frog.views',
