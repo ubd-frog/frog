@@ -43,6 +43,7 @@ Frog.Uploader = new Class({
                 {title: "Video files", extensions: "mp4,avi,mov,wmv"}
             ]
         });
+        this.uploader = uploader;
 
         uploader.init();
 

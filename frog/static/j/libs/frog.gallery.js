@@ -73,6 +73,15 @@ Frog.Gallery = new Class({
             self.tileSize = Math.floor((window.getWidth() - 2) / self.tilesPerRow);
             self.request();
         });
+        Frog.UI.addEvent('render', function() {
+            if (self.options.upload) {
+                var uploaderElement = $('upload');
+                self.uploader = new Frog.Uploader(self.id);
+                self.uploader.addEvent('complete', function() {
+                    self.request();
+                });
+            }
+        });
         if (this.options.upload) {
             Frog.UI.enableUploads();
         }
@@ -80,15 +89,6 @@ Frog.Gallery = new Class({
         Frog.UI.setId(this.id);
         Frog.UI.render(this.toolsElement);
 
-        if (this.options.upload) {
-            var uploaderElement = $('upload');
-            this.uploader = new Frog.Uploader(this.id);
-            this.uploader.addEvent('complete', function() {
-                this.request();
-            }.bind(this));
-        }
-
-        
         this.viewer = new Frog.Viewer();
         this.viewer.addEvent('show', function() {
             window.scrollTo(0,0);

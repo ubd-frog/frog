@@ -21,11 +21,14 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
 Frog.UI = (function(Frog) {
+    var self = this;
     var ID, Store, ToolBar, SwitchArtistWindow;
     var navmenu = Ext.create('Ext.menu.Menu', {hideMode: 'display'});
     
     var uploadEnabled = false;
     var advancedFilter = Frog.Prefs.advanced_filter;
+
+    self.renderCallback = null;
 
 
     // -- Models
@@ -247,6 +250,10 @@ Frog.UI = (function(Frog) {
                 else {
                     addLoginAction();
                 }
+        
+                if (self.renderCallback !== null) {
+                    renderCallback();
+                }
             }
         }).GET({gallery: ID});
     }
@@ -260,6 +267,9 @@ Frog.UI = (function(Frog) {
                 break;
             case 'filter':
                 FilterObserver.subscribe(fn);
+                break;
+            case 'render':
+                self.renderCallback = fn;
                 break;
         }
     }

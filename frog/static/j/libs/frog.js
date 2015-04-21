@@ -284,9 +284,6 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
                         click: function(e) {
                             e.stop();
                             this.hide();
-                            var el = $('frog_comments');
-                            self.guid = Frog.util.getData(el, 'frog_guid');
-                            var id = Frog.util.getData(el, 'frog_gallery_id');
                             
                             self.input.show();
                             self.input.focus();
@@ -299,6 +296,9 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
                                     text: 'Save',
                                     renderTo: bot,
                                     handler: function() {
+                                        var el = $('frog_comments');
+                                        self.guid = Frog.util.getData(el, 'frog_guid');
+                                        var id = Frog.util.getData(el, 'frog_gallery_id');
                                         new Request.JSON({
                                             url: '/frog/comment/'
                                         }).POST({guid: self.guid, comment: self.input.value});
