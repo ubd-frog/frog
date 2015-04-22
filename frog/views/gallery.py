@@ -376,6 +376,6 @@ def search(query, model):
     query = '%s*' % query.strip()
     LOGGER.debug(query)
     sqs = SearchQuerySet()
-    sqs = sqs.filter(content=query).models(model)
+    sqs = sqs.raw_search('*{0}*'.format(query)).models(model)
 
     return [o.pk for o in sqs]

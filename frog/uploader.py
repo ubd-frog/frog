@@ -22,6 +22,7 @@
 
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.models import User
+from django.core.exceptions import PermissionDenied
 
 from frog import models
 from frog.common import JsonResponse, Result, getHashForFile
@@ -67,6 +68,9 @@ def upload(request):
                     user = request.user
             
             uniqueName = request.POST.get('uid', models.Piece.getUniqueID(foreignPath, user))
+
+            if galleries and models.Gallery.objects.filter(pk__in=[int(g) for g in galleries], uploads=False):
+                raise PermissionDenied()
             
             if f.content_type.startswith('image'):
                 if Path(filename).ext.lower() not in EXT['image']:
