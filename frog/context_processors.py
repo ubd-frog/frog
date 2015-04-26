@@ -43,5 +43,5 @@ def media(request):
         'build': BUILD,
         'SITE_URL': FROG_SITE_URL,
     }
-    print obj
+    
     return obj
