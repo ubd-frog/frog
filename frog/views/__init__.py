@@ -76,10 +76,10 @@ def login_(request):
         user = authenticate(username=username, password=password)
         
         if user is None:
-            return render(request, 'frog/index.html', {'message': 'Invalid Credentials'})
+            return render(request, INDEX_HTML, {'message': 'Invalid Credentials'})
 
         if not user.is_active:
-            return render(request, 'frog/index.html', {'message': 'User account not active'})
+            return render(request, INDEX_HTML, {'message': 'User account not active'})
 
     ## -- Create an artist tag for them
     Tag.objects.get_or_create(name=user.first_name + ' ' + user.last_name, defaults={'artist': True})
