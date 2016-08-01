@@ -34,7 +34,7 @@ class SimpleAuthBackend(object):
 
     supports_inactive_user = False
 
-    def authenticate(self, username=None, password=None):
+    def authenticate(self, username=None, password=None, **kwargs):
         try:
             user = User.objects.get(username=username)
         except User.DoesNotExist:
@@ -44,6 +44,9 @@ class SimpleAuthBackend(object):
             user = User(username=username, password='rad')
             user.is_staff = False
             user.is_superuser = False
+            for key, value in kwargs.items():
+                setattr(user, key, value)
+
             user.save()
         return user
 

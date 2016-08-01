@@ -8,7 +8,7 @@ except ImportError:
 import os
 from pip.req import parse_requirements
 
-install_reqs = parse_requirements(os.path.abspath(os.path.dirname(__file__)) + '/requirements.txt')
+install_reqs = parse_requirements(os.path.abspath(os.path.dirname(__file__)) + '/requirements.txt', session=False)
 reqs = [str(ir.req) for ir in install_reqs]
 
 setup(
@@ -16,7 +16,7 @@ setup(
     description='Media server built on django',
     long_description=('A server and client solution to viewing '
                       ' and filtering large image and video collections'),
-    version='1.0.7',
+    version='1.1.0',
     author='Brett Dixon',
     author_email='theiviaxx@gmail.com',
     license='MIT',

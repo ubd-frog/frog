@@ -336,9 +336,9 @@ Frog.Gallery = new Class({
     _getScreen: function() {
         var s, e, t, row, endRow;
 
-        row = Math.floor(window.getScroll().y / (this.tileSize + 30));
+        row = Math.ceil(window.getScroll().y / (this.tileSize + 30));
         s = row * this.tilesPerRow;
-        endRow = row + Math.floor(window.getHeight() / (this.tileSize + 30));
+        endRow = row + Math.floor(window.getHeight() / (this.tileSize + 30)) + 1;
         e = endRow * this.tilesPerRow + this.tilesPerRow;
 
         for (var i=s;i<e;i++) {

@@ -33,10 +33,11 @@ Piece API
 """
 
 from django.shortcuts import render
+from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 
 from frog.models import Image, Video, Tag
-from frog.common import Result, JsonResponse, getPutData
+from frog.common import Result, getPutData
 
 
 def image(request, obj_id):
@@ -50,6 +51,7 @@ def image(request, obj_id):
         getPutData(request)
         return delete(request, obj)
 
+
 def video(request, obj_id):
     """Handles a request based on method and calls the appropriate function"""
     obj = Video.objects.get(pk=obj_id)
@@ -61,6 +63,17 @@ def video(request, obj_id):
         getPutData(request)
         return delete(request, obj)
 
+
+def getGuids(request):
+    res = Result()
+    guids = request.GET.get('guids')
+    if guids:
+        guids = guids.split(',')
+
+
+    return JsonResponse(res)
+
+
 def get(request, obj):
     if isinstance(obj, Image):
         template = 'frog/image.html'
@@ -69,8 +82,9 @@ def get(request, obj):
 
     return render(request, template, {'object': obj})
 
+
 @login_required
-def post(self, request, obj):
+def post(request, obj):
     tags = request.POST.get('tags', '').split(',')
     res = Result()
     for tag in tags:
@@ -86,8 +100,9 @@ def post(self, request, obj):
 
     return JsonResponse(res)
 
+
 @login_required
-def delete(self, request, obj):
+def delete(request, obj):
     obj.deleted = True
     obj.save()
     res = Result()

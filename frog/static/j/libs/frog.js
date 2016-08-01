@@ -102,7 +102,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         },
         hashData: function() {
             var str = unescape(location.href.split('#')[1]);
-            return (str !== 'undefined') ? JSON.parse(str) : {};
+            return (str !== 'undefined' && str.length > 0) ? JSON.parse(str) : {};
         }
     }
     
@@ -113,7 +113,9 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
                 noCache: true,
                 onSuccess: function(res) {
                     Object.append(this, res.value);
-                    Frog.GalleryObject.request();
+                    if (Frog.GalleryObject) {
+                        Frog.GalleryObject.request();
+                    }
                 }.bind(this)
             }).GET();
         },

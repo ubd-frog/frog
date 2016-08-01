@@ -33,27 +33,29 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ImproperlyConfigured
 from django.conf import settings
 
-from frog.videoThread import VideoThread, parseInfo, FROG_FFMPEG
-
 from path import path as Path
 from PIL import Image as pilImage
 import six
 
 from frog import getRoot
+from frog.video_parser import parseInfo
 
 FROG_IMAGE_SIZE_CAP = getattr(settings, 'FROG_IMAGE_SIZE_CAP', 5120)
 FROG_IMAGE_SMALL_SIZE = getattr(settings, 'FROG_IMAGE_SMALL_SIZE', 600)
 FROG_THUMB_SIZE = getattr(settings, 'FROG_THUMB_SIZE', 256)
 FROG_UNIQUE_ID = getattr(settings, 'FROG_UNIQUE_ID', None)
 FROG_PATH = getattr(settings, 'FROG_PATH', None)
+FROG_VIDEO_WORK = Path(getattr(settings, 'FROG_VIDEO_WORK', '/tmp/frog_video.json'))
+try:
+    FROG_FFMPEG = getattr(settings, 'FROG_FFMPEG')
+    FROG_FFPROBE = getattr(settings, 'FROG_FFPROBE')
+except AttributeError:
+    raise ImproperlyConfigured('FROG_FFMPEG and FROG_FFPROBE are required')
 try:
     FROG_SITE_URL = getattr(settings, 'FROG_SITE_URL')
 except AttributeError:
     raise ImproperlyConfigured('FROG_SITE_URL is required')
 
-gQueue = Queue()
-gVideoThread = VideoThread(gQueue)
-gVideoThread.start()
 
 DefaultPrefs = {
     'backgroundColor': '000000',
@@ -62,8 +64,8 @@ DefaultPrefs = {
     'includeImage': True,
     'includeVideo': True,
 }
-
 ROOT = getRoot()
+
 
 class Tag(models.Model):
     name = models.CharField(max_length=255, unique=True)
@@ -93,7 +95,7 @@ class Piece(models.Model):
     title = models.CharField(max_length=255, blank=True)
     author = models.ForeignKey(User)
     created = models.DateTimeField(auto_now_add=True)
-    modified = models.DateTimeField(auto_now_add=True, auto_now=True)
+    modified = models.DateTimeField(auto_now=True)
     thumbnail = models.ImageField(upload_to='%Y/%m/%d', max_length=255, blank=True, null=True)
     width = models.IntegerField(default=0)
     height = models.IntegerField(default=0)
@@ -115,9 +117,9 @@ class Piece(models.Model):
     def thumbnail_tag(self):
         if self.thumbnail:
             if self.width / self.height > 1:
-                return u'<img src="%s" width="256" />' % self.thumbnail.url
+                return u'<img src="%s" style="max-width: 256px;" />' % self.thumbnail.url
             else:
-                return u'<img src="%s" height="256" />' % self.thumbnail.url
+                return u'<img src="%s" style="max-height: 256px;" />' % self.thumbnail.url
 
         return ''
     thumbnail_tag.allow_tags = True
@@ -141,8 +143,8 @@ class Piece(models.Model):
     def getGuid(self):
         return Guid(self.id, self.AssetType)
 
-    def export(self):
-        pass
+    def export(self, *args, **kwargs):
+        raise NotImplementedError
 
     def getPath(self):
         guid = self.getGuid()
@@ -169,7 +171,7 @@ class Piece(models.Model):
         return json.dumps(self.json())
 
     def tagArtist(self, tag=None):
-        ## -- First remove any artist tags
+        # -- First remove any artist tags
         for n in self.tags.filter(artist=True):
             self.tags.remove(n)
         self.save()
@@ -210,13 +212,15 @@ class Image(Piece):
     image = models.ImageField(upload_to='%Y/%m/%d', max_length=255, blank=True, null=True)
     small = models.ImageField(upload_to='%Y/%m/%d', max_length=255, blank=True, null=True)
 
-    def export(self, hashVal, hashPath, tags=None, galleries=None):
-        '''
+    def export(self, hashVal=None, hashPath=None, tags=None, galleries=None):
+        """
         The export function needs to:
         - Move source image to asset folder
         - Rename to guid.ext
         - Save thumbnail, small, and image versions
-        '''
+        """
+        hashVal = hashVal or self.hash
+        hashPath = hashPath or self.parent / hashVal + self.ext
         
         self.source = hashPath.replace('\\', '/').replace(ROOT, '')
         galleries = galleries or []
@@ -236,15 +240,16 @@ class Image(Piece):
         formats = [
             ('image', FROG_IMAGE_SIZE_CAP),
             ('small', FROG_IMAGE_SMALL_SIZE),
-            ('thumbnail', FROG_THUMB_SIZE),
         ]
-        for i,n in enumerate(formats):
+        for i, n in enumerate(formats):
             if workImage.size[0] > n[1] or workImage.size[1] > n[1]:
                 workImage.thumbnail((n[1], n[1]), pilImage.ANTIALIAS)
                 setattr(self, n[0], self.source.name.replace(hashVal, '_' * i + hashVal))
                 workImage.save(ROOT + getattr(self, n[0]).name)
             else:
                 setattr(self, n[0], self.source)
+
+        self.generateThumbnail()
 
         for gal in galleries:
             g = Gallery.objects.get(pk=int(gal))
@@ -268,6 +273,39 @@ class Image(Piece):
 
         return obj
 
+    def generateThumbnail(self, image=None):
+        """Generates a square thumbnail"""
+        if image is None:
+            image = pilImage.open(ROOT / self.source.name)
+        ratio = float(self.width) / float(self.height)
+        if ratio >= 1.0:
+            width = FROG_THUMB_SIZE * ratio
+            height = FROG_THUMB_SIZE
+            box = (
+                int(width / 2 - (FROG_THUMB_SIZE / 2)),
+                0,
+                int(width / 2 + (FROG_THUMB_SIZE / 2)),
+                FROG_THUMB_SIZE
+            )
+        else:
+            width = FROG_THUMB_SIZE
+            height = FROG_THUMB_SIZE / ratio
+            box = (
+                0,
+                int(height / 2 - (FROG_THUMB_SIZE / 2)),
+                FROG_THUMB_SIZE,
+                int(height / 2 + (FROG_THUMB_SIZE / 2)),
+            )
+        # Resize
+        image.thumbnail((width, height), pilImage.ANTIALIAS)
+        # Crop from center
+        print box
+
+        image = image.crop(box)
+        # save
+        self.thumbnail = self.source.name.replace(self.hash, '__{}'.format(self.hash))
+        image.save(ROOT / self.thumbnail.name)
+
 
 class Video(Piece):
     AssetType = 2
@@ -276,29 +314,25 @@ class Video(Piece):
     video_thumbnail = models.FileField(upload_to='%Y/%m/%d', max_length=255, blank=True, null=True)
 
     def export(self, hashVal, hashPath, tags=None, galleries=None):
-        '''
+        """
         The export function needs to:
         - Move source image to asset folder
         - Rename to guid.ext
         - Save thumbnail, video_thumbnail, and MP4 versions.  If the source is already h264, then only transcode the thumbnails
-        '''
+        """
 
         self.source = hashPath.replace('\\', '/').replace(ROOT, '')
         galleries = galleries or []
         tags = tags or []
 
-        ## -- Get info
-        cmd = '%s -i "%s"' % (FROG_FFMPEG, hashPath)
-        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
-        infoString = proc.stdout.readlines()
-        videodata = parseInfo(infoString)
-        
-        self.width = int(videodata['video'][0]['width'])
-        self.height = int(videodata['video'][0]['height'])
+        # -- Get info
+        videodata = self.info()
+        self.width = videodata['streams'][0]['width']
+        self.height = videodata['streams'][0]['height']
 
-        ## -- Save thumbnail and put into queue
+        # -- Save thumbnail and put into queue
         thumbnail = hashPath.parent / ("_%s.jpg" % hashVal)
-        cmd = '%s -i "%s" -ss 1 -vframes 1 "%s"' % (
+        cmd = '%s -i "%s" -ss 1 -vframes 1 "%s" -y' % (
             FROG_FFMPEG,
             hashPath,
             thumbnail
@@ -322,14 +356,16 @@ class Video(Piece):
         if not self.guid:
             self.guid = self.getGuid().guid
 
-        ## -- Set the temp video while processing
+        # -- Set the temp video while processing
         self.video = 'frog/i/queued.mp4'
         queuedvideo = VideoQueue.objects.get_or_create(video=self)[0]
         queuedvideo.save()
 
         self.save()
 
-        gQueue.put(self)
+        item = VideoQueue()
+        item.video = self
+        item.save()
 
     def json(self):
         obj = super(Video, self).json()
@@ -338,6 +374,21 @@ class Video(Piece):
         obj['video_thumbnail'] = self.video_thumbnail.url if self.video_thumbnail else ''
 
         return obj
+
+    def generateThumbnail(self):
+        """Generates a square thumbnail"""
+
+    def info(self):
+        cmd = [
+            FROG_FFPROBE,
+            '-select_streams', 'v:0', '-show_entries', 'stream=width,height,codec_name,duration', '-of', 'json',
+            self.source.file.name
+        ]
+        try:
+            output = subprocess.check_output(cmd)
+            return json.loads(output)
+        except subprocess.CalledProcessError as err:
+            return None
 
 
 class VideoQueue(models.Model):
@@ -353,14 +404,6 @@ class VideoQueue(models.Model):
     status = models.SmallIntegerField(default=QUEUED, choices=STATUS)
     message = models.TextField(blank=True, null=True)
 
-    def setStatus(self, status):
-        self.status = status
-        self.save()
-
-    def setMessage(self, message):
-        self.message = message
-        self.save()
-
 
 class Gallery(models.Model):
     PUBLIC, PRIVATE, PERSONAL = (0, 1, 2)
@@ -370,8 +413,8 @@ class Gallery(models.Model):
         (PERSONAL, 'Personal'),
     )
     title = models.CharField(max_length=128)
-    images = models.ManyToManyField(Image, blank=True, null=True)
-    videos = models.ManyToManyField(Video, blank=True, null=True)
+    images = models.ManyToManyField(Image, blank=True)
+    videos = models.ManyToManyField(Video, blank=True)
     security = models.SmallIntegerField(default=PUBLIC, choices=SECURITY_LEVEL)
     owner = models.ForeignKey(User, default=1)
     description = models.TextField(default="", blank=True)
@@ -404,7 +447,7 @@ class Gallery(models.Model):
 
 class UserPref(models.Model):
     user = models.ForeignKey(User, related_name='frog_prefs')
-    data = models.TextField(default='{}')
+    data = models.TextField(default=json.dumps(DefaultPrefs))
 
     def json(self):
         return json.loads(self.data)
@@ -431,13 +474,17 @@ class Guid(object):
         1: 1152921504606846976,
         2: 2305843009213693952,
     }
+
     def __init__(self, obj_id, type_id=1):
         if isinstance(obj_id, str):
             self.int = int(obj_id, 16)
             self.guid = obj_id[2:] if obj_id[1] == 'x' else obj_id
         elif isinstance(obj_id, six.integer_types):
             self.int = self.AssetTypes[type_id] + obj_id
-            self.guid = hex(self.int)[2:-1]
+            if six.PY2:
+                self.guid = hex(self.int)[2:-1]
+            else:
+                self.guid = hex(self.int)[2:]
         else:
             self.int = 0
             self.guid = ''

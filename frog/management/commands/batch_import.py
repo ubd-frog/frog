@@ -20,54 +20,59 @@
 ##################################################################################################
 
 
-import datetime
-import json
 from optparse import make_option
-from django.core.management.base import BaseCommand, CommandError
-from django.conf import settings
+from django.core.management.base import BaseCommand
 
-from frog.models import Gallery, RSSStorage, Image, Video, Piece, Tag
+import path
+
+from frog.models import Gallery, Image, Video, Piece
 from frog.uploader import EXT, User
-from frog.path import path as Path
 from frog.common import getRoot
 
 
 class Command(BaseCommand):
-    option_list = BaseCommand.option_list + (
-        make_option('--dirnames', '-d',
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '--dirnames', '-d',
             action='store_true',
             dest='dirnames',
             default=False,
             help='Use folder names as tags'
-        ),
-        make_option('--topdir', '-t',
+        )
+        parser.add_argument(
+            '--topdir', '-t',
             dest='topdir',
             default='.',
             help='Folder name to stop gathering tags from'
-        ),
-    )
+        )
+        parser.add_argument(
+            '--user', '-u',
+            dest='user',
+            default='noauthor',
+            help='Username to use for images'
+        )
 
     def handle(self, *args, **options):
         if options['topdir'] == '.':
             options['topdir'] = args[0]
 
-        FILES = Path(args[0]).walk()
-        ALL_EXT = EXT['image'] + EXT['video']
-        USER = User.objects.get_or_create(
-            username='noauthor',
+        files = path.Path(args[0]).walk()
+        extensions = EXT['image'] + EXT['video']
+        user = User.objects.get_or_create(
+            username=options['user'],
             defaults={'first_name': 'No', 'last_name': 'Author', 'email': 'none@gmail.com'}
         )[0]
-        GALLERY = Gallery.objects.get(pk=1)
+        gallery = Gallery.objects.get(pk=1)
 
-        for file_ in FILES:
-            if file_.ext.lower() in ALL_EXT:
-                uniqueName = Piece.getUniqueID(file_, USER)
+        for file_ in files:
+            if file_.ext.lower() in extensions:
+                uniqueName = Piece.getUniqueID(file_, user)
                 if file_.ext.lower() in EXT['image']:
                     model = Image
                 else:
                     model = Video
 
-                obj = model.objects.get_or_create(unique_id=uniqueName, defaults={'author': USER})[0]
+                obj = model.objects.get_or_create(unique_id=uniqueName, defaults={'author': user})[0]
                 guid = obj.getGuid()
                 hashVal = file_.read_hexhash('sha1')
 
@@ -82,7 +87,7 @@ class Command(BaseCommand):
                 obj.hash = hashVal
                 obj.foreign_path = file_
                 obj.title = objPath.namebase
-                obj.gallery_set.add(GALLERY)
+                obj.gallery_set.add(gallery)
 
                 tags = []
                 if options['dirnames']:

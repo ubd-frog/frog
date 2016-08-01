@@ -54,6 +54,7 @@ def index(request, obj_id=None):
         getPutData(request)
         return delete(request)
 
+
 def get(request, obj_id=None):
     """Lists all tags
 
@@ -62,7 +63,9 @@ def get(request, obj_id=None):
     if obj_id:
         obj = get_object_or_404(Tag, pk=obj_id)
 
-        return render(request, 'frog/tag.html', {'object': obj})
+        res = Result()
+        res.append(obj.json())
+        return JsonResponse(res)
     else:
         res = Result()
         res.isSuccess = True
@@ -70,6 +73,7 @@ def get(request, obj_id=None):
             res.append(n.json())
 
         return JsonResponse(res)
+
 
 @login_required
 def post(request):
@@ -98,6 +102,7 @@ def post(request):
 
     return JsonResponse(res)
 
+
 @login_required
 def put(request):
     """Adds tags from objects resolved from guids
@@ -117,6 +122,7 @@ def put(request):
 
     return JsonResponse(res)
 
+
 @login_required
 def delete(request):
     """Removes tags from objects resolved from guids
@@ -135,6 +141,7 @@ def delete(request):
     _manageTags(tagList, guids, add=False)
 
     return JsonResponse(res)
+
 
 def search(request):
     """
@@ -170,6 +177,7 @@ def search(request):
         l += [t.json() for t in query]
 
     return JsonResponse(l)
+
 
 @login_required
 def manage(request):
@@ -214,7 +222,6 @@ def manage(request):
                 tag.save()
                 addList.append(tag.id)
 
-
         objects = getObjectsFromGuids(guids)
         addTags = Tag.objects.filter(id__in=addList)
         remTags = Tag.objects.filter(id__in=rem)
@@ -229,6 +236,7 @@ def manage(request):
         res.isSuccess = True
 
         return JsonResponse(res)
+
 
 def _manageTags(tagList, guids, add=True):
     """ Adds or Removed Guids from Tags """
@@ -246,6 +254,7 @@ def _manageTags(tagList, guids, add=True):
     else:
         return _removeTags(tags, objects)
 
+
 def _addTags(tags, objects):
     """ Adds tags to objects """
     for t in tags:
@@ -253,6 +262,7 @@ def _addTags(tags, objects):
             o.tags.add(t)
 
     return True
+
 
 def _removeTags(tags, objects):
     """ Removes tags from objects """

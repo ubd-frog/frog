@@ -339,10 +339,13 @@ Frog.UI = (function(Frog) {
         });
         colorMenu.picker.colors = ['000000', '424242', '999999', 'FFFFFF'];
         var tileSizeHandler = function(item, checked) {
+            if (!checked) {
+                Frog.Prefs.set('tileCount', size);
+                return;
+            }
             var size = item.value;
-            Frog.Prefs.set('tileCount', size);
+            Frog.Prefs.set('tileCount', size, ChangeObserver.fire.bind(ChangeObserver));
             item.parentMenu.hide();
-            ChangeObserver.fire(Frog.Prefs);
         }
         var batchSize = Ext.create('Ext.form.field.Number', {
             value: Frog.Prefs.batchSize,

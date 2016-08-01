@@ -22,41 +22,42 @@
 from django.conf.urls import patterns, url
 
 # import views
-from frog.views import gallery, tag, userpref, comment, piece
+from frog import views
 from frog.rss import Daily, Weekly
 
-urlpatterns = patterns('',
-    ## -- Gallery
-    url(r'^gallery$', gallery.index),
-    url(r'^gallery/(?P<obj_id>\d+)$', gallery.index),
-    url(r'^gallery/(?P<obj_id>\d+)/filter$', gallery.filterObjects),
-    ## -- Image/Video
-    url(r'^image/(?P<obj_id>\d+)$', piece.image),
-    url(r'^video/(?P<obj_id>\d+)$', piece.video),
-    ## -- Tag
-    url(r'^tag/$', tag.index),
-    url(r'^tag/(?P<obj_id>\d+)$', tag.index),
-    url(r'^tag/search$', tag.search),
-    url(r'^tag/manage$', tag.manage),
-    ## -- User prefs
-    url(r'^pref/$', userpref.index),
-    ## -- Comments
-    url(r'^comment/$', comment.commentList),
-    url(r'^comment/(?P<obj_id>\d+)$', comment.index),
-    ## -- RSS
+urlpatterns = [
+    # -- Gallery
+    url(r'^gallery$', views.gallery.index),
+    url(r'^gallery/(?P<obj_id>\d+)$', views.gallery.index),
+    url(r'^gallery/(?P<obj_id>\d+)/filter$', views.gallery.filterObjects),
+    # -- Image/Video
+    url(r'^image/(?P<obj_id>\d+)$', views.piece.image),
+    url(r'^video/(?P<obj_id>\d+)$', views.piece.video),
+    url(r'^p$', views.piece.getGuids),
+    # -- Tag
+    url(r'^tag/$', views.tag.index),
+    url(r'^tag/(?P<obj_id>\d+)$', views.tag.index),
+    url(r'^tag/search$', views.tag.search),
+    url(r'^tag/manage$', views.tag.manage),
+    # -- User prefs
+    url(r'^pref/$', views.userpref.index),
+    # -- Comments
+    url(r'^comment/$', views.comment.commentList),
+    url(r'^comment/(?P<obj_id>\d+)$', views.comment.index),
+    # -- RSS
     url(r'^rss/(?P<obj_id>\d+)/daily$', Daily()),
     url(r'^rss/(?P<obj_id>\d+)/weekly$', Weekly()),
-    ## -- Misc functions
-    url(r'^download$', 'frog.views.download'),
-    url(r'^help/', 'frog.views.helpMe'),
-    url(r'^switchartist$', 'frog.views.switchArtist'),
-    url(r'^artistlookup$', 'frog.views.artistLookup'),
-    url(r'^isunique$', 'frog.views.isUnique'),
-    url(r'^getuser$', 'frog.views.getUser'),
-    ## -- Authentication
-    url(r'^login$', 'frog.views.login_'),
-    url(r'^logout$', 'frog.views.logout_'),
-    url(r'^access_denied', 'frog.views.accessDenied'),
+    # -- Misc functions
+    url(r'^download$', views.download),
+    url(r'^help/', views.helpMe),
+    url(r'^switchartist$', views.switchArtist),
+    url(r'^artistlookup$', views.artistLookup),
+    url(r'^isunique$', views.isUnique),
+    url(r'^getuser$', views.getUser),
+    # -- Authentication
+    url(r'^login$', views.login_),
+    url(r'^logout$', views.logout_),
+    url(r'^access_denied', views.accessDenied),
 
-    url(r'^$', 'frog.views.index'),
-)
+    url(r'^$', views.index),
+]

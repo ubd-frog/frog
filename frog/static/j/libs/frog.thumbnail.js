@@ -22,7 +22,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 Frog.Thumbnail = new Class({
     Implements: [Events, Options],
-    Padding: 14,//(8 + 2 + 4) * 2, // 8 for the div padding and 2 for the img padding
+    Padding: 0,//14,//(8 + 2 + 4) * 2, // 8 for the div padding and 2 for the img padding
     options: {
         imageID: 0,
         onClick: function(){},
@@ -122,18 +122,18 @@ Frog.Thumbnail = new Class({
         Frog.util.setData(this.artist, 'frog_tag_id', id);
     },
     setSize: function(size) {
-        var dim = Frog.util.fitToRect(size - this.Padding, size - this.Padding, this.width, this.height);
+        var dim = Frog.util.fitToRect(size - this.Padding, size - this.Padding, 400, 400);//this.width, this.height);
         this.element.setStyles({
             width: size,
-            height: size + 30
+            height: size// + 30
         });
         this.imgLink.setStyles(dim);
         this.img.setStyles({
-            width: dim.width - 6,
-            height: dim.height - 6
+            width: dim.width,// - 6,
+            height: dim.height// - 6
         });
         this.spacer.setStyles({
-            height: (size - dim.height - 10) / 2
+            height: 0//(size - dim.height - 10 + 10) / 2
         });
     },
     setSelected: function(sel) {

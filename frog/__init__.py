@@ -21,11 +21,13 @@
 
 from django.conf import settings
 
-from path import path as Path
+import path
+
 
 def getRoot():
     """Convenience to return the media root with forward slashes"""
     root = settings.MEDIA_ROOT.replace('\\', '/')
     if not root.endswith('/'):
         root += '/'
-    return Path(root)
+
+    return path.Path(root)

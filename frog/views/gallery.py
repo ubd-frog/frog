@@ -34,11 +34,7 @@ Gallery API
 
 import time
 import functools
-
-try:
-    import ujson as json
-except ImportError:
-    import json
+import logging
 
 from django.http import HttpResponseRedirect
 from django.core.exceptions import ImproperlyConfigured
@@ -47,17 +43,24 @@ from django.db.models import Q
 from django.contrib.contenttypes.models import ContentType
 from django.db import connection
 from django.contrib.auth.decorators import login_required
+from django.conf import settings
 
 import six
+try:
+    import ujson as json
+except ImportError:
+    import json
 try:
     from haystack.query import SearchQuerySet
     HAYSTACK = True
 except (ImportError, ImproperlyConfigured):
     HAYSTACK = False
 
-from frog.views import LOGGER
 from frog.models import Gallery, Image, Video, UserPref
 from frog.common import Result, JsonResponse, getObjectsFromGuids, getPutData
+
+
+LOGGER = logging.getLogger('frog')
 
 
 def index(request, obj_id=None):
@@ -72,6 +75,7 @@ def index(request, obj_id=None):
     elif request.method == 'DELETE':
         getPutData(request)
         return delete(request, obj_id)
+
 
 def get(request, obj_id=None):
     if obj_id:
@@ -101,6 +105,7 @@ def get(request, obj_id=None):
 
         return JsonResponse(res)
 
+
 @login_required
 def post(request):
     """ Create a Gallery """
@@ -127,6 +132,7 @@ def post(request):
     res.message = 'Gallery created' if created else ''
 
     return JsonResponse(res)
+
 
 @login_required
 def put(request, obj_id=None):
@@ -157,6 +163,7 @@ def put(request, obj_id=None):
 
     return JsonResponse(res)
 
+
 @login_required
 def delete(request, obj_id=None):
     """ Removes ImageVideo objects from Gallery """
@@ -174,6 +181,7 @@ def delete(request, obj_id=None):
     res.isSuccess = True
 
     return JsonResponse(res)
+
 
 def filterObjects(request, obj_id):
     """
@@ -203,6 +211,7 @@ def filterObjects(request, obj_id):
 
     return _filter(request, obj, tags=tags, rng=rng, models=models, more=more)
 
+
 def _filter(request, object_, tags=None, models=(Image, Video), rng=None, more=False):
     """Filters Piece objects from self based on filters, search, and range
 
@@ -230,7 +239,7 @@ def _filter(request, object_, tags=None, models=(Image, Video), rng=None, more=F
     if request.user.is_anonymous():
         gRange = 300
     else:
-        Prefs = json.loads(UserPref.objects.get(user=request.user).data)
+        Prefs = json.loads(UserPref.objects.get_or_create(user=request.user)[0].data)
         gRange = Prefs['batchSize']
     request.session.setdefault('frog_range', '0:%i' % gRange)
 
@@ -244,7 +253,7 @@ def _filter(request, object_, tags=None, models=(Image, Video), rng=None, more=F
         else:
             s, e = 0, gRange
 
-    ## -- Gat all IDs for each model
+    # -- Gat all IDs for each model
     for m in models:
         indexes = list(m.model_class().objects.all().values_list('id', flat=True))
         if not indexes:
@@ -252,13 +261,13 @@ def _filter(request, object_, tags=None, models=(Image, Video), rng=None, more=F
 
         lastIndex = indexes[0]
         if more:
-            ## -- This is a request for more results
+            # -- This is a request for more results
             idx = request.session.get('last_%s_id' % m.model, lastIndex + 1)
             lastIDs.setdefault('last_%s_id' % m.model, idx)
         else:
             lastIDs['last_%s_id' % m.model] = lastIndex + 1
         
-        ## -- Start with objects within range
+        # -- Start with objects within range
         idDict[m.model] = m.model_class().objects.filter(gallery=object_, id__lt=lastIDs['last_%s_id' % m.model])
         LOGGER.debug(m.model + '_initial_query: %f' % (time.clock() - NOW))
 
@@ -267,22 +276,22 @@ def _filter(request, object_, tags=None, models=(Image, Video), rng=None, more=F
                 searchQuery = ""
                 o = None
                 for item in bucket:
-                    ## -- filter by tag
+                    # -- filter by tag
                     if isinstance(item, six.integer_types):
                         if not o:
                             o = Q()
                         o |= Q(tags__id=item)
-                    ## -- add to search string
+                    # -- add to search string
                     else:
                         searchQuery += item + ' '
                         if not HAYSTACK:
                             if not o:
                                 o = Q()
-                            ## -- use a basic search
+                            # -- use a basic search
                             LOGGER.debug('search From LIKE')
                             o |= Q(title__icontains=item)
                 if HAYSTACK and searchQuery != "":
-                    ## -- once all tags have been filtered, filter by search
+                    # -- once all tags have been filtered, filter by search
                     searchIDs = search(searchQuery, m.model_class())
                     if searchIDs:
                         if not o:
@@ -291,37 +300,36 @@ def _filter(request, object_, tags=None, models=(Image, Video), rng=None, more=F
                         o |= Q(id__in=searchIDs)
 
                 if o:
-                    ## -- apply the filters
+                    # -- apply the filters
                     idDict[m.model] = idDict[m.model].filter(o)
                 else:
                     idDict[m.model] = idDict[m.model].none()
 
             LOGGER.debug(m.model + '_added_buckets(%i): %f' % (len(tags), time.clock() - NOW))
         
-        ## -- Get all ids of filtered objects, this will be a very fast query
+        # -- Get all ids of filtered objects, this will be a very fast query
         idDict[m.model] = list(idDict[m.model].values_list('id', flat=True))
         LOGGER.debug(m.model + '_queried_ids: %f' % (time.clock() - NOW))
 
         res.message = str(s) + ':' + str(e)
         
-        ## -- perform the main query to retrieve the objects we want
+        # -- perform the main query to retrieve the objects we want
         objDict[m.model] = m.model_class().objects.filter(id__in=idDict[m.model]).select_related('author').prefetch_related('tags')
         if not rng:
             objDict[m.model] = objDict[m.model][:gRange]
         objDict[m.model] = list(objDict[m.model])
         LOGGER.debug(m.model + '_queried_obj: %f' % (time.clock() - NOW))
     
-    
-    ## -- combine and sort all objects by date
+    # -- combine and sort all objects by date
     objects = _sortObjects(**objDict) if len(models) > 1 else objDict.values()[0]
     objects = objects[s:e]
     LOGGER.debug('sorted: %f' % (time.clock() - NOW))
 
-    ## -- serialize objects
+    # -- serialize objects
     for i in objects:
         for m in models:
             if isinstance(i, m.model_class()):
-                ## -- set the last ID per model for future lookups
+                # -- set the last ID per model for future lookups
                 lastIDs['last_%s_id' % m.model] = i.id
                 data['last_%s_id' % m.model] = i.id
         res.append(i.json())
@@ -334,13 +342,15 @@ def _filter(request, object_, tags=None, models=(Image, Video), rng=None, more=F
     request.session['last_video_id'] = lastIDs.get('last_video_id', 0)
     
     data['count'] = len(objects)
-    data['queries'] = connection.queries
+    if settings.DEBUG:
+        data['queries'] = connection.queries
 
     res.value = data
 
     res.isSuccess = True
 
     return JsonResponse(res)
+
 
 def _sortObjects(**args):
     """Sorts lists of objects and combines them into a single list"""
@@ -357,6 +367,7 @@ def _sortObjects(**args):
 
     return o
 
+
 def _sortByCreated(a, b):
     """Sort function for object by created date then by ID"""
     if a.created < b.created:
@@ -370,6 +381,7 @@ def _sortByCreated(a, b):
             return -1
         else:
             return 0
+
 
 def search(query, model):
     """ Performs a search query and returns the object ids """

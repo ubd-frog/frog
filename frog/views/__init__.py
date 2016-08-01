@@ -31,12 +31,11 @@ from django.core.mail import send_mail
 from django.conf import settings
 
 from frog.models import Gallery, Image, Video, Tag, Piece, DefaultPrefs
-
 from frog.common import Result, JsonResponse, getObjectsFromGuids, userToJson
 from frog.uploader import upload
 from frog.signals import frog_auth_check
-
-from frog.sendFile import send_zipfile
+from frog.send_file import send_zipfile
+from frog.views import comment, gallery, piece, tag, userpref
 
 
 LOGGER = logging.getLogger('frog')
@@ -54,6 +53,7 @@ def index(request):
     else:
         return upload(request)
 
+
 def login_(request):
     res = Result()
 
@@ -63,39 +63,40 @@ def login_(request):
     password = request.POST.get('password')
     
     if password is None:
-        ## -- SimpleAuth
-        first_name = request.POST.get('first_name', 'no').lower()
-        last_name = request.POST.get('last_name', 'author').lower()
-        user = authenticate(username=username)
-        user.first_name = first_name
-        user.last_name = last_name
-        user.email = email
-        user.save()
+        # -- SimpleAuth
+        user = authenticate(
+            username=username,
+            first_name=request.POST.get('first_name', 'no').lower(),
+            last_name=request.POST.get('last_name', 'author').lower(),
+            email=email
+        )
     else:
-        ## -- LDAP
+        # -- LDAP
         user = authenticate(username=username, password=password)
         
         if user is None:
             return render(request, INDEX_HTML, {'message': 'Invalid Credentials'})
 
-        if not user.is_active:
-            return render(request, INDEX_HTML, {'message': 'User account not active'})
+    if not user.is_active:
+        return render(request, INDEX_HTML, {'message': 'User account not active'})
 
-    ## -- Create an artist tag for them
+    # -- Create an artist tag for them
     Tag.objects.get_or_create(name=user.first_name + ' ' + user.last_name, defaults={'artist': True})
 
-    ## -- Log them in
     login(request, user)
 
     return HttpResponseRedirect('/frog/gallery/1')
+
 
 def logout_(request):
     logout(request)
 
     return HttpResponseRedirect('/frog')
 
+
 def accessDenied(request):
     return render(request, 'frog/access_denied.html')
+
 
 @login_required
 def download(request):
@@ -113,6 +114,7 @@ def download(request):
         response = send_zipfile(request, fileList)
         
         return response
+
 
 @login_required
 def switchArtist(request):
@@ -139,6 +141,7 @@ def switchArtist(request):
 
     return JsonResponse(res)
 
+
 @login_required
 def artistLookup(request):
     res = Result()
@@ -153,6 +156,7 @@ def artistLookup(request):
 
     return JsonResponse(res.values)
 
+
 @login_required
 def helpMe(request):
     msg = request.POST.get('message')
@@ -160,6 +164,7 @@ def helpMe(request):
     send_mail('Frog Help', msg, request.user.email, toAddr)
 
     return HttpResponse()
+
 
 def isUnique(request):
     path = request.GET.get('path', None)
@@ -188,6 +193,7 @@ def isUnique(request):
         res.message = "No path provided"
 
     return JsonResponse(res)
+
 
 def getUser(request):
     res = Result()

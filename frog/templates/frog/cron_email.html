@@ -1,58 +1,4 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; margin: 0;">
-<head>
-<meta name="viewport" content="width=device-width" />
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-
-
-<style type="text/css">
-img {
-max-width: 100%;
-}
-body {
--webkit-font-smoothing: antialiased; -webkit-text-size-adjust: none; width: 100% !important; height: 100%; line-height: 1.6;
-}
-body {
-background-color: #f6f6f6;
-}
-@media only screen and (max-width: 640px) {
-  h1 {
-    font-weight: 600 !important; margin: 20px 0 5px !important;
-  }
-  h2 {
-    font-weight: 600 !important; margin: 20px 0 5px !important;
-  }
-  h3 {
-    font-weight: 600 !important; margin: 20px 0 5px !important;
-  }
-  h4 {
-    font-weight: 600 !important; margin: 20px 0 5px !important;
-  }
-  h1 {
-    font-size: 22px !important;
-  }
-  h2 {
-    font-size: 18px !important;
-  }
-  h3 {
-    font-size: 16px !important;
-  }
-  .container {
-    width: 100% !important;
-  }
-  .content {
-    padding: 10px !important;
-  }
-  .content-wrap {
-    padding: 10px !important;
-  }
-  .invoice {
-    width: 100% !important;
-  }
-}
-</style>
-</head>
-
+{% load tablecols %}
 <body itemscope itemtype="http://schema.org/EmailMessage" style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; -webkit-font-smoothing: antialiased; -webkit-text-size-adjust: none; width: 100% !important; height: 100%; line-height: 1.6; background: #f6f6f6; margin: 0;">
 
 <table class="body-wrap" style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; width: 100%; background: #f6f6f6; margin: 0;">
@@ -65,34 +11,31 @@ background-color: #f6f6f6;
                         <td class="content-wrap" style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; vertical-align: top; margin: 0; padding: 20px;" valign="top">
                             <meta itemprop="name" content="Confirm Email" style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; margin: 0;" />
                             <table width="100%" cellpadding="0" cellspacing="0" style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; margin: 0;">
+                                {% for row in images|tablecols:3 %}
                                 <tr style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; margin: 0;">
+                                    {% for obj in row %}
                                     <td class="content-block" style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; vertical-align: top; margin: 0; padding: 0 0 20px;" valign="top">
-                                        <p>
-                                            {% if image %}
-                                            {{user}} commented on your image <a href='{{SITE_URL}}/frog/image/{{object.id}}'>{{object.title}}</a>
-                                            {% else %}
-                                            {{user}} commented on your image <a href='{{SITE_URL}}/frog/video/{{object.id}}'>{{object.title}}</a>
-                                            {% endif %}
-                                        </p>
+                                        <a href='{{SITE_URL}}/frog/image/{{obj.id}}'>
+                                            <img src='{{SITE_URL}}/{{obj.thumbnail.url}}' {% if obj.width > obj.height %}width="200"{% else %}height="200"{% endif %} />
+                                        </a>
                                     </td>
+                                    {% endfor %}
                                 </tr>
+                                {% endfor %}
+                                {% for row in videos|tablecols:3 %}
                                 <tr style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; margin: 0;">
+                                    {% for obj in row %}
                                     <td class="content-block" style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; vertical-align: top; margin: 0; padding: 0 0 20px;" valign="top">
-                                        <p>
-                                            {% if image %}
-                                            <a href='{{SITE_URL}}/frog/image/{{object.id}}'>
-                                            {% else %}
-                                            <a href='{{SITE_URL}}/frog/video/{{object.id}}'>
-                                            {% endif %}
-                                                <img src="{{SITE_URL}}{{object.thumbnail.url}}" {% if img.width > img.height %}width="200"{% else %}height="200"{% endif %} />
-                                            </a>
-                                        </p>
-                                        {{comment.comment}}
+                                        <a href='{{SITE_URL}}/frog/video/{{obj.id}}'>
+                                            <img src='{{SITE_URL}}/{{obj.thumbnail.url}}' {% if obj.width > obj.height %}width="200"{% else %}height="200"{% endif %} />
+                                        </a>
                                     </td>
+                                    {% endfor %}
                                 </tr>
+                                {% endfor %}
                                 <tr style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; margin: 0;">
                                     <td class="content-block" itemprop="handler" itemscope itemtype="http://schema.org/HttpActionHandler" style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; vertical-align: top; margin: 0; padding: 0 0 20px;" valign="top">
-                                        <a href="{{SITE_URL}}/frog/{% if image %}image{% else %}video{% endif %}/{{object.id}}" class="btn-primary" itemprop="url" style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; color: #FFF; text-decoration: none; line-height: 2; font-weight: bold; text-align: center; cursor: pointer; display: inline-block; border-radius: 5px; text-transform: capitalize; background: #348eda; margin: 0; border-color: #348eda; border-style: solid; border-width: 10px 20px;">View Image</a>
+                                        <a href="{{SITE_URL}}/frog/gallery/{{gallery.id}}" class="btn-primary" itemprop="url" style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; color: #FFF; text-decoration: none; line-height: 2; font-weight: bold; text-align: center; cursor: pointer; display: inline-block; border-radius: 5px; text-transform: capitalize; background: #348eda; margin: 0; border-color: #348eda; border-style: solid; border-width: 10px 20px;">View Gallery</a>
                                     </td>
                                 </tr>
                             </table>
@@ -106,4 +49,3 @@ background-color: #f6f6f6;
 </table>
 
 </body>
-</html>

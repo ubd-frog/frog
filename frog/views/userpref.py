@@ -45,6 +45,7 @@ def index(request):
         return post(request)
     return HttpResponse('')
 
+
 def get(request):
     """Gets the currently logged in users preferences
 
@@ -59,6 +60,7 @@ def get(request):
     res.isSuccess = True
 
     return JsonResponse(res)
+
 
 @login_required
 def post(request):

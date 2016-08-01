@@ -31,13 +31,13 @@ Comment API
 """
 
 from django.shortcuts import render
-from django.contrib.comments.models import Comment
 from django.core.mail import send_mail
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.contenttypes.models import ContentType
 from django.template.loader import render_to_string
-from django.conf import settings
+
+from django_comments.models import Comment
 
 from frog.common import Result, JsonResponse, commentToJson, getObjectsFromGuids, getPutData
 from frog.models import Image, FROG_SITE_URL
@@ -50,6 +50,7 @@ def index(request, obj_id):
     elif request.method == 'PUT':
         getPutData(request)
         return put(request)
+
 
 def get(request, obj_id):
     """Returns a serialized object
@@ -64,13 +65,10 @@ def get(request, obj_id):
 
     return JsonResponse(res)
 
+
 @login_required
 def post(request):
-    """Returns a serialized object
-    :param obj_id: ID of comment object
-    :type obj_id: int
-    :returns: json
-    """
+    """Returns a serialized object"""
     guid = request.POST.get('guid', None)
     res = Result()   
 
@@ -86,8 +84,9 @@ def post(request):
         c.save()
         obj.comment_count = obj.comment_count + 1
         obj.save()
-
-        __email(c, obj)
+        
+        if request.user != obj.author:
+            __email(c, obj)
 
         res.append({'id': c.id, 'comment': c.comment})
         res.isSuccess = True
@@ -96,6 +95,7 @@ def post(request):
         res.message = "No guid provided"
 
     return JsonResponse(res)
+
 
 @login_required
 def put(request, obj_id):
@@ -119,6 +119,7 @@ def put(request, obj_id):
 
     return JsonResponse(res)
 
+
 @csrf_exempt
 def commentList(request):
     """Returns a rendered list of comments
@@ -140,6 +141,7 @@ def commentList(request):
         comments = Comment.objects.filter(object_pk=obj.id, content_type=contentType)
     
     return render(request, 'frog/comment_list.html', {'comments': comments, 'guid': guid, 'id': id})
+
 
 def __email(comment, obj):
     """Returns a serialized object

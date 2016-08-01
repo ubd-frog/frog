@@ -37,10 +37,12 @@ except ImportError:
 from django.http import HttpResponse
 from django.conf import settings
 
+import path
+
 from frog.models import Image, Video
 from frog.plugin import FrogPluginRegistry
 
-from path import path as Path
+
 
 class Result(object):
     """Standardized result for ajax requests"""
@@ -142,7 +144,7 @@ def getHashForFile(f):
 
 def getRoot():
     """Convenience to return the media root with forward slashes"""
-    return Path(settings.MEDIA_ROOT.replace('\\', '/'))
+    return path.Path(settings.MEDIA_ROOT.replace('\\', '/'))
 
 def uniqueID(size=6, chars=string.ascii_uppercase + string.digits):
     """A quick and dirty way to get a unique string"""
@@ -160,6 +162,7 @@ def getObjectsFromGuids(guids):
     objects = img + vid
 
     return objects
+
 
 def getPluginContext():
     plugins = __discoverPlugins()
@@ -208,12 +211,12 @@ def __discoverPlugins():
     for app in settings.INSTALLED_APPS:
         if not app.startswith('django'):
             module = __import__(app)
-            moduledir = Path(module.__file__).parent
+            moduledir = path.Path(module.__file__).parent
             plugin = moduledir / 'frog_plugin.py'
             if plugin.exists():
-                file_, path, desc = imp.find_module('frog_plugin', [moduledir])
+                file_, fpath, desc = imp.find_module('frog_plugin', [moduledir])
                 if file_:
-                    imp.load_module('frog_plugin', file_, path, desc)
+                    imp.load_module('frog_plugin', file_, fpath, desc)
 
     return FrogPluginRegistry.plugins
 

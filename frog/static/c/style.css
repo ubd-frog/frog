@@ -301,24 +301,24 @@ a:hover { color: #fff; }
     float: left;
     width: 200px;
     height: 220px;
-    border: 1px solid transparent;
+    border: 0px solid transparent;
     box-sizing: border-box;
     -webkit-box-sizing: border-box;
     -moz-box-sizing: border-box;
     -ms-box-sizing: border-box;
-    border-radius: 4px;
-    -webkit-border-radius: 4px;
-    -moz-border-radius: 4px;
-    -ms-border-radius: 4px;
-    -webkit-background-clip: padding-box;
+    /*border-radius: 4px;*/
+    /*-webkit-border-radius: 4px;*/
+    /*-moz-border-radius: 4px;*/
+    /*-ms-border-radius: 4px;*/
+    /*-webkit-background-clip: padding-box;*/
 }
     .thumbnail:hover {
         background: #333;
-        border: 1px solid #444;
+        /*border: 1px solid #444;*/
     }
     .thumbnail > div {
         width: 100%;
-        padding: 0 6px;
+        /*padding: 0 6px;*/
         overflow: hidden;
         box-sizing: border-box;
         -webkit-box-sizing: border-box;
@@ -343,7 +343,7 @@ a:hover { color: #fff; }
     .thumbnail > div:first-child a {
         display: block;
         margin: 0 auto;
-        border: 1px solid #333;
+        /*border: 1px solid #333;*/
         cursor: pointer;
         box-sizing: border-box;
         -webkit-box-sizing: border-box;
@@ -351,7 +351,7 @@ a:hover { color: #fff; }
         -ms-box-sizing: border-box;
     }
     .thumbnail img {
-        margin: 2px;
+        /*margin: 2px;*/
         opacity: 0;
         box-sizing: border-box;
         -webkit-box-sizing: border-box;
@@ -366,7 +366,8 @@ a:hover { color: #fff; }
         opacity: 1.0;
     }
     .thumbnail.selected {
-        background: #273240;
+        background: rgba(39, 50, 64, 0.47);
+        border-color: rgba(12, 69, 86, 0.49);
     }
     .thumbnail.selected:hover {
         background: #4b5560;
@@ -430,6 +431,17 @@ a:hover { color: #fff; }
             border: 1px solid #fff;
             background: #666;
             color: #fff;
+        }
+
+        .thumbnail.selected:after {
+            box-shadow: inset 0 0 10em rgba(12, 120, 137, 1);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+            content: "";
         }
 /*Query Builder*/
 ul.frog-bucket {
@@ -631,6 +643,13 @@ li.frog-tag {
     -ms-user-select: none;
     user-select: none;
 }
+#frog_viewer_info {
+    position: absolute;
+    top: 0;
+    left: 0;
+    padding: 4px 0 0 4px;
+}
+
 #frog_viewer_controls {
     position: absolute;
     top: 0;

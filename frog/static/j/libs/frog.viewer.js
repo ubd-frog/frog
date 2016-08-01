@@ -127,6 +127,11 @@ Frog.Viewer = new Class({
         this.render();
     },
     build: function() {
+        var info = new Element('div', {id: 'frog_viewer_info'});
+        this.title = new Element('h1').inject(info);
+        this.author = new Element('i').inject(info);
+        this.date = new Element('i').inject(info);
+
         var controls = new Element('div', {id: 'frog_viewer_controls'});
         var buttons = new Element('ul').inject(controls);
         this.bPrev = new Element('li', {'class': 'frog-prev'}).inject(buttons);
@@ -143,6 +148,7 @@ Frog.Viewer = new Class({
         this.bWindow.addEvent('click', this.fitToWindow.bind(this));
         this.bDownload.addEvent('click', this.download.bind(this));
 
+        info.inject(this.element);
         controls.inject(this.element);
 
         this.bClose = new Element('div', {
@@ -295,10 +301,11 @@ Frog.Viewer = new Class({
             loop: 'loop'
         });
 
-        var src = new Element('source', {
+        new Element('source', {
             src: vid.video,
-            type: 'video/mp4; codecs="avc1.42E01E, mp4a.40.2"'
+            type: 'video/mp4'
         }).inject(this.videoEl);
+        this.videoEl.load();
         this.videoEl.play();
     },
     setImages: function(images, id) {
@@ -329,6 +336,10 @@ Frog.Viewer = new Class({
             this.img.setStyle('display', 'none');
             this.setVideo(obj);
         }
+
+        this.title.set('text', obj.title);
+        this.author.set('text', obj.author.username);
+        this.date.set('text', obj.date);
         
         this.countLabel.set('text', (idx + 1) + '/' + this.objects.length);
     },

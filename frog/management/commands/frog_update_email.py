@@ -19,52 +19,61 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ##################################################################################################
 
-
 import datetime
-import json
 from optparse import make_option
+
 from django.core.management.base import BaseCommand
+from django.template.loader import render_to_string
+from django.core.mail import send_mail
+from django.utils import timezone
+from django.conf import settings
+from django.core.exceptions import ImproperlyConfigured
 
-import pytz
+from frog.models import Gallery, FROG_SITE_URL
 
-from frog.models import Gallery, RSSStorage
+FROG_UPDATE_GROUP_EMAIL = getattr(settings, 'FROG_UPDATE_GROUP_EMAIL')
 
 
 class Command(BaseCommand):
-    option_list = BaseCommand.option_list + (
-        make_option('--type', '-t',
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '--type', '-t',
             dest='intervalType',
             default='weekly',
             help='Frequency type'
-        ),
-    )
+        )
 
     def handle(self, *args, **kwargs):
-        thisDay = datetime.datetime.now(pytz.utc)
-        if kwargs['intervalType'] == 'daily':
+        if FROG_UPDATE_GROUP_EMAIL is None:
+            raise ImproperlyConfigured('FROG_UPDATE_GROUP_EMAIL is required for email updates')
+
+        today = timezone.now()
+        interval = kwargs.get('intervalType', 'weekly')
+        if interval == 'daily':
             delta = 1
         else:
             delta = 7
-        prevDay = thisDay - datetime.timedelta(delta)
+        previous = today - datetime.timedelta(delta)
 
         galleries = Gallery.objects.all()
 
         for g in galleries:
-            images = g.images.values_list('id', flat=True).filter(created__range=(prevDay, thisDay))
-            videos = g.videos.values_list('id', flat=True).filter(created__range=(prevDay, thisDay))
+            images = g.images.filter(created__range=(previous, today))
+            videos = g.videos.filter(created__range=(previous, today))
 
             if not images and not videos:
                 continue
 
-            obj = {
-                'image': list(images),
-                'video': list(videos),
-            }
-
-            rss = RSSStorage()
-            rss.date = thisDay
-            rss.gallery = g
-            rss.interval = kwargs['intervalType']
-            rss.data = json.dumps(obj)
-            rss.save()
-            self.stdout.write('Added %s\n' % rss)
+            html = render_to_string(
+                'frog/cron_email.html',
+                {'images': images, 'videos': videos, 'SITE_URL': FROG_SITE_URL, 'gallery': g}
+            )
+            subject = '{name} ({interval}) for {date}'.format(
+                interval=interval.capitalize(),
+                name=g.title,
+                date=today.strftime('%m/%d/%Y'),
+            )
+            from_email, to = FROG_UPDATE_GROUP_EMAIL, FROG_UPDATE_GROUP_EMAIL
+            text_content = 'Only html supported'
+            send_mail(subject, text_content, from_email, [to], html_message=html)
+            self.stdout.write('Found {} images and {} videos'.format(len(images), len(videos)))
