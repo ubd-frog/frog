@@ -40,15 +40,6 @@ To find images or videos, there is a search bar at the top just as there should 
 As mentioned before, when media is stored in a network folder, browsing is cumbersome. If Google has tought us anything, its that search is the only means of finding something when the number of items gets too large. No matter how organized a folder structure may be, search will always be faster and more accessible to users.
 
 
-Studios Using Frog
-------------------
-
-.. image:: /_static/blizzard.png
-    :target: http://www.blizzard.com
-.. image:: /_static/ccp.png
-    :target: http://www.ccpgames.com/en/home
-
-
 User Guide
 ==========
 
