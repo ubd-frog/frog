@@ -96,13 +96,10 @@ Frog.Thumbnail = new Class({
         }).inject(this.imgLink);
 
         var tags = new Element('div', {'class': 'tag-hover gradient'}).inject(this.element);
-        this.tagList = new Element('div').inject(tags);
-
-        var bot = new Element('div').inject(this.element);
-        this.title = new Element('span', {'text': this.object.title}).inject(bot);
-        var artistDiv = new Element('div', {'text': 'Artist: '}).inject(bot);
+        this.title = new Element('span', {'text': this.object.title}).inject(tags);
+        var artistDiv = new Element('div').inject(tags);
         this.artist = new Element('a', {'href': "javascript:void(0);", 'class': 'frog-tag'}).inject(artistDiv);
-        var commentLink = new Element('div', {
+        new Element('div', {
             'class': 'frog-comment-bubble',
             text: this.object.comment_count,
             events: {
@@ -111,7 +108,7 @@ Frog.Thumbnail = new Class({
                     Frog.Comments.get(self.object.guid, self.id);
                 }
             }
-        }).inject(bot);
+        }).inject(tags);
     },
     toElement: function() {
         return this.element;
@@ -157,13 +154,13 @@ Frog.Thumbnail = new Class({
         if (id.toString() === artistTagId) {
             return;
         }
-        if (this.tagList.getElements('a').length > 0) {
-            this.tagList.innerHTML += ' | ';
-        }
-        var tag = Frog.Tags.get(id);
-        var a = new Element('a', {'href': 'javascript:void(0);', text: tag.capitalize(), 'class': 'frog-tag'}).inject(this.tagList);
-        Frog.util.setData(a, 'frog_tag_id', id);
-        
+        // if (this.tagList.getElements('a').length > 0) {
+        //     this.tagList.innerHTML += ' | ';
+        // }
+        // var tag = Frog.Tags.get(id);
+        // var a = new Element('a', {'href': 'javascript:void(0);', text: tag.capitalize(), 'class': 'frog-tag'}).inject(this.tagList);
+        // Frog.util.setData(a, 'frog_tag_id', id);
+
         this.tags.push(id);
     },
     removeTag: function(tag) {
@@ -172,21 +169,21 @@ Frog.Thumbnail = new Class({
         }
 
         var i;
-        for (i=0;i<this.tags.length;i++) {
-            if (tag === this.tags[i]) {
-                var tagelement = this.getTagElement(tag);
-                if (tagelement) {
-                    if (typeOf(tagelement.previousSibling) === 'textnode') {
-                        tagelement.previousSibling.nodeValue = '';
-                    }
-                    else if (typeOf(tagelement.nextSibling) === 'textnode') {
-                        tagelement.nextSibling.nodeValue = '';
-                    }
-                    tagelement.destroy();
-                }
-                break;
-            }
-        }
+        // for (i=0;i<this.tags.length;i++) {
+        //     if (tag === this.tags[i]) {
+        //         var tagelement = this.getTagElement(tag);
+        //         if (tagelement) {
+        //             if (typeOf(tagelement.previousSibling) === 'textnode') {
+        //                 tagelement.previousSibling.nodeValue = '';
+        //             }
+        //             else if (typeOf(tagelement.nextSibling) === 'textnode') {
+        //                 tagelement.nextSibling.nodeValue = '';
+        //             }
+        //             tagelement.destroy();
+        //         }
+        //         break;
+        //     }
+        // }
 
         return this.tags.splice(1, i);
     },
@@ -198,13 +195,13 @@ Frog.Thumbnail = new Class({
         this.loaded = true;
     },
     getTagElement: function(id) {
-        var tags = this.tagList.getElements('a');
-        for (var i=0;i<tags.length;i++) {
-            var tag = tags[i];
-            var idx = (Browser.ie) ? tag.getProperty('data-frog_tag_id') : tag.dataset.frog_tag_id;
-            if (id.toInt() === idx.toInt()) {
-                return tag;
-            }
-        }
+        // var tags = this.tagList.getElements('a');
+        // for (var i=0;i<tags.length;i++) {
+        //     var tag = tags[i];
+        //     var idx = (Browser.ie) ? tag.getProperty('data-frog_tag_id') : tag.dataset.frog_tag_id;
+        //     if (id.toInt() === idx.toInt()) {
+        //         return tag;
+        //     }
+        // }
     }
 })

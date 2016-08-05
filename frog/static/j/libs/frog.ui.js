@@ -467,7 +467,7 @@ Frog.UI = (function(Frog) {
                                     if (typeof(tag) === 'string') {
                                         tag = Frog.Tags.get(tag);
                                     }
-                                    thumbnail.addTag({id: tag.toInt()});
+                                    // thumbnail.addTag({id: tag.toInt()});
                                 });
                                 rem.each(function(tag) {
                                     thumbnail.removeTag(tag.toInt());
