@@ -38,7 +38,7 @@ from PIL import Image as pilImage
 import six
 
 from frog import getRoot
-from frog.video_parser import parseInfo
+
 
 FROG_IMAGE_SIZE_CAP = getattr(settings, 'FROG_IMAGE_SIZE_CAP', 5120)
 FROG_IMAGE_SMALL_SIZE = getattr(settings, 'FROG_IMAGE_SMALL_SIZE', 600)
@@ -299,8 +299,6 @@ class Image(Piece):
         # Resize
         image.thumbnail((width, height), pilImage.ANTIALIAS)
         # Crop from center
-        print box
-
         image = image.crop(box)
         # save
         self.thumbnail = self.source.name.replace(self.hash, '__{}'.format(self.hash))
@@ -478,16 +476,12 @@ class Guid(object):
     def __init__(self, obj_id, type_id=1):
         if isinstance(obj_id, str):
             self.int = int(obj_id, 16)
-            self.guid = obj_id[2:] if obj_id[1] == 'x' else obj_id
         elif isinstance(obj_id, six.integer_types):
             self.int = self.AssetTypes[type_id] + obj_id
-            if six.PY2:
-                self.guid = hex(self.int)[2:-1]
-            else:
-                self.guid = hex(self.int)[2:]
-        else:
-            self.int = 0
-            self.guid = ''
+        self.guid = format(self.int, 'x')
+
+    def __repr__(self):
+        return '<GUID: {}:{}>'.format(self.int, self.guid)
 
 
 class RSSStorage(models.Model):
