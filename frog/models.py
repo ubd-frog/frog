@@ -277,24 +277,28 @@ class Image(Piece):
         """Generates a square thumbnail"""
         if image is None:
             image = pilImage.open(ROOT / self.source.name)
+
+        size = FROG_THUMB_SIZE
+        if self.width < size and self.height < size:
+            size = min(self.width, self.height)
         ratio = float(self.width) / float(self.height)
         if ratio >= 1.0:
-            width = FROG_THUMB_SIZE * ratio
-            height = FROG_THUMB_SIZE
+            width = size * ratio
+            height = size
             box = (
-                int(width / 2 - (FROG_THUMB_SIZE / 2)),
+                int(width / 2 - (size / 2)),
                 0,
-                int(width / 2 + (FROG_THUMB_SIZE / 2)),
-                FROG_THUMB_SIZE
+                int(width / 2 + (size / 2)),
+                size
             )
         else:
-            width = FROG_THUMB_SIZE
-            height = FROG_THUMB_SIZE / ratio
+            width = size
+            height = size / ratio
             box = (
                 0,
-                int(height / 2 - (FROG_THUMB_SIZE / 2)),
-                FROG_THUMB_SIZE,
-                int(height / 2 + (FROG_THUMB_SIZE / 2)),
+                int(height / 2 - (size / 2)),
+                size,
+                int(height / 2 + (size / 2)),
             )
         # Resize
         image.thumbnail((width, height), pilImage.ANTIALIAS)
