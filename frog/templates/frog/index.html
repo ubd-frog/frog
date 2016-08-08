@@ -5,33 +5,40 @@
         <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
 
         <title>Frog Login</title>
-        <link rel="stylesheet" href="{{MEDIA_URL}}frog/c/style.css?b={{build}}">
+        <link rel="stylesheet" href="{{MEDIA_URL}}frog/c/login.css?b={{build}}">
     </head>
     <body>
-        <div role="main">
-            <div id='frog_login'>
-                <header> Frog login</header>
-                <section>
-                    <form method='post' action='/frog/login'>
-                        {% csrf_token %}
-                        <p>
-                            <label for='frog_login_email'>Email:</label>
-                            <input id='frog_login_email' type='email' name='email' autofocus='autofocus' required='required' />
-                        </p>
-                        <p>
-                            <label for='frog_login_first_name'>First:</label>
-                            <input id='frog_login_first_name' type='text' name='first_name' required='required' />
-                        </p>
-                        <p>
-                            <label for='frog_login_last_name'>Last:</label>
-                            <input id='frog_login_last_name' type='text' name='last_name' required='required' />
-                        </p>
-                        <p>
-                            <input id='frog_login_button' type='submit' value='Login' class='disabled1' />
-                        </p>
-                    </form>
-                </section>
+        <hgroup>
+            <h1>Frog Login</h1>
+        </hgroup>
+        <form method='post' action='/frog/login'>
+            {% csrf_token %}
+            <div class="group">
+                <input type="email" name='email'><span class="highlight" required='required'></span><span class="bar"></span>
+                <label>Email</label>
             </div>
+            <div class="group">
+                <input type="text" name='first'><span class="highlight" required='required'></span><span class="bar"></span>
+                <label>First Name</label>
+            </div>
+            <div class="group">
+                <input type="text" name='last'><span class="highlight" required='required'></span><span class="bar"></span>
+                <label>Last Name</label>
+            </div>
+            <button type="submit" class="button buttonBlue">Login
+                <div class="ripples buttonRipples"><span class="ripplesCircle"></span></div>
+            </button>
+        </form>
+        {% if message %}
+        <div id='msg-div' style='position: relative; top: -8px;'>
+            <div class='msg alert-danger'>{{message}}</div>
         </div>
+        {% endif %}
+        <footer>
+            <a href="http://frog.readthedocs.io/en/latest/" target="_blank"><img src="{{MEDIA_URL}}frog/i/frog.png"></a>
+        </footer>
+
+        <script   src="https://code.jquery.com/jquery-2.2.4.min.js"   integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="   crossorigin="anonymous"></script>
+        <script src="{{MEDIA_URL}}frog/j/login.js?b={{build}}"></script>
     </body>
 </html>

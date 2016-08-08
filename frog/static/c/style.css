@@ -217,6 +217,7 @@ body {
     overflow-y: scroll;
     min-height: 800px;
     font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
 }
 
 /* EXT overrides */
