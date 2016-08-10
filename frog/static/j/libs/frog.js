@@ -110,6 +110,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         init: function() {
             new Request.JSON({
                 url: '/frog/pref/',
+                async: false,
                 noCache: true,
                 onSuccess: function(res) {
                     Object.append(this, res.value);
@@ -136,6 +137,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
     new Request.JSON({
         url: '/frog/getuser',
+        async: false,
         onSuccess: function(res) {
             if (res.isSuccess) {
                 Frog.Prefs.init();
@@ -144,7 +146,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
             else {
                 Object.append(Frog.Prefs, res.value);
             }
-            Frog.Comments.build();
+            //Frog.Comments.build();
         }
     }).GET();
 
@@ -155,6 +157,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
             
             new Request.JSON({
                 url: '/frog/tag/',
+                async: false,
                 onSuccess: function(res) {
                     if (res.isSuccess) {
                         res.values.each(function(tag) {
@@ -252,6 +255,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
             this.bCancel = null;
             this.request = new Request.HTML({
                 url: '/frog/comment/',
+                async: false,
                 evalScripts: true,
                 noCache: true,
                 onSuccess: function(tree, elements, html) {
@@ -362,5 +366,6 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         }
     });
     Frog.Comments = new Frog.CommentManager();
+    Frog.Comments.build();
 
 })(window);

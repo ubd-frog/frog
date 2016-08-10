@@ -454,12 +454,13 @@ Frog.UI = (function(Frog) {
                         var id = Frog.util.getData(item, 'frog_tag_id');
                         rem.push(id);
                     });
+console.log(guids);
                     
                     new Request.JSON({
                         url: '/frog/tag/manage',
                         headers: {"X-CSRFToken": Cookie.read('csrftoken')},
                         onSuccess: function() {
-                            $$('.selected').each(function(element) {
+                            /*$$('.selected').each(function(element) {
                                 var thumbid = (Browser.ie) ? element.getProperty('data-frog_tn_id') : element.dataset.frog_tn_id;
                                 var thumbnail = Frog.GalleryObject.thumbnails[thumbid.toInt()];
                                 add.each(function(tag) {
@@ -473,7 +474,7 @@ Frog.UI = (function(Frog) {
                                     thumbnail.removeTag(tag.toInt());
                                 });
                             });
-                            msg('Tags modified', 'alert-success');
+                            msg('Tags modified', 'alert-success');*/
                         }
                     }).POST({
                         add: add.join(','),
