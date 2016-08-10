@@ -368,9 +368,11 @@ a:hover { color: #fff; }
         opacity: 1.0;
     }
     .thumbnail.selected {
-        background: rgba(39, 50, 64, 0.47);
-        border-color: rgba(12, 69, 86, 0.49);
+        border: 1px solid #202020;
     }
+        .thumbnail.selected img {
+            transform: translateZ(0px) scale3d(0.8, 0.8, 1);
+        }
     .thumbnail.selected:hover {
         background: #4b5560;
     }
@@ -438,17 +440,26 @@ a:hover { color: #fff; }
             background: #333;
             color: #fff;
         }
-
-        .thumbnail.selected:after {
-            box-shadow: inset 0 0 4em rgb(69, 134, 212);
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 2;
-            content: "";
+    .frog-like {
+        position: absolute;
+        right: 28px;
+        bottom: 4px;
+        cursor: pointer;
+    }
+        .frog-like i {
+            font-size: 16px;
         }
+
+    /*.thumbnail.selected:after {*/
+        /*box-shadow: inset 0 0 4em rgb(69, 134, 212);*/
+        /*position: absolute;*/
+        /*top: 0;*/
+        /*left: 0;*/
+        /*width: 100%;*/
+        /*height: 100%;*/
+        /*z-index: 2;*/
+        /*content: "";*/
+    /*}*/
 /*Query Builder*/
 ul.frog-bucket {
     list-style-type: none;

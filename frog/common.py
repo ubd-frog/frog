@@ -51,7 +51,10 @@ class Result(object):
         self.value = None
         self.values = []
         self.isError = False
-        self.isSuccess = False
+
+    @property
+    def isSuccess(self):
+        return not self.isError
 
     def append(self, val):
         """Appends the object to the end of the values list.  Will also set the value to the first
@@ -62,6 +65,15 @@ class Result(object):
         """
         self.values.append(val)
         self.value = self.values[0]
+
+    def asDict(self):
+        """Returns a serializable object"""
+        return {
+            'isError': self.isError,
+            'message': self.message,
+            'values': self.values,
+            'value': self.value,
+        }
 
 
 def userToJson(user):

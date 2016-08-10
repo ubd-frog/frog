@@ -33,6 +33,7 @@ urlpatterns = [
     # -- Image/Video
     url(r'^image/(?P<obj_id>\d+)$', views.piece.image),
     url(r'^video/(?P<obj_id>\d+)$', views.piece.video),
+    url(r'^like/(?P<guid>\w+)$', views.piece.like),
     url(r'^p$', views.piece.getGuids),
     # -- Tag
     url(r'^tag/$', views.tag.index),

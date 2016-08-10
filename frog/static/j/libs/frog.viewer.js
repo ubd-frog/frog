@@ -131,6 +131,7 @@ Frog.Viewer = new Class({
         this.title = new Element('h1').inject(info);
         this.author = new Element('i').inject(info);
         this.date = new Element('i').inject(info);
+        this.description = new Element('pre').inject(info);
 
         var controls = new Element('div', {id: 'frog_viewer_controls'});
         var buttons = new Element('ul').inject(controls);
@@ -340,6 +341,7 @@ Frog.Viewer = new Class({
         this.title.set('text', obj.title);
         this.author.set('text', obj.author.username);
         this.date.set('text', obj.date);
+        this.description.set('text', obj.description);
         
         this.countLabel.set('text', (idx + 1) + '/' + this.objects.length);
     },

@@ -196,7 +196,7 @@ Frog.Gallery = new Class({
             },
             onSuccess: function(res) {
                 self.requestValue = res.value;
-                if (res.isSuccess) {
+                if (!res.isError) {
                     if (!append) {
                         window.scrollTo(0,0);
                         self.clear();
@@ -378,7 +378,7 @@ Frog.Gallery = new Class({
             emulation: false,
             headers: {"X-CSRFToken": Cookie.read('csrftoken')},
             onSuccess: function(res) {
-                if (res.isSuccess) {
+                if (!res.isError) {
                     ids.each(function(id) {
                         $(this.thumbnails[id]).destroy();
                         this.thumbnails.erase(id);

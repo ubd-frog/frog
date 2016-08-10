@@ -120,16 +120,14 @@ Frog.UI = (function(Frog) {
             icon: Frog.icon('compass'),
             menu: navmenu
         });
-        // -- RSS button
-        ToolBar.add({
-            icon: Frog.icon('feed'),
-            handler: rssHandler
-        });
         // -- Check for user
         new Request.JSON({
             url: '/frog/getuser',
             onSuccess: function(res) {
-                if (res.isSuccess) {
+                if (res.isError) {
+                    addLoginAction();
+                }
+                else{
                     if (uploadEnabled) {
                         // -- Upload button
                         ToolBar.add({
@@ -246,9 +244,6 @@ Frog.UI = (function(Frog) {
                         icon: Frog.icon('cog'),
                         menu: buildPrefMenu()
                     });                    
-                }
-                else {
-                    addLoginAction();
                 }
         
                 if (self.renderCallback !== null) {
@@ -662,52 +657,6 @@ Frog.UI = (function(Frog) {
             }
         });
     }
-    function rssHandler() {
-        var win = Ext.create('widget.window', {
-            title: 'RSS Feeds',
-            icon: Frog.icon('feed'),
-            closable: true,
-            closeAction: 'hide',
-            resizable: false,
-            modal: true,
-            width: 400,
-            height: 200,
-            bodyStyle: 'padding: 5px;'
-        });
-        win.show();
-        var fp = Ext.create('Ext.FormPanel', {
-            defaultType: 'radio',
-            items: [{
-                xtype: 'label',
-                text: "Select a feed frequency you'd like to subscribe to and the images will be available through Outlook",
-                height: 100
-            },
-            {
-                boxLabel: 'Daily',
-                name: 'rss_int',
-                inputValue: 'daily'
-            }, {
-                checked: true,
-                boxLabel: 'Weekly',
-                name: 'rss_int',
-                inputValue: 'weekly'
-            }],
-            buttons: [{
-                text: 'Save',
-                handler: function() {
-                    var r = fp.getForm().getValues(true).split('=')[1];
-                    location.href = 'feed://' + location.host + '/frog/rss/' + ID + '/' + r;
-                    win.close();
-                }
-            },{
-                text: 'Cancel',
-                handler: function() {
-                    win.close();
-                }
-            }]
-        });
-        win.add(fp)
-    }
     function helpHandler() {
         var win = Ext.create('widget.window', {
             title: 'Ask for Help',
@@ -867,16 +816,16 @@ Frog.UI.SwitchArtist = function() {
             url: '/frog/switchartist',
             headers: {"X-CSRFToken": Cookie.read('csrftoken')},
             onSuccess: function(res) {
-                if (res.isSuccess) {
+                if (res.isError) {
+                    Frog.UI.alert('An error occurred, artist was not switched', 'alert-danger');
+                }
+                else {
                     Frog.UI.alert('Artist successfully switched', 'alert-success');
                     selected.each(function(el) {
                         var tag = el.getElement('span + div a.frog-tag');
                         tag.set('text', res.value.name.capitalize());
                         Frog.util.setData(tag, 'frog_tag_id', res.value.tag);
                     });
-                }
-                else {
-                    Frog.UI.alert('An error occurred, artist was not switched', 'alert-danger');
                 }
             }
         }).POST({'artist': name.toLowerCase(), guids: guids.join(',')});

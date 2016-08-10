@@ -57,9 +57,8 @@ def get(request):
         obj.data = json.dumps(DefaultPrefs.copy())
         obj.save()
     res.append(obj.json())
-    res.isSuccess = True
 
-    return JsonResponse(res)
+    return JsonResponse(res.asDict())
 
 
 @login_required
@@ -84,9 +83,8 @@ def post(request):
         obj.setKey(key, val)
         obj.save()
         res.append(obj.json())
-        res.isSuccess = True
     else:
         res.isError = True
         res.message = 'No key and value provided'
 
-    return JsonResponse(res)
+    return JsonResponse(res.asDict())

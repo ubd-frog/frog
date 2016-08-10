@@ -86,7 +86,6 @@ def get(request, obj_id=None):
         return render(request, 'frog/gallery.html', {'object': obj})
     else:
         res = Result()
-        res.isSuccess = True
         flat = bool(request.GET.get('flat'))
         if request.user.is_anonymous():
             objects = Gallery.objects.filter(security=Gallery.PUBLIC)
@@ -103,7 +102,7 @@ def get(request, obj_id=None):
             else:
                 res.append(n.json())
 
-        return JsonResponse(res)
+        return JsonResponse(res.asDict())
 
 
 @login_required
@@ -127,11 +126,10 @@ def post(request):
     g.save()
 
     res = Result()
-    res.isSuccess = True
     res.append(g.json())
     res.message = 'Gallery created' if created else ''
 
-    return JsonResponse(res)
+    return JsonResponse(res.asDict())
 
 
 @login_required
@@ -159,9 +157,8 @@ def put(request, obj_id=None):
 
     res = Result()
     res.append(object_.json())
-    res.isSuccess = True
 
-    return JsonResponse(res)
+    return JsonResponse(res.asDict())
 
 
 @login_required
@@ -178,9 +175,8 @@ def delete(request, obj_id=None):
             object_.videos.remove(o)
 
     res = Result()
-    res.isSuccess = True
 
-    return JsonResponse(res)
+    return JsonResponse(res.asDict())
 
 
 def filterObjects(request, obj_id):
@@ -195,9 +191,8 @@ def filterObjects(request, obj_id):
         res.isError = True
         res.message = 'This gallery is not public'
 
-        return JsonResponse(res)
+        return JsonResponse(res.asDict())
 
-    
     tags = json.loads(request.GET.get('filters', '[[]]'))
     rng = request.GET.get('rng', None)
     more = json.loads(request.GET.get('more', 'false'))
@@ -347,9 +342,7 @@ def _filter(request, object_, tags=None, models=(Image, Video), rng=None, more=F
 
     res.value = data
 
-    res.isSuccess = True
-
-    return JsonResponse(res)
+    return JsonResponse(res.asDict())
 
 
 def _sortObjects(**args):

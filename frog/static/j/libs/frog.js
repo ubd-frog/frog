@@ -137,12 +137,12 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     new Request.JSON({
         url: '/frog/getuser',
         onSuccess: function(res) {
-            if (res.isSuccess) {
-                Frog.Prefs.init();
-                Frog.user = true;
+            if (res.isError) {
+                Object.append(Frog.Prefs, res.value);
             }
             else {
-                Object.append(Frog.Prefs, res.value);
+                Frog.Prefs.init();
+                Frog.user = true;
             }
             Frog.Comments.build();
         }
@@ -156,13 +156,13 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
             new Request.JSON({
                 url: '/frog/tag/',
                 onSuccess: function(res) {
-                    if (res.isSuccess) {
+                    if (res.isError) {
+                        throw res.message;
+                    }
+                    else {
                         res.values.each(function(tag) {
                             self.tags[tag.id] = tag.name.toLowerCase();
                         });
-                    }
-                    else if (res.isError) {
-                        throw res.message;
                     }
                 }
             }).GET({json:true});
@@ -176,7 +176,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
                     new Request.JSON({
                         url: '/frog/tag/' + arg,
                         onSuccess: function(res) {
-                            if (res.isSuccess) {
+                            if (!res.isError) {
                                 value = res.value.name;
                                 self.tags[value] = res.value.name.toLowerCase();
                             }
@@ -195,7 +195,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
                         url: '/frog/tag/',
                         headers: {"X-CSRFToken": Cookie.read('csrftoken')},
                         onSuccess: function(res) {
-                            if (res.isSuccess) {
+                            if (!res.isError) {
                                 value = res.value.id.toInt();
                                 self.tags[value] = res.value.name;
                             }
@@ -216,7 +216,6 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     Frog.Tag = new Class({
         Implements: Events,
         initialize: function(id, name) {
-            var self = this;
             this.id = id;
             this.name = name || Frog.Tags.get(id);
             this.isSearch = typeof(id) === 'string';

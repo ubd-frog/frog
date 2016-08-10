@@ -60,19 +60,17 @@ def get(request, obj_id=None):
 
     :returns: json
     """
+    res = Result()
     if obj_id:
         obj = get_object_or_404(Tag, pk=obj_id)
 
-        res = Result()
         res.append(obj.json())
         return JsonResponse(res)
     else:
-        res = Result()
-        res.isSuccess = True
         for n in Tag.objects.all():
             res.append(n.json())
 
-        return JsonResponse(res)
+        return JsonResponse(res.asDict())
 
 
 @login_required
@@ -94,13 +92,12 @@ def post(request):
     
     tag, created = Tag.objects.get_or_create(name=name.lower())
 
-    res.isSuccess = True
     if created:
         res.message = "Created"
 
     res.append(tag.json())
 
-    return JsonResponse(res)
+    return JsonResponse(res.asDict())
 
 
 @login_required
@@ -116,11 +113,10 @@ def put(request):
     tagList = filter(None, request.PUT.get('tags', '').split(','))
     guids = request.PUT.get('guids', '').split(',')
     res = Result()
-    res.isSuccess = True
 
     _manageTags(tagList, guids)
 
-    return JsonResponse(res)
+    return JsonResponse(res.asDict())
 
 
 @login_required
@@ -136,11 +132,10 @@ def delete(request):
     tagList = filter(None, request.DELETE.get('tags', '').split(','))
     guids = request.DELETE.get('guids', '').split(',')
     res = Result()
-    res.isSuccess = True
 
     _manageTags(tagList, guids, add=False)
 
-    return JsonResponse(res)
+    return JsonResponse(res.asDict())
 
 
 def search(request):
@@ -198,11 +193,9 @@ def manage(request):
                 'queries': connection.queries,
             }
 
-            res.value = data
+            res.append(data)
 
-            res.isSuccess = True
-
-            return JsonResponse(res)
+            return JsonResponse(res.asDict())
 
         return render(request, 'frog/tag_manage.html', {'tags': tags})
     else:
@@ -233,9 +226,8 @@ def manage(request):
                 o.tags.remove(r)
 
         res = Result()
-        res.isSuccess = True
 
-        return JsonResponse(res)
+        return JsonResponse(res.asDict())
 
 
 def _manageTags(tagList, guids, add=True):

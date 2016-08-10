@@ -99,6 +99,22 @@ Frog.Thumbnail = new Class({
         this.title = new Element('span', {'text': this.object.title}).inject(tags);
         var artistDiv = new Element('div').inject(tags);
         this.artist = new Element('a', {'href': "javascript:void(0);", 'class': 'frog-tag'}).inject(artistDiv);
+
+        this.like = new Element('a ', {
+            'class': 'frog-like',
+            'html': '<i class="fa fa-thumbs-o-up"></i> <span>' + this.object.like_count + '</span>'
+        }).inject(tags).addEvent('click', function(e) {
+            e.stop();
+            new Request.JSON({
+                url: '/frog/like/' + this.object.guid,
+                onSuccess: function(res) {
+                    if (!res.isError) {
+                        this.like.getElements('span').set('text', res.value.like_count);
+                    }
+                }.bind(this)
+            }).POST();
+        }.bind(this));
+
         new Element('div', {
             'class': 'frog-comment-bubble',
             text: this.object.comment_count,

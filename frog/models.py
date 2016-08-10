@@ -28,10 +28,14 @@ try:
 except ImportError:
     from queue import Queue
 
-from django.db import models
-from django.contrib.auth.models import User
+from django.db import models, IntegrityError
 from django.core.exceptions import ImproperlyConfigured
 from django.conf import settings
+from django.contrib.auth.models import User
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
+from django.contrib.sites.models import Site
+from django.contrib.sites.shortcuts import get_current_site
 
 from path import path as Path
 from PIL import Image as pilImage
@@ -106,6 +110,8 @@ class Piece(models.Model):
     deleted = models.BooleanField(default=False)
     hash = models.CharField(max_length=40, blank=True)
     comment_count = models.IntegerField(default=0)
+    like_count = models.IntegerField(default=0)
+    description = models.TextField(blank=True, null=True)
 
     class Meta:
         abstract = True
@@ -139,6 +145,13 @@ class Piece(models.Model):
             uid = '%s_%s' % (username, path.name)
 
         return uid
+
+    @staticmethod
+    def fromGuid(guid):
+        if guid[0] == '1':
+            return Image.objects.get(guid=guid)
+
+        return Video.objects.get(guid=guid)
 
     def getGuid(self):
         return Guid(self.id, self.AssetType)
@@ -201,9 +214,21 @@ class Piece(models.Model):
             'tags': [tag.json() for tag in self.tags.all()],
             'thumbnail': self.thumbnail.url if self.thumbnail else '',
             'comment_count': self.comment_count,
+            'like_count': self.like_count,
+            'description': self.description,
         }
 
         return obj
+
+    def like(self, request):
+        try:
+            Like.objects.create(user=request.user, content_object=self, site=get_current_site(request))
+            self.like_count += 1
+            self.save()
+
+            return True
+        except IntegrityError:
+            return False
 
 
 class Image(Piece):
@@ -365,9 +390,13 @@ class Video(Piece):
 
         self.save()
 
-        item = VideoQueue()
-        item.video = self
-        item.save()
+        try:
+            item = VideoQueue()
+            item.video = self
+            item.save()
+        except IntegrityError:
+            # -- Already queued
+            pass
 
     def json(self):
         obj = super(Video, self).json()
@@ -486,6 +515,29 @@ class Guid(object):
 
     def __repr__(self):
         return '<GUID: {}:{}>'.format(self.int, self.guid)
+
+
+class Like(models.Model):
+    user = models.ForeignKey(User, related_name='like_user')
+    date = models.DateTimeField(auto_now_add=True)
+    content_type = models.ForeignKey(ContentType,
+                                     verbose_name='content_type',
+                                     related_name='content_type_set_for_%(class)s',
+                                     on_delete=models.CASCADE)
+    object_pk = models.TextField()
+    content_object = GenericForeignKey(ct_field='content_type', fk_field='object_pk')
+    site = models.ForeignKey(Site, on_delete=models.CASCADE)
+
+    class Meta:
+        # make sure we can't have a user liking an object more than once
+        unique_together = (('user', 'content_type', 'object_pk'),)
+
+    def json(self):
+        return {
+            'user': self.user.id,
+            'date': self.date.isoformat(),
+            'object_guid': self.content_object.guid,
+        }
 
 
 class RSSStorage(models.Model):
