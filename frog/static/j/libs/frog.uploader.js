@@ -70,7 +70,7 @@ Frog.Uploader = new Class({
                         else {
                             obj.date = new Date(res.value.created);
                         }
-                        var item = self.uploaderList.store.add(obj);
+                        self.uploaderList.store.add(obj);
                     }
                 }).GET({path:f.name})
             });

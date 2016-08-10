@@ -32,10 +32,11 @@ Comment API
 
 from django.shortcuts import render
 from django.core.mail import send_mail
-from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
-from django.contrib.contenttypes.models import ContentType
 from django.template.loader import render_to_string
+from django.contrib.auth.decorators import login_required
+from django.contrib.contenttypes.models import ContentType
+from django.contrib.sites.shortcuts import get_current_site
 
 from django_comments.models import Comment
 
@@ -61,9 +62,8 @@ def get(request, obj_id):
     res = Result()
     c = Comment.objects.get(pk=obj_id)
     res.append(commentToJson(c))
-    res.isSuccess = True
 
-    return JsonResponse(res)
+    return JsonResponse(res.asDict())
 
 
 @login_required
@@ -80,21 +80,21 @@ def post(request):
         c.user_name = request.user.get_full_name()
         c.user_email = request.user.email
         c.content_object = obj
-        c.site_id = 1
+        c.site_id = get_current_site(request).id
         c.save()
-        obj.comment_count = obj.comment_count + 1
+
+        obj.comment_count += 1
         obj.save()
         
         if request.user != obj.author:
             __email(c, obj)
 
         res.append({'id': c.id, 'comment': c.comment})
-        res.isSuccess = True
     else:
         res.isError = True
         res.message = "No guid provided"
 
-    return JsonResponse(res)
+    return JsonResponse(res.asDict())
 
 
 @login_required
@@ -112,12 +112,11 @@ def put(request, obj_id):
         c.save()
 
         res.append(commentToJson(c))
-        res.isSuccess = True
     else:
         res.isError = True
         res.message = "No comment provided"
 
-    return JsonResponse(res)
+    return JsonResponse(res.asDict())
 
 
 @csrf_exempt
@@ -150,7 +149,7 @@ def __email(comment, obj):
     """
     html = render_to_string('frog/comment_email.html', {
         'user': comment.user,
-        'comment': comment,
+        'comment': comment.comment,
         'object': obj,
         'image': isinstance(obj, Image),
         'SITE_URL': FROG_SITE_URL,

@@ -55,9 +55,6 @@ def index(request):
 
 
 def login_(request):
-    res = Result()
-
-    res.isSuccess = True
     email = request.POST.get('email', 'noauthor@domain.com').lower()
     username = email.split('@')[0]
     password = request.POST.get('password')
@@ -132,14 +129,13 @@ def switchArtist(request):
             n.author = author
             n.tagArtist(tag)
 
-        res.isSuccess = True
         res.append(userToJson(author))
         res.value['tag'] = Tag.objects.get(name=artist.lower()).id
     else:
         res.isError = True
         res.message = "No artist provided"
 
-    return JsonResponse(res)
+    return JsonResponse(res.asDict())
 
 
 @login_required
@@ -186,8 +182,6 @@ def isUnique(request):
             res.append(vid[0].json())
         else:
             res.append(True)
-
-        res.isSuccess = True
     else:
         res.isError = True
         res.message = "No path provided"
@@ -206,6 +200,5 @@ def getUser(request):
             gallery = Gallery.objects.filter(pk=galleryid, owner=request.user)
             if gallery:
                 res.append(gallery[0].json())
-        res.isSuccess = True
 
     return JsonResponse(res)

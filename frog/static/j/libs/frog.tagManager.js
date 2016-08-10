@@ -25,14 +25,14 @@ Frog.TagManager = new Class({
         new Request.JSON({
             url: '/frog/tag/',
             onSuccess: function(res) {
-                if (res.isSuccess) {
+                if (res.isError) {
+                    throw res.message;
+                }
+                else {
                     Frog.Tags = {};
                     res.values.each(function(tag) {
                         Frog.Tags[tag.id] = tag.name;
                     });
-                }
-                else if (res.isError) {
-                    throw res.message;
                 }
             }
         }).GET({json:true});
@@ -52,7 +52,7 @@ Frog.TagManager = new Class({
                     url: '/frog/tag/',
                     async: false,
                     onSuccess: function(res) {
-                        if (res.isSuccess) {
+                        if (!res.isError) {
                             value = res.value.id;
                         }
                     }

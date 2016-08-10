@@ -34,9 +34,12 @@ Piece API
 
 from django.shortcuts import render
 from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
 from django.contrib.auth.decorators import login_required
 
-from frog.models import Image, Video, Tag
+from frog.models import Image, Video, Tag, Piece, FROG_SITE_URL
 from frog.common import Result, getPutData
 
 
@@ -59,6 +62,9 @@ def video(request, obj_id):
         return get(request, obj)
     elif request.method == 'POST':
         return post(request, obj)
+    elif request.method == 'PUT':
+        getPutData(request)
+        return put(request, obj)
     elif request.method == 'DELETE':
         getPutData(request)
         return delete(request, obj)
@@ -70,8 +76,23 @@ def getGuids(request):
     if guids:
         guids = guids.split(',')
 
+    return JsonResponse(res.asDict())
 
-    return JsonResponse(res)
+
+@login_required
+@csrf_exempt
+def like(request, guid):
+    obj = Piece.fromGuid(guid)
+    res = Result()
+    if obj.like(request):
+        emailLike(request, obj)
+    else:
+        res.isError = True
+        res.message = 'Cannot "like" things more than once'
+
+    res.append(obj.json())
+
+    return JsonResponse(res.asDict())
 
 
 def get(request, obj):
@@ -96,9 +117,20 @@ def post(request, obj):
                 res.append(t.json())
         obj.tags.add(t)
 
-    res.isSuccess = True
+    return JsonResponse(res.asDict())
 
-    return JsonResponse(res)
+
+@login_required
+def put(request, obj):
+    obj.title = request.PUT.get('title', obj.title)
+    obj.description = request.PUT.get('description', obj.description)
+    if request.FILES:
+        # -- Handle thumbanil upload
+        pass
+    obj.save()
+
+    res = Result()
+    return JsonResponse(res.asDict())
 
 
 @login_required
@@ -106,7 +138,21 @@ def delete(request, obj):
     obj.deleted = True
     obj.save()
     res = Result()
-    res.isSuccess = True
-    res.value = obj.json()
+    res.append(obj.json())
 
-    return JsonResponse(res)
+    return JsonResponse(res.asDict())
+
+
+def emailLike(request, obj):
+    html = render_to_string('frog/comment_email.html', {
+        'user': request.user,
+        'object': obj,
+        'comment': '',
+        'image': isinstance(obj, Image),
+        'SITE_URL': FROG_SITE_URL,
+    })
+    subject, from_email, to = '{} liked {}'.format(request.user.username, obj.title), request.user_email, obj.author.email
+    text_content = 'This is an important message.'
+    html_content = html
+
+    send_mail(subject, text_content, from_email, [to], html_message=html_content)
