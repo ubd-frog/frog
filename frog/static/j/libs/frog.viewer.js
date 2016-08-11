@@ -274,7 +274,7 @@ Frog.Viewer = new Class({
 
         this.shelf.hide();
 
-        this.center();
+        this.fitToWindow();
     },
     setImage: function(img) {
         this.video.hide();
@@ -308,6 +308,7 @@ Frog.Viewer = new Class({
         }).inject(this.videoEl);
         this.videoEl.load();
         this.videoEl.play();
+        this.fitToWindow();
     },
     setImages: function(images, id) {
         if (typeof(id) === 'undefined') {
