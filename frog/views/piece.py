@@ -85,7 +85,8 @@ def like(request, guid):
     obj = Piece.fromGuid(guid)
     res = Result()
     if obj.like(request):
-        emailLike(request, obj)
+        #emailLike(request, obj)
+        pass
     else:
         res.isError = True
         res.message = 'Cannot "like" things more than once'
@@ -151,7 +152,7 @@ def emailLike(request, obj):
         'image': isinstance(obj, Image),
         'SITE_URL': FROG_SITE_URL,
     })
-    subject, from_email, to = '{} liked {}'.format(request.user.username, obj.title), request.user_email, obj.author.email
+    subject, from_email, to = '{} liked {}'.format(request.user.username, obj.title), request.user.email, obj.author.email
     text_content = 'This is an important message.'
     html_content = html
 
