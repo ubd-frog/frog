@@ -21,7 +21,7 @@
 
 import logging
 
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import authenticate, login, logout
@@ -31,7 +31,7 @@ from django.core.mail import send_mail
 from django.conf import settings
 
 from frog.models import Gallery, Image, Video, Tag, Piece, DefaultPrefs
-from frog.common import Result, JsonResponse, getObjectsFromGuids, userToJson
+from frog.common import Result, getObjectsFromGuids, userToJson
 from frog.uploader import upload
 from frog.signals import frog_auth_check
 from frog.send_file import send_zipfile
@@ -150,7 +150,7 @@ def artistLookup(request):
     for user in users:
         res.append(userToJson(user))
 
-    return JsonResponse(res.values)
+    return JsonResponse(res.values, safe=False)
 
 
 @login_required
@@ -186,19 +186,23 @@ def isUnique(request):
         res.isError = True
         res.message = "No path provided"
 
-    return JsonResponse(res)
+    return JsonResponse(res.asDict())
 
 
 def getUser(request):
     res = Result()
+    data = {}
     if request.user.is_anonymous():
         res.isError = True
-        res.append(DefaultPrefs)
+        data['prefs'] = DefaultPrefs
     else:
+        data['user'] = userToJson(request.user)
         galleryid = request.GET.get('gallery')
         if galleryid is not None:
             gallery = Gallery.objects.filter(pk=galleryid, owner=request.user)
             if gallery:
-                res.append(gallery[0].json())
+                data['gallery'] = gallery[0].json()
 
-    return JsonResponse(res)
+    res.append(data)
+
+    return JsonResponse(res.asDict())

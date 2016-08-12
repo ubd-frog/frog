@@ -35,10 +35,11 @@ Tag API
 
 from django.shortcuts import render, get_object_or_404
 from django.db import connection
+from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 
 from frog.models import Tag
-from frog.common import Result, JsonResponse, getObjectsFromGuids, getPutData
+from frog.common import Result, getObjectsFromGuids, getPutData
 
 
 def index(request, obj_id=None):
@@ -65,7 +66,7 @@ def get(request, obj_id=None):
         obj = get_object_or_404(Tag, pk=obj_id)
 
         res.append(obj.json())
-        return JsonResponse(res)
+        return JsonResponse(res.asDict())
     else:
         for n in Tag.objects.all():
             res.append(n.json())
@@ -88,7 +89,7 @@ def post(request):
         res.isError = True
         res.message = "No name given"
 
-        return JsonResponse(res)
+        return JsonResponse(res.asDict())
     
     tag, created = Tag.objects.get_or_create(name=name.lower())
 

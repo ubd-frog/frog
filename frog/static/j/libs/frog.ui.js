@@ -111,7 +111,6 @@ Frog.UI = (function(Frog) {
     }
 
     function render(el) {
-        var menuremove, menucopy, menudownload, menuswitchartist;
         ToolBar.render(el);
         // -- Navigation panel
         navmenu.add(buildNav());
@@ -168,8 +167,8 @@ Frog.UI = (function(Frog) {
                             }
                         ]
                     };
-                    if (res.value) {
-                        if (res.value.parent === null) {
+                    if (res.value.gallery) {
+                        if (res.value.gallery.parent === null) {
                             menuconfig.items.push({
                                 text: 'Add Sub Gallery',
                                 icon: Frog.icon('application_view_tile'),
@@ -188,19 +187,19 @@ Frog.UI = (function(Frog) {
                                         {
                                             text: 'Public',
                                             group: 'security',
-                                            checked: res.value.security === 0,
+                                            checked: res.value.gallery.security === 0,
                                             handler: securityHandler
                                         },
                                         {
                                             text: 'Private',
                                             group: 'security',
-                                            checked: res.value.security === 1,
+                                            checked: res.value.gallery.security === 1,
                                             handler: securityHandler
                                         },
                                         {
                                             text: 'Personal',
                                             group: 'security',
-                                            checked: res.value.security === 2,
+                                            checked: res.value.gallery.security === 2,
                                             handler: securityHandler
                                         }
                                     ]
@@ -449,28 +448,11 @@ Frog.UI = (function(Frog) {
                         var id = Frog.util.getData(item, 'frog_tag_id');
                         rem.push(id);
                     });
-console.log(guids);
                     
                     new Request.JSON({
                         url: '/frog/tag/manage',
                         headers: {"X-CSRFToken": Cookie.read('csrftoken')},
-                        onSuccess: function() {
-                            /*$$('.selected').each(function(element) {
-                                var thumbid = (Browser.ie) ? element.getProperty('data-frog_tn_id') : element.dataset.frog_tn_id;
-                                var thumbnail = Frog.GalleryObject.thumbnails[thumbid.toInt()];
-                                add.each(function(tag) {
-                                    tag = Ext.Number.from(tag, tag);
-                                    if (typeof(tag) === 'string') {
-                                        tag = Frog.Tags.get(tag);
-                                    }
-                                    // thumbnail.addTag({id: tag.toInt()});
-                                });
-                                rem.each(function(tag) {
-                                    thumbnail.removeTag(tag.toInt());
-                                });
-                            });
-                            msg('Tags modified', 'alert-success');*/
-                        }
+                        onSuccess: function() {}
                     }).POST({
                         add: add.join(','),
                         rem: rem.join(','),
@@ -486,6 +468,158 @@ console.log(guids);
             }]
         });
         win.show();
+    }
+    function editMetaHandler() {
+        if ($$('.selected').length === 0) {
+            return;
+        }
+        var guid = Frog.util.getData($$('.selected')[0], 'frog_guid');
+        Ext.define('Meta', {
+            extend: 'Ext.data.Model',
+            fields: [
+                {name: 'title', type: 'string'},
+                {name: 'description', type: 'string'},
+                {name: 'thumbnail', type: 'string'}
+            ]
+        });
+        var store = Ext.create('Ext.data.Store', {
+            model: 'Meta',
+            proxy: {
+                type: 'ajax',
+                url: '/frog/piece/' + guid,
+                reader: {
+                    type: 'json',
+                    root: 'value'
+                }
+            }
+        });
+
+        var form = Ext.create('Ext.form.Panel', {
+            items: [{
+                xtype:'fieldset',
+                items: [{
+                    xtype: 'textfield',
+                    name: 'title',
+                    fieldLabel: 'Title',
+                    store: store,
+                    valueField: 'title'
+                }, {
+                    xtype: 'textarea',
+                    name: 'description',
+                    fieldLabel: 'Description',
+                    store: store,
+                    valueField: 'decription'
+                }
+                ]
+            }],
+        });
+
+
+        var win = Ext.create('widget.window', {
+            title: 'Edit Meta',
+            icon: Frog.icon('pencil'),
+            closable: true,
+            resizable: false,
+            modal: true,
+            width: 400,
+            // height: 300,
+            layout: 'fit',
+            bodyStyle: 'padding: 5px;',
+            items: [{
+                xtype: 'grid',
+                store: store,
+                columns: [
+                    {
+                        text     : 'File',
+                        flex     : 6,
+                        sortable : false,
+                        dataIndex: 'file'
+                    },
+                    {
+                        text     : 'Size',
+                        flex     : 1,
+                        sortable : false,
+                        dataIndex: 'size'
+                    },
+                    {
+                        text: 'Created',
+                        flex: 2,
+                        sortable: false,
+                        dataIndex: 'date',
+                        xtype: 'datecolumn',
+                        format:'Y-m-d'
+                    },
+                    {
+                        text     : '%',
+                        flex     : 1,
+                        sortable : false,
+                        dataIndex: 'percent'
+                    },
+                    {
+                        text: 'Status',
+                        flex: 2,
+                        sortable: false,
+                        dataIndex: 'status'
+                    },
+                    {
+                        xtype: 'actioncolumn',
+                        flex: 1,
+                        sortable: false,
+                        items: [
+                            {
+                                text: 'remove',
+                                icon: '/static/frog/i/delete.png',
+                                handler: function(grid, rowIndex, colIndex) {
+                                    var rec = store.getAt(rowIndex);
+                                    var file = self.uploader.getFile(rec.get('id'));
+                                    self.uploader.removeFile(file);
+                                    store.remove([rec]);
+                                }
+                            }
+                        ]
+                    }
+                ],
+                flex: 1,
+                viewConfig: {
+                    stripeRows: true,
+                    getRowClass: function(record) {
+                        var c = record.get('unique');
+                        return (c) ? '' : 'red';
+                    }
+                }
+            }],
+            buttons: [{
+                text: 'Save',
+                handler: function() {
+                    var data = form.getValues(false, true)
+                    new Request.JSON({
+                        url: '/frog/piece/' + guid + '/',
+                        emulation: false,
+                        onSuccess: function(res) {
+                            $$('.selected')[0].getElements('.tag-hover > span')[0].set('text', data.title);
+                            var obj = Frog.GalleryObject.getObjectFromGuid(guid);
+                            obj.title = data.title;
+                            obj.description = data.description;
+                        }
+                    }).PUT(data);
+                    win.close();
+                    Frog.GalleryObject.keyboard.activate();
+                }
+            },{
+                text: 'Cancel',
+                handler: function() {
+                    win.close();
+                    Frog.GalleryObject.keyboard.activate();
+                }
+            }]
+        });
+        win.add(form);
+        win.show();
+        Frog.GalleryObject.keyboard.relinquish();
+        store.on('load', function(store, records, successful, eOpts) {
+            form.loadRecord(records[0]);
+        });
+        store.load();
     }
     function removeHandler(silent) {
         if (typeof(silent) === 'undefined') {
@@ -587,6 +721,7 @@ console.log(guids);
                         // -- Create the new gallery first synchronously
                         new Request.JSON({
                             url: '/frog/gallery',
+                            async: false,
                             headers: {"X-CSRFToken": Cookie.read('csrftoken')},
                             onSuccess: function(res) {
                                 data.id = res.value.id;

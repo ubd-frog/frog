@@ -108,19 +108,6 @@ def commentToJson(comment):
 
     return obj
 
-def JsonResponse(obj=None, status=200):
-    """Returns an HttpResponse of the object serliazed to json
-
-    :param obj: Object to serialize
-    :type obj: any
-    :returns: HttpResponse
-    """
-    obj = obj or {}
-    try:
-        data = json.dumps(obj)
-    except TypeError:
-        data = json.dumps(obj.__dict__)
-    return HttpResponse(data, content_type='application/json', status=status)
 
 def getPutData(request):
     """Adds raw post to the PUT and DELETE querydicts on the request so they behave like post

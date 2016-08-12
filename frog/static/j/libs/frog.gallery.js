@@ -99,6 +99,7 @@ Frog.Gallery = new Class({
             self.container.setStyle('height', 'auto')
             window.scrollTo(0,this.y);
             self.selector.activate();
+            self.keyboard.activate();
         }.bind(this));
         this.keyboard = new Keyboard({
             active: true,

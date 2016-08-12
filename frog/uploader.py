@@ -23,9 +23,10 @@
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
+from django.http import JsonResponse
 
 from frog import models
-from frog.common import JsonResponse, Result, getHashForFile
+from frog.common import Result, getHashForFile
 
 from path import path as Path
 
@@ -89,10 +90,9 @@ def upload(request):
                 for gal in galleries:
                     g = models.Gallery.objects.get(pk=int(gal))
                     obj.gallery_set.add(g)
-                res.isSuccess = True
                 res.message = "Files were the same"
 
-                return JsonResponse(res)
+                return JsonResponse(res.asDict())
 
             objPath = models.ROOT
             if models.FROG_PATH:
@@ -118,18 +118,18 @@ def upload(request):
                     dest = objPath.parent / f.name
                     handle_uploaded_file(dest, f)
 
-            res.isSuccess = True
         except MediaTypeError:
             res.isError = True
             res.message = 'Filetype not supported'
             
-            return JsonResponse(res)
+            return JsonResponse(res.asDict())
 
     else:
         res.isError = True
         res.message = "No file found"
 
-    return JsonResponse(res)
+    return JsonResponse(res.asDict())
+
 
 def handle_uploaded_file(dest, f):
     destination = open(dest, 'wb+')

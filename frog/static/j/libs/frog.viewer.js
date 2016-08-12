@@ -52,7 +52,7 @@ Frog.Viewer = new Class({
             move: this.move.bind(this),
             zoom: this.zoom.bind(this),
             resize: this.resize.bind(this)
-        }
+        };
 
         this.keyboard = new Keyboard({
             events: {
@@ -65,6 +65,7 @@ Frog.Viewer = new Class({
                 }.bind(this)
             }
         });
+        this.editKeyboard = new Keyboard();
 
         this.build();
         this.shelf = new Frog.Viewer.Shelf();
@@ -88,6 +89,7 @@ Frog.Viewer = new Class({
             this.origin.y = e.client.y;
             this.shelf.hide();
         }
+        this._submitEdits();
     },
     move: function(e) {
         if (this.isMouseDown) {
@@ -129,9 +131,9 @@ Frog.Viewer = new Class({
     build: function() {
         var info = new Element('div', {id: 'frog_viewer_info'});
         this.title = new Element('h1').inject(info);
+        this.description = new Element('pre').inject(info);
         this.author = new Element('i').inject(info);
         this.date = new Element('i').inject(info);
-        this.description = new Element('pre').inject(info);
 
         var controls = new Element('div', {id: 'frog_viewer_controls'});
         var buttons = new Element('ul').inject(controls);
@@ -341,10 +343,52 @@ Frog.Viewer = new Class({
 
         this.title.set('text', obj.title);
         this.author.set('text', obj.author.username);
-        this.date.set('text', obj.date);
-        this.description.set('text', obj.description);
+        this.date.set('text', new Date(obj.created).format('%Y.%M.%d'));
+        var description = obj.description;
+        if (this.objects[this.current].author.username === Frog.user.username && !description) {
+            description = '<description>';
+        }
+        this.description.set('text', description);
         
         this.countLabel.set('text', (idx + 1) + '/' + this.objects.length);
+
+        this.title.addEvent('dblclick', function (event) {
+            if (this.objects[this.current].author.username !== Frog.user.username) {
+                return;
+            }
+            event.stop();
+            var el = new Element('input', {'type': 'text'}).inject(this.element);
+            var size = this.title.getSize();
+            el.setStyle('background-color', '#' + Frog.Prefs.backgroundColor);
+            el.setStyle('width', size.x + 12);
+            el.setStyle('height', size.y + 12);
+            el.setPosition(this.title.getPosition());
+            el.value = this.title.get('text');
+            el.select();
+            el.addEvent('blur', this._submitEdits.bind(this));
+            el.addEvent('keyup', function(event) {
+                if (event.code === 13) {
+                    this._submitEdits();
+                }
+            }.bind(this));
+            this.editKeyboard.activate();
+        }.bind(this));
+        this.description.addEvent('dblclick', function (event) {
+            if (this.objects[this.current].author.username !== Frog.user.username) {
+                return;
+            }
+            event.stop();
+            var el = new Element('textarea').inject(this.element);
+            var size = this.description.getSize();
+            el.setStyle('background-color', '#' + Frog.Prefs.backgroundColor);
+            el.setStyle('width', size.x + 12);
+            el.setStyle('height', size.y + 12);
+            el.setPosition(this.description.getPosition());
+            el.value = this.description.get('text');
+            el.select();
+            el.addEvent('blur', this._submitEdits.bind(this));
+            this.editKeyboard.activate();
+        }.bind(this));
     },
     _loadCallback: function() {
         this.xform = this.main = $M([
@@ -358,7 +402,34 @@ Frog.Viewer = new Class({
         this.fitToWindow();
     },
     _progressCallback: function() {
-        console.log(arguemnts);
+        console.log(arguments);
+    },
+    _submitEdits: function() {
+        this.editKeyboard.relinquish();
+        var title = this.element.getElement('input[type="text"]');
+        var desc = this.element.getElement('textarea');
+        if (desc) {
+            if (this.description.get('text') !== desc.value) {
+                new Request.JSON({
+                    url: '/frog/piece/' + this.objects[this.current].guid + '/',
+                    emulation: false
+                }).PUT({description: desc.value});
+                this.description.set('text', desc.value);
+                this.objects[this.current].description = desc.value;
+            }
+            desc.destroy();
+        }
+        if (title) {
+            if (this.title.get('text') !== title.value) {
+                new Request.JSON({
+                    url: '/frog/piece/' + this.objects[this.current].guid + '/',
+                    emulation: false
+                }).PUT({title: title.value});
+                this.title.set('text', title.value);
+                this.objects[this.current].title = title.value;
+            }
+            title.destroy();
+        }
     },
     show: function() {
         this.clear();
@@ -372,7 +443,7 @@ Frog.Viewer = new Class({
         window.addEvent('resize', this.events.resize);
         document.body.addClass('noscroll');
         document.body.addClass('noselect');
-        this.element.setStyle('background-color', Frog.Prefs.backgroundColor);
+        this.element.setStyle('background-color', '#' + Frog.Prefs.backgroundColor);
 
         this.keyboard.activate();
         this.fireEvent('onShow', [this]);
@@ -390,6 +461,7 @@ Frog.Viewer = new Class({
         document.body.removeClass('noselect');
 
         this.keyboard.relinquish();
+        this.editKeyboard.relinquish();
 
         var data = Frog.util.hashData();
         delete data.viewer;

@@ -36,7 +36,7 @@ import time
 import functools
 import logging
 
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, JsonResponse
 from django.core.exceptions import ImproperlyConfigured
 from django.shortcuts import render
 from django.db.models import Q
@@ -57,7 +57,7 @@ except (ImportError, ImproperlyConfigured):
     HAYSTACK = False
 
 from frog.models import Gallery, Image, Video, UserPref
-from frog.common import Result, JsonResponse, getObjectsFromGuids, getPutData
+from frog.common import Result, getObjectsFromGuids, getPutData
 
 
 LOGGER = logging.getLogger('frog')

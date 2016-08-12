@@ -665,7 +665,14 @@ li.frog-tag {
     top: 0;
     left: 0;
     padding: 4px 0 0 4px;
+    font-size: 14px;
 }
+    #frog_viewer_info h1 {
+        font-size: 18px;
+    }
+    #frog_viewer_info i {
+        display: block;
+    }
 
 #frog_viewer_controls {
     position: absolute;
@@ -736,6 +743,22 @@ li.frog-tag {
     position: absolute;
     opacity: 0.0;
     cursor: move;
+}
+#frog_viewer > textarea {
+    position: absolute;
+    z-index: 3010;
+    color: #d2d2d2;
+    font-size: 14px;
+    min-width: 200px;
+    min-height: 200px;
+    border: none;
+}
+#frog_viewer > input[type="text"] {
+    position: absolute;
+    z-index: 3010;
+    color: #d2d2d2;
+    border: none;
+    font-size: 14px;
 }
 .frog-prev { background: url('../i/viewerControls.png') left top no-repeat; }
 .frog-next { background: url('../i/viewerControls.png') left -20px no-repeat; }

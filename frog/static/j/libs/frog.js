@@ -140,13 +140,12 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         async: false,
         onSuccess: function(res) {
             if (res.isError) {
-                Object.append(Frog.Prefs, res.value);
+                Object.append(Frog.Prefs, res.value.prefs);
             }
             else {
                 Frog.Prefs.init();
-                Frog.user = true;
+                Frog.user = res.value.user;
             }
-            //Frog.Comments.build();
         }
     }).GET();
 

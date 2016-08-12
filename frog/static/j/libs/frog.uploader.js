@@ -62,6 +62,7 @@ Frog.Uploader = new Class({
                             file: f.name,
                             size: f.size,
                             percent: 0,
+                            status: 'Queued',
                             unique: res.value === true
                         }
                         if (obj.unique) {
@@ -80,11 +81,15 @@ Frog.Uploader = new Class({
             var row = self.uploaderList.store.getById(file.id);
             if (row) {
                 row.set('percent', file.percent);
+                row.set('status', 'Uploading...');
+                if (file.percent === 100) {
+                    row.set('status', 'Processing...')
+                }
             }
         });
 
         uploader.bind('FileUploaded', function(up, file, res) {
-            var index = self.uploaderList.store.getById(file.id)
+            var index = self.uploaderList.store.getById(file.id);
             self.uploaderList.store.remove(index);
         });
 
@@ -119,7 +124,8 @@ Frog.Uploader = new Class({
                 {name: 'size', type: 'int'},
                 {name: 'percent', type: 'int'},
                 {name: 'unique', type: 'bool'},
-                {name: 'date', type: 'date'}
+                {name: 'date', type: 'date'},
+                {name: 'status'}
             ]
         });
 
@@ -170,6 +176,12 @@ Frog.Uploader = new Class({
                             flex     : 1,
                             sortable : false,
                             dataIndex: 'percent'
+                        },
+                        {
+                            text: 'Status',
+                            flex: 2,
+                            sortable: false,
+                            dataIndex: 'status'
                         },
                         {
                             xtype: 'actioncolumn',

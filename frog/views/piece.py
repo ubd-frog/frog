@@ -50,6 +50,9 @@ def image(request, obj_id):
         return get(request, obj)
     elif request.method == 'POST':
         return post(request, obj)
+    elif request.method == 'PUT':
+        getPutData(request)
+        return put(request, obj)
     elif request.method == 'DELETE':
         getPutData(request)
         return delete(request, obj)
@@ -60,6 +63,25 @@ def video(request, obj_id):
     obj = Video.objects.get(pk=obj_id)
     if request.method == 'GET':
         return get(request, obj)
+    elif request.method == 'POST':
+        return post(request, obj)
+    elif request.method == 'PUT':
+        getPutData(request)
+        return put(request, obj)
+    elif request.method == 'DELETE':
+        getPutData(request)
+        return delete(request, obj)
+
+
+@login_required
+@csrf_exempt
+def data(request, guid):
+    obj = Piece.fromGuid(guid)
+    if request.method == 'GET':
+        res = Result()
+        res.append(obj.json())
+
+        return JsonResponse(res.asDict())
     elif request.method == 'POST':
         return post(request, obj)
     elif request.method == 'PUT':

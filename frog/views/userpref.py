@@ -30,11 +30,11 @@ try:
 except ImportError:
     import json
 
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.contrib.auth.decorators import login_required
 
 from frog.models import UserPref, DefaultPrefs
-from frog.common import Result, JsonResponse
+from frog.common import Result
 
 
 def index(request):

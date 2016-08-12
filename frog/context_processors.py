@@ -32,7 +32,7 @@ except AttributeError:
     raise ImproperlyConfigured, 'FROG_SITE_URL is required'
 
 
-BUILD = 1003
+BUILD = 1005
 
 def media(request):
     obj = {

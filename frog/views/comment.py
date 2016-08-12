@@ -32,6 +32,7 @@ Comment API
 
 from django.shortcuts import render
 from django.core.mail import send_mail
+from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.template.loader import render_to_string
 from django.contrib.auth.decorators import login_required
@@ -40,7 +41,7 @@ from django.contrib.sites.shortcuts import get_current_site
 
 from django_comments.models import Comment
 
-from frog.common import Result, JsonResponse, commentToJson, getObjectsFromGuids, getPutData
+from frog.common import Result, commentToJson, getObjectsFromGuids, getPutData
 from frog.models import Image, FROG_SITE_URL
 
 
