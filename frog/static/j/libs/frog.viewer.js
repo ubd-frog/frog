@@ -37,8 +37,8 @@ Frog.Viewer = new Class({
 
         this.element = new Element('div', {id: 'frog_viewer'}).inject(document.body);
         this.canvas = new Element('canvas', {width: window.getWidth(), height: window.getHeight()}).inject(this.element);
-        this.video = new Element('div', {'class': 'leanback-player-video'}).inject(this.element);
-        this.videoEl = new Element('video').inject(this.video);
+        this.video = new Element('div').inject(this.element);
+        this.videoEl = new Element('video', {'class': 'video-js'}).inject(this.video);
         this.img = new Element('img', {width: window.getWidth(), height: window.getHeight()}).inject(this.element, 'top');
 
         this.ctx = this.canvas.getContext('2d');

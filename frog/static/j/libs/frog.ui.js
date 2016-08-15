@@ -176,7 +176,7 @@ Frog.UI = (function(Frog) {
                             });
                         }
                     }
-                    if (res.value !== null) {
+                    if (res.value.gallery !== null) {
                         menuconfig.items.push('-');
                         menuconfig.items.push(
                             {

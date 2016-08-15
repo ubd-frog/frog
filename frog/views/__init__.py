@@ -197,6 +197,7 @@ def getUser(request):
         data['prefs'] = DefaultPrefs
     else:
         data['user'] = userToJson(request.user)
+        data['gallery'] = None
         galleryid = request.GET.get('gallery')
         if galleryid is not None:
             gallery = Gallery.objects.filter(pk=galleryid, owner=request.user)

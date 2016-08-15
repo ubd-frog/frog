@@ -10,6 +10,7 @@
         <link id="page_favicon" href="{{MEDIA_URL}}frog/i/favicon.ico" rel="icon" type="image/x-icon" />
         <link rel="stylesheet" href="{{MEDIA_URL}}frog/c/ext-all-gray.css">
         <link rel="stylesheet" href="{{MEDIA_URL}}frog/c/font-awesome.min.css?b={{build}}">
+        <link href="http://vjs.zencdn.net/5.10.8/video-js.css" rel="stylesheet">
         <link rel="stylesheet" href="{{MEDIA_URL}}frog/c/style.css?b={{build}}">
         {% for stylesheet in plugins.css%}
         <link rel="stylesheet" href="{{MEDIA_URL}}{{stylesheet}}">
@@ -74,6 +75,7 @@
         <script src="{{MEDIA_URL}}frog/j/libs/plupload.full.min.js"></script>
         <script src="{{MEDIA_URL}}frog/j/libs/Meio.Autocomplete.min.js"></script>
         <script src="{{MEDIA_URL}}frog/j/libs/sylvester.js"></script>
+        <script src="http://vjs.zencdn.net/5.10.8/video.js"></script>
 
         <!-- scripts concatenated and minified via build script -->
         <script src="{{MEDIA_URL}}frog/j/libs/frog.js?b={{build}}"></script>
