@@ -38,7 +38,7 @@ Frog.Viewer = new Class({
         this.element = new Element('div', {id: 'frog_viewer'}).inject(document.body);
         this.canvas = new Element('canvas', {width: window.getWidth(), height: window.getHeight()}).inject(this.element);
         this.video = new Element('div').inject(this.element);
-        this.videoEl = new Element('video', {'class': 'video-js'}).inject(this.video);
+        this.videoEl = new Element('video', {'id': 'frog_video_player', 'class': 'video-js'}).inject(this.video);
         this.img = new Element('img', {width: window.getWidth(), height: window.getHeight()}).inject(this.element, 'top');
 
         this.ctx = this.canvas.getContext('2d');
@@ -210,11 +210,11 @@ Frog.Viewer = new Class({
 
         var vid = this.objects[this.current];
         var padTop = window.getHeight() / 2 - vid.height / 2;
-        this.video.setStyle('padding-top', padTop);
+        this.video.firstChild.setStyle('margin', parseInt(padTop) + 'px auto');
 
-        this.videoEl.setStyles({
-            width: null,
-            height: null
+        this.video.firstChild.setStyles({
+            width: vid.width,
+            height: vid.height
         })
     },
     fitToWindow: function() {
@@ -222,15 +222,15 @@ Frog.Viewer = new Class({
         var dim = Frog.util.fitToRect(window.getWidth() - padding, window.getHeight() - padding, this.image.width, this.image.height);
 
         // -- Video
-        if (this.video.isVisible()) {
-            var dim = Frog.util.fitToRect(window.getWidth() - padding, window.getHeight() - padding, this.videoEl.width, this.videoEl.height);
-            var scale = dim.width / this.videoEl.width;
-            var padTop = window.getHeight() / 2 - (this.videoEl.height * scale) / 2;
-            this.video.setStyle('padding-top', padTop);
-            this.videoEl.setStyles({
-                width: this.videoEl.width * scale,
-                height: this.videoEl.height * scale
-            })
+        if (this.video.isVisible() && this.player) {
+            var vid = this.objects[this.current];
+            var dim = Frog.util.fitToRect(window.getWidth() - padding, window.getHeight() - padding, vid.width, vid.height);
+            var scale = dim.width / vid.width;
+            var padTop = window.getHeight() / 2 - (this.player.height() * scale) / 2;
+            this.video.firstChild.setStyle('margin', parseInt(padTop) + 'px auto');
+            // this.video.setStyle('padding-left', padding / 2);
+            this.video.firstChild.setStyle('width', vid.width * scale);
+            this.video.firstChild.setStyle('height', vid.height * scale);
         }
         else {
             var scale = dim.width / this.image.width;
@@ -311,6 +311,10 @@ Frog.Viewer = new Class({
         this.videoEl.load();
         this.videoEl.play();
         this.fitToWindow();
+
+        if (!this.player) {
+            this.player = videojs('frog_video_player');
+        }
     },
     setImages: function(images, id) {
         if (typeof(id) === 'undefined') {

@@ -357,17 +357,7 @@ class Video(Piece):
         self.width = videodata['streams'][0]['width']
         self.height = videodata['streams'][0]['height']
 
-        # -- Save thumbnail and put into queue
-        thumbnail = hashPath.parent / ("_%s.jpg" % hashVal)
-        cmd = '%s -i "%s" -ss 1 -vframes 1 "%s" -y' % (
-            FROG_FFMPEG,
-            hashPath,
-            thumbnail
-        )
-        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
-        proc.communicate()
-
-        self.thumbnail = thumbnail.replace('\\', '/').replace(ROOT, '')
+        self.generateThumbnail()
 
         for gal in galleries:
             g = Gallery.objects.get(pk=int(gal))
@@ -406,8 +396,51 @@ class Video(Piece):
 
         return obj
 
-    def generateThumbnail(self):
+    def generateThumbnail(self, image=None):
         """Generates a square thumbnail"""
+
+        if image is None:
+            # -- Save thumbnail and put into queue
+            source = ROOT / self.source.name
+            thumbnail = source.parent / '_{}.jpg'.format(source.namebase)
+            cmd = '{} -i "{}" -ss 1 -vframes 1 "{}" -y'.format(
+                FROG_FFMPEG,
+                source,
+                thumbnail
+            )
+            proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
+            proc.communicate()
+            image = pilImage.open(thumbnail)
+
+        size = FROG_THUMB_SIZE
+        if self.width < size and self.height < size:
+            size = min(self.width, self.height)
+        ratio = float(self.width) / float(self.height)
+        if ratio >= 1.0:
+            width = size * ratio
+            height = size
+            box = (
+                int(width / 2 - (size / 2)),
+                0,
+                int(width / 2 + (size / 2)),
+                size
+            )
+        else:
+            width = size
+            height = size / ratio
+            box = (
+                0,
+                int(height / 2 - (size / 2)),
+                size,
+                int(height / 2 + (size / 2)),
+            )
+        # Resize
+        image.thumbnail((width, height), pilImage.ANTIALIAS)
+        # Crop from center
+        image = image.crop(box)
+        # save
+        self.thumbnail = thumbnail
+        image.save(thumbnail)
 
     def info(self):
         cmd = [

@@ -32,15 +32,34 @@ from frog.common import getRoot
 
 class Command(BaseCommand):
     help = 'Generated thumbnails'
+    
     def add_arguments(self, parser):
         parser.add_argument(
-            '--exclude-video', '-e',
+            '--video',
             action='store_true',
             dest='video',
             default=False,
-            help='Exclude generating thumbnails for videos'
+            help='Generate thumbnails for videos'
         )
+        parser.add_argument(
+            '--image',
+            action='store_true',
+            dest='image',
+            default=False,
+            help='Generate thumbnails for images'
+        )
+
     def handle(self, *args, **options):
-        for image in Image.objects.all():
-            self.stdout.write('Generating thumbnail for {}'.format(image))
-            image.generateThumbnail()
+        processall = not options.get('image', False) and not options.get('video', False)
+        if processall:
+            self.stdout.write('Processing all: {}'.format(options))
+        
+        if options.get('image', False) or processall:
+            for image in Image.objects.all():
+                self.stdout.write('Generating thumbnail for {}'.format(image))
+                image.generateThumbnail()
+
+        if options.get('video', False) or processall:
+            for image in Video.objects.all():
+                self.stdout.write('Generating thumbnail for {}'.format(image))
+                image.generateThumbnail()
