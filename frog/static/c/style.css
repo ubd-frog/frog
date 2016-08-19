@@ -304,6 +304,7 @@ a:hover { color: #fff; }
     width: 200px;
     height: 220px;
     border: 0px solid transparent;
+    border-width: 1px 0 0 1px;
     box-sizing: border-box;
     -webkit-box-sizing: border-box;
     -moz-box-sizing: border-box;
@@ -368,7 +369,8 @@ a:hover { color: #fff; }
         opacity: 1.0;
     }
     .thumbnail.selected {
-        border: 1px solid #202020;
+        border-color: #626f7d;
+        background: #4b5560;
     }
         .thumbnail.selected img {
             transform: translateZ(0px) scale3d(0.8, 0.8, 1);
@@ -545,7 +547,7 @@ li.frog-tag {
 #gallery {
     width: 100%;
     padding-top: 68px;
-    overflow: auto;
+    /*overflow: auto;*/
 }
 #frog_upload {
     display: none;

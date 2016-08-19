@@ -278,6 +278,9 @@ Frog.Gallery = new Class({
     },
     viewImages: function(e, el) {
         e.stop();
+        if (window.event.shiftKey) {
+            return;
+        }
         if (this.options.altclick && e.control) {
             var id = Frog.util.getData(el.parentNode.parentNode, 'frog_tn_id').toInt();
             this.options.altclick(this.objects[id]);

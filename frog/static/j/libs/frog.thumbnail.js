@@ -58,7 +58,7 @@ Frog.Thumbnail = new Class({
             'class': 'thumbnail noselect',
             events: {
                 click: function(e) {
-                    if (e.target.get('tag') === 'div') {
+                    if (window.event.shiftKey) {
                         self.setSelected();
                     }
                 }
@@ -142,8 +142,8 @@ Frog.Thumbnail = new Class({
         });
         this.imgLink.setStyles(dim);
         this.img.setStyles({
-            width: dim.width,// - 6,
-            height: dim.height// - 6
+            width: dim.width - 1,// - 6,
+            height: dim.height - 1// - 6
         });
         this.spacer.setStyles({
             height: 0//(size - dim.height - 10 + 10) / 2
