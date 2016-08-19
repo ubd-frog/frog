@@ -172,7 +172,7 @@ def search(request):
     else:
         l += [t.json() for t in query]
 
-    return JsonResponse(l)
+    return JsonResponse(l, safe=False)
 
 
 @login_required
