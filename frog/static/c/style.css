@@ -298,9 +298,9 @@ a:hover { color: #fff; }
     background-image: url('../i/application_view_tile.png');
 }
 .thumbnail {
-    display: inline-block;
+    display: inline-flex;
     position: relative;
-    float: left;
+    /*float: left;*/
     width: 200px;
     height: 220px;
     border: 0px solid transparent;
@@ -546,8 +546,8 @@ li.frog-tag {
 /*Main Elements*/
 #gallery {
     width: 100%;
-    padding-top: 68px;
-    /*overflow: auto;*/
+    padding-top: 84px;
+    overflow: auto;
 }
 #frog_upload {
     display: none;
