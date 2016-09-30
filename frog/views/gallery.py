@@ -37,7 +37,7 @@ import functools
 import logging
 
 from django.http import HttpResponseRedirect, JsonResponse
-from django.core.exceptions import ImproperlyConfigured
+from django.core.exceptions import ImproperlyConfigured, PermissionDenied
 from django.shortcuts import render
 from django.db.models import Q
 from django.contrib.contenttypes.models import ContentType
@@ -94,13 +94,13 @@ def get(request, obj_id=None):
 
         objects = objects.filter(parent__isnull=True)
 
-        for n in objects:
+        for obj in objects:
             if flat:
-                res.append({'title': n.title, 'id': n.id});
-                for child in n.gallery_set.all().order_by('title'):
+                res.append({'title': obj.title, 'id': obj.id});
+                for child in obj.gallery_set.all().order_by('title'):
                     res.append({'title': '-- %s' % child.title, 'id': child.id});
             else:
-                res.append(n.json())
+                res.append(obj.json())
 
         return JsonResponse(res.asDict())
 
@@ -187,11 +187,7 @@ def filterObjects(request, obj_id):
     obj = Gallery.objects.get(pk=obj_id)
 
     if request.user.is_anonymous() and obj.security != Gallery.PUBLIC:
-        res = Result()
-        res.isError = True
-        res.message = 'This gallery is not public'
-
-        return JsonResponse(res.asDict())
+        raise PermissionDenied()
 
     tags = json.loads(request.GET.get('filters', '[[]]'))
     rng = request.GET.get('rng', None)
@@ -231,11 +227,7 @@ def _filter(request, object_, tags=None, models=(Image, Video), rng=None, more=F
     data = {}
 
     LOGGER.debug('init: %f' % (time.clock() - NOW))
-    if request.user.is_anonymous():
-        gRange = 300
-    else:
-        Prefs = json.loads(UserPref.objects.get_or_create(user=request.user)[0].data)
-        gRange = Prefs['batchSize']
+    gRange = 300
     request.session.setdefault('frog_range', '0:%i' % gRange)
 
     if rng:
@@ -257,6 +249,7 @@ def _filter(request, object_, tags=None, models=(Image, Video), rng=None, more=F
         lastIndex = indexes[0]
         if more:
             # -- This is a request for more results
+            LOGGER.debug(request.session.get('last_%s_id' % m.model))
             idx = request.session.get('last_%s_id' % m.model, lastIndex + 1)
             lastIDs.setdefault('last_%s_id' % m.model, idx)
         else:
@@ -335,6 +328,7 @@ def _filter(request, object_, tags=None, models=(Image, Video), rng=None, more=F
     LOGGER.debug('total: %f' % (time.clock() - NOW))
     request.session['last_image_id'] = lastIDs.get('last_image_id', 0)
     request.session['last_video_id'] = lastIDs.get('last_video_id', 0)
+    LOGGER.debug(request.session.get('last_image_id'))
     
     data['count'] = len(objects)
     if settings.DEBUG:

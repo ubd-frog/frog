@@ -33,6 +33,8 @@ Tag API
     POST    /manage  Adds and removes tags from guids and commits data
 """
 
+import json
+
 from django.shortcuts import render, get_object_or_404
 from django.db import connection
 from django.http import JsonResponse
@@ -83,7 +85,8 @@ def post(request):
     :returns: json
     """
     res = Result()
-    name = request.POST.get('name', None)
+    data = request.POST or json.loads(request.body)['body']
+    name = data.get('name', None)
 
     if not name:
         res.isError = True
@@ -200,9 +203,11 @@ def manage(request):
 
         return render(request, 'frog/tag_manage.html', {'tags': tags})
     else:
-        add = request.POST.get('add', '').split(',')
-        rem = request.POST.get('rem', '').split(',')
-        guids = request.POST.get('guids', '').split(',')
+        res = Result()
+        data = request.POST or json.loads(request.body)['body']
+        add = data.get('add', '').split(',')
+        rem = data.get('rem', '').split(',')
+        guids = data.get('guids', '').split(',')
 
         add = [a for a in add if a]
         rem = [r for r in rem if r]
@@ -226,7 +231,7 @@ def manage(request):
             for r in remTags:
                 o.tags.remove(r)
 
-        res = Result()
+            res.append(o.json())
 
         return JsonResponse(res.asDict())
 

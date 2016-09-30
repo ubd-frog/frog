@@ -40,7 +40,7 @@ from django.template.loader import render_to_string
 from django.contrib.auth.decorators import login_required
 
 from frog.models import Image, Video, Tag, Piece, FROG_SITE_URL
-from frog.common import Result, getPutData
+from frog.common import Result, getPutData, getObjectsFromGuids
 
 
 def image(request, obj_id):
@@ -92,11 +92,14 @@ def data(request, guid):
         return delete(request, obj)
 
 
+@login_required
 def getGuids(request):
     res = Result()
-    guids = request.GET.get('guids')
-    if guids:
-        guids = guids.split(',')
+    data = {}
+    
+    guids = request.GET.get('guids', '').split(',')
+    for _ in getObjectsFromGuids(guids):
+        res.append(_.json())
 
     return JsonResponse(res.asDict())
 
@@ -107,8 +110,7 @@ def like(request, guid):
     obj = Piece.fromGuid(guid)
     res = Result()
     if obj.like(request):
-        #emailLike(request, obj)
-        pass
+        emailLike(request, obj)
     else:
         res.isError = True
         res.message = 'Cannot "like" things more than once'

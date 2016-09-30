@@ -30,6 +30,8 @@ Comment API
     PUT     /id      Updates the content of the comment
 """
 
+import json
+
 from django.shortcuts import render
 from django.core.mail import send_mail
 from django.http import JsonResponse
@@ -70,13 +72,14 @@ def get(request, obj_id):
 @login_required
 def post(request):
     """Returns a serialized object"""
-    guid = request.POST.get('guid', None)
-    res = Result()   
+    data = request.POST or json.loads(request.body)['body']
+    guid = data.get('guid', None)
+    res = Result()
 
     if guid:
         obj = getObjectsFromGuids([guid,])[0]
         c = Comment()
-        c.comment = request.POST.get('comment', 'No comment')
+        c.comment = data.get('comment', 'No comment')
         c.user = request.user
         c.user_name = request.user.get_full_name()
         c.user_email = request.user.email
@@ -90,7 +93,7 @@ def post(request):
         if request.user != obj.author:
             __email(c, obj)
 
-        res.append({'id': c.id, 'comment': c.comment})
+        res.append(commentToJson(c))
     else:
         res.isError = True
         res.message = "No guid provided"
@@ -139,6 +142,12 @@ def commentList(request):
             model = 'video'
         contentType = ContentType.objects.get(app_label="frog", model=model)
         comments = Comment.objects.filter(object_pk=obj.id, content_type=contentType)
+
+    if request.GET.get('json'):
+        res = Result()
+        for comment in comments:
+            res.append(commentToJson(comment))
+        return JsonResponse(res.asDict())
     
     return render(request, 'frog/comment_list.html', {'comments': comments, 'guid': guid, 'id': id})
 

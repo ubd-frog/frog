@@ -54,6 +54,10 @@ def index(request):
         return upload(request)
 
 
+def authInfo(request):
+    return 
+
+
 def login_(request):
     email = request.POST.get('email', 'noauthor@domain.com').lower()
     username = email.split('@')[0]
@@ -82,11 +86,21 @@ def login_(request):
 
     login(request, user)
 
+    if not Gallery.objects.filter(title=user.username):
+        usergallery = Gallery(title=user.username, security=Gallery.PERSONAL)
+        usergallery.save()
+
+    if request.is_ajax():
+        return JsonResponse({'value': 1})
+
     return HttpResponseRedirect('/frog/gallery/1')
 
 
 def logout_(request):
     logout(request)
+
+    if request.is_ajax():
+        return JsonResponse({'value': 1})
 
     return HttpResponseRedirect('/frog')
 
