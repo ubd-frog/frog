@@ -83,6 +83,7 @@ class Tag(models.Model):
         obj = {
             'id': self.id,
             'name': self.name,
+            'artist': self.artist,
         }
 
         return obj
@@ -199,9 +200,11 @@ class Piece(models.Model):
             'id': self.id,
             'title': self.title,
             'author': {
+                'id': self.author.id,
                 'first': self.author.first_name,
                 'last': self.author.last_name,
                 'username': self.author.username,
+                'name': self.author.get_full_name(),
                 'email': self.author.email,
             },
             'created': self.created.isoformat(),
@@ -255,7 +258,7 @@ class Image(Piece):
         
         workImage = pilImage.open(imagefile)
 
-        if imagefile.ext in ('.tif', '.tiff'):
+        if imagefile.ext in ('.tif', '.tiff', 'psd'):
             png = imagefile.parent / imagefile.namebase + '.png'
             workImage.save(png)
             workImage = pilImage.open(png)
@@ -339,6 +342,8 @@ class Video(Piece):
     source = models.FileField(upload_to='%Y/%m/%d', max_length=255, blank=True, null=True)
     video = models.FileField(upload_to='%Y/%m/%d', max_length=255, blank=True, null=True)
     video_thumbnail = models.FileField(upload_to='%Y/%m/%d', max_length=255, blank=True, null=True)
+    poster = models.ImageField(upload_to='%Y/%m/%d', max_length=255, blank=True, null=True)
+    framerate = models.IntegerField(default=24)
 
     def export(self, hashVal, hashPath, tags=None, galleries=None):
         """
@@ -356,6 +361,7 @@ class Video(Piece):
         videodata = self.info()
         self.width = videodata['streams'][0]['width']
         self.height = videodata['streams'][0]['height']
+        self.framerate = int(videodata['streams'][0]['avg_frame_rate'].split('/')[0])
 
         self.generateThumbnail()
 
@@ -393,6 +399,8 @@ class Video(Piece):
         obj['source'] = self.source.url if self.source else ''
         obj['video'] = self.video.url if self.video else ''
         obj['video_thumbnail'] = self.video_thumbnail.url if self.video_thumbnail else ''
+        obj['poster'] = self.poster.url if self.poster else ''
+        obj['framerate'] = self.framerate
 
         return obj
 
@@ -403,6 +411,7 @@ class Video(Piece):
             # -- Save thumbnail and put into queue
             source = ROOT / self.source.name
             thumbnail = source.parent / '_{}.jpg'.format(source.namebase)
+            poster = source.parent / '__{}.jpg'.format(source.namebase)
             cmd = '{} -i "{}" -ss 1 -vframes 1 "{}" -y'.format(
                 FROG_FFMPEG,
                 source,
@@ -411,6 +420,7 @@ class Video(Piece):
             proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
             proc.communicate()
             image = pilImage.open(thumbnail)
+            image.save(poster)
 
         size = FROG_THUMB_SIZE
         if self.width < size and self.height < size:
@@ -445,7 +455,7 @@ class Video(Piece):
     def info(self):
         cmd = [
             FROG_FFPROBE,
-            '-select_streams', 'v:0', '-show_entries', 'stream=width,height,codec_name,duration', '-of', 'json',
+            '-select_streams', 'v:0', '-show_entries', 'stream=width,height,codec_name,duration,avg_frame_rate', '-of', 'json',
             self.source.file.name
         ]
         try:

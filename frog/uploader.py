@@ -22,6 +22,7 @@
 
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.models import User
+from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.http import JsonResponse
 
@@ -31,7 +32,7 @@ from frog.common import Result, getHashForFile
 from path import path as Path
 
 EXT = {
-    'image': ['.jpg', '.png', '.gif', '.tif', '.tiff'],
+    'image': ['.jpg', '.png', '.gif', '.tif', '.tiff', 'psd'],
     'video': ['.mp4', '.avi', '.wmv', '.mov']
 }
 
@@ -40,6 +41,7 @@ class MediaTypeError(Exception):
     pass
 
 
+@login_required
 @csrf_exempt
 def upload(request):
     res = Result()
@@ -62,11 +64,7 @@ def upload(request):
             if username:
                 user = User.objects.get(username=username)
             else:
-                if request.user.is_anonymous():
-                    username = 'noauthor'
-                    user = User.objects.get(username=username)
-                else:
-                    user = request.user
+                user = request.user
             
             uniqueName = request.POST.get('uid', models.Piece.getUniqueID(foreignPath, user))
 
