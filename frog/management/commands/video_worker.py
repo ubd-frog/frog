@@ -30,13 +30,17 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('-q', '--quality', default='medium', help='Video output quality')
-        parser.add_argument('-a', '--always-convert', default=False, action='store_true', help='Always convert video')
-        parser.add_argument('-e', '--email-user', default=True, action='store_false', help='Email user when processing their video has completed')
+        parser.add_argument('-a', '--always-convert', default=False, dest='alwaysconvert', action='store_true', help='Always convert video')
+        parser.add_argument('-e', '--email-user', default=True, dest='emailuser', action='store_false', help='Email user when processing their video has completed')
 
     def handle(self, *args, **options):
         video_thread.LOGGER.info('Starting Worker')
         try:
-            thread = video_thread.VideoThread()
+            thread = video_thread.VideoThread(
+                quality=options['quality'],
+                alwaysconvert=options['alwaysconvert'],
+                emailuser=options['emailuser']
+            )
             thread.start()
             thread.join()
         except Exception as err:

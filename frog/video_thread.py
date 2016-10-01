@@ -20,16 +20,12 @@
 ##################################################################################################
 
 
-import logging
 import subprocess
 import argparse
 import shutil
 import logging.config
-from collections import namedtuple
 from threading import Thread, Event
 
-import django
-django.setup()
 from django.conf import settings
 from django.core.mail import send_mail, mail_admins
 from django.template.loader import render_to_string
@@ -69,6 +65,8 @@ class VideoThread(Thread):
         self._alwaysconvert = alwaysconvert
         self._emailuser = emailuser
 
+        LOGGER.info('Options quality={}, alwaysconvert={}'.format(self._quality, self._alwaysconvert))
+
     def stop(self):
         self.stop_event.set()
 
@@ -104,14 +102,16 @@ class VideoThread(Thread):
 
                 # -- Further processing is needed if not h264 or needs to be scrubbable
                 if not isH264 or scrub or self._alwaysconvert or item.force:
+                    LOGGER.info('Converting video: %s' % video.guid)
                     item.message = 'Converting to MP4...'
                     item.save()
 
                     args = FROG_SCRUB_FFMPEG_ARGS if scrub else FROG_FFMPEG_ARGS
                     cmd = [FROG_FFMPEG, '-i', str(sourcepath)]
                     cmd += args.format(QUALITY[self._quality]).split(' ')
-                    cmd += [str(outfile)]
+                    cmd += [str(tempfile)]
                     try:
+                        LOGGER.info(cmd)
                         subprocess.call(cmd)
                     except subprocess.CalledProcessError as err:
                         LOGGER.error('Failed to convert video: %s' % video.guid)
