@@ -107,15 +107,12 @@ class VideoThread(Thread):
                     item.message = 'Converting to MP4...'
                     item.save()
 
-                    ffmpegargs = FROG_SCRUB_FFMPEG_ARGS if scrub else FROG_FFMPEG_ARGS
-                    cmd = '{exe} -i "{infile}" {args} "{outfile}"'.format(
-                        exe=FROG_FFMPEG,
-                        infile=sourcepath,
-                        args=ffmpegargs.format(QUALITY[self._quality]),
-                        outfile=tempfile,
-                    )
+                    args = FROG_SCRUB_FFMPEG_ARGS if scrub else FROG_FFMPEG_ARGS
+                    cmd = [FROG_FFMPEG, '-i', str(sourcepath)]
+                    cmd += args.format(QUALITY[self._quality]).split(' ')
+                    cmd += [str(outfile)]
                     try:
-                        subprocess.call(cmd, shell=True)
+                        subprocess.call(cmd)
                     except subprocess.CalledProcessError as err:
                         LOGGER.error('Failed to convert video: %s' % video.guid)
                         item.status = VideoQueue.ERROR
