@@ -22,6 +22,8 @@
 
 import logging
 import subprocess
+import argparse
+import shutil
 import logging.config
 from collections import namedtuple
 from threading import Thread, Event
@@ -43,8 +45,8 @@ except AttributeError:
     raise ImproperlyConfigured('FROG_FFMPEG and FROG_FFPROBE are required')
 
 FROG_SCRUB_DURATION = getattr(settings, 'FROG_SCRUB_DURATION', 60)
-FROG_FFMPEG_ARGS = getattr(settings, 'FROG_FFMPEG_ARGS', '-vcodec libx264 -b:v {}k -acodec libfdk_aac -b:a 56k -ac 2 -y')
-FROG_SCRUB_FFMPEG_ARGS = getattr(settings, 'FROG_SCRUB_FFMPEG_ARGS', '-vcodec libx264 -b:v {}k -x264opts keyint=1:min-keyint=8 -acodec libfdk_aac -b:a 56k -ac 2 -y')
+FROG_FFMPEG_ARGS = getattr(settings, 'FROG_FFMPEG_ARGS', '-vcodec libx264 -b:v {}k -acodec aac -b:a 56k -ac 2 -y')
+FROG_SCRUB_FFMPEG_ARGS = getattr(settings, 'FROG_SCRUB_FFMPEG_ARGS', '-vcodec libx264 -b:v {}k -x264opts keyint=1:min-keyint=1 -acodec aac -b:a 56k -ac 2 -y')
 
 TIMEOUT = 1
 ROOT = getRoot()
@@ -97,10 +99,11 @@ class VideoThread(Thread):
                 isH264 = 'h264' in videodata['streams'][0]['codec_name'].lower() and sourcepath.ext == '.mp4'
                 scrub = float(videodata['streams'][0]['duration']) <= FROG_SCRUB_DURATION
 
+                tempfile = sourcepath.parent / 'temp.mp4'
                 outfile = sourcepath.parent / '{}.mp4'.format(video.hash)
 
                 # -- Further processing is needed if not h264 or needs to be scrubbable
-                if not isH264 or scrub or self._alwaysconvert:
+                if not isH264 or scrub or self._alwaysconvert or item.force:
                     item.message = 'Converting to MP4...'
                     item.save()
 
@@ -109,7 +112,7 @@ class VideoThread(Thread):
                         exe=FROG_FFMPEG,
                         infile=sourcepath,
                         args=ffmpegargs.format(QUALITY[self._quality]),
-                        outfile=outfile,
+                        outfile=tempfile,
                     )
                     try:
                         subprocess.call(cmd, shell=True)
@@ -121,6 +124,7 @@ class VideoThread(Thread):
                         continue
 
                     video.video = outfile.replace('\\', '/').replace(ROOT, '')
+                    shutil.move(tempfile, outfile)
                 else:
                     # -- No further processing
                     video.video = video.source.name
@@ -156,13 +160,34 @@ def emailUser(video, error=None):
     send_mail(subject, text_content, from_email, [to], html_message=html_content)
 
 
-if __name__ == '__main__':
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '--quality',
+        default='medium',
+    )
+    parser.add_argument(
+        '--always-convert',
+        action='store_true',
+        dest='alwaysconvert'
+    )
+    parser.add_argument(
+        '--email-user',
+        action='store_true',
+        dest='emailuser'
+    )
+
+    args = parser.parse_args()
+
     LOGGER.info('Starting Worker')
     try:
-        thread = VideoThread()
+        thread = VideoThread(quality=args.quality, alwaysconvert=args.alwaysconvert, emailuser=args.emailuser)
         thread.start()
         thread.join()
     except Exception as err:
         LOGGER.error(err)
+        
 
 
+if __name__ == '__main__':
+    main()
