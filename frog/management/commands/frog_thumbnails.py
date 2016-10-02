@@ -59,6 +59,7 @@ class Command(BaseCommand):
                 self.stdout.write('Generating thumbnail for {}'.format(image))
                 try:
                     image.generateThumbnail()
+                    image.save()
                 except Exception as err:
                     self.stderr.write(str(err))
 
@@ -67,5 +68,6 @@ class Command(BaseCommand):
                 self.stdout.write('Generating thumbnail for {}'.format(image))
                 try:
                     image.generateThumbnail()
+                    image.save()
                 except Exception as err:
                     self.stderr.write(str(err))
