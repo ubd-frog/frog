@@ -57,9 +57,15 @@ class Command(BaseCommand):
         if options.get('image', False) or processall:
             for image in Image.objects.all():
                 self.stdout.write('Generating thumbnail for {}'.format(image))
-                image.generateThumbnail()
+                try:
+                    image.generateThumbnail()
+                except Exception as err:
+                    self.stderr.write(str(err))
 
         if options.get('video', False) or processall:
             for image in Video.objects.all():
                 self.stdout.write('Generating thumbnail for {}'.format(image))
-                image.generateThumbnail()
+                try:
+                    image.generateThumbnail()
+                except Exception as err:
+                    self.stderr.write(str(err))

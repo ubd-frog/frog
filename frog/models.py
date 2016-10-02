@@ -406,18 +406,14 @@ class Video(Piece):
 
     def generateThumbnail(self, image=None):
         """Generates a square thumbnail"""
+        source = ROOT / self.source.name
+        thumbnail = source.parent / '_{}.jpg'.format(source.namebase)
 
         if image is None:
             # -- Save thumbnail and put into queue
-            source = ROOT / self.source.name
-            thumbnail = source.parent / '_{}.jpg'.format(source.namebase)
             poster = source.parent / '__{}.jpg'.format(source.namebase)
-            cmd = '{} -i "{}" -ss 1 -vframes 1 "{}" -y'.format(
-                FROG_FFMPEG,
-                source,
-                thumbnail
-            )
-            proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
+            cmd = [FROG_FFMPEG, '-i', str(source), '-ss', '1', '-vframes', '1', str(thumbnail), '-y']
+            proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             proc.communicate()
             image = pilImage.open(thumbnail)
             image.save(poster)
@@ -455,7 +451,8 @@ class Video(Piece):
     def info(self):
         cmd = [
             FROG_FFPROBE,
-            '-select_streams', 'v:0', '-show_entries', 'stream=width,height,codec_name,duration,avg_frame_rate', '-of', 'json',
+            '-select_streams', 'v:0', '-show_entries', 'stream=width,height,codec_name,duration,avg_frame_rate',
+            '-of', 'json',
             self.source.file.name
         ]
         try:
