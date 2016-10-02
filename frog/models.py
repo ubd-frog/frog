@@ -445,7 +445,7 @@ class Video(Piece):
         # Crop from center
         image = image.crop(box)
         # save
-        self.thumbnail = thumbnail
+        self.thumbnail = thumbnail.replace(ROOT, '')
         image.save(thumbnail)
 
     def info(self):
