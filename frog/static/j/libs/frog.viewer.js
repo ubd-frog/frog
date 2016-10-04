@@ -299,7 +299,8 @@ Frog.Viewer = new Class({
         this.videoEl.setProperties({
             poster: vid.thumbnail,
             autoplay: 'autoplay',
-            loop: 'loop'
+            loop: 'loop',
+            src: vid.video
         });
 
         new Element('source', {
