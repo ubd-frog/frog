@@ -173,6 +173,7 @@ def emailLike(request, obj):
         'user': request.user,
         'object': obj,
         'comment': '',
+        'action_type': 'liked',
         'image': isinstance(obj, Image),
         'SITE_URL': FROG_SITE_URL,
     })

@@ -69,9 +69,9 @@ background-color: #f6f6f6;
                                     <td class="content-block" style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; vertical-align: top; margin: 0; padding: 0 0 20px;" valign="top">
                                         <p>
                                             {% if image %}
-                                            {{user}} commented on your image <a href='{{SITE_URL}}/frog/image/{{object.id}}'>{{object.title}}</a>
+                                            {{user}} {{action_type}} your image <a href='{{SITE_URL}}/frog/image/{{object.id}}'>{{object.title}}</a>
                                             {% else %}
-                                            {{user}} commented on your image <a href='{{SITE_URL}}/frog/video/{{object.id}}'>{{object.title}}</a>
+                                            {{user}} {{action_type}} your image <a href='{{SITE_URL}}/frog/video/{{object.id}}'>{{object.title}}</a>
                                             {% endif %}
                                         </p>
                                     </td>

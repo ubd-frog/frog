@@ -161,6 +161,7 @@ def __email(comment, obj):
         'user': comment.user,
         'comment': comment.comment,
         'object': obj,
+        'action_type': 'commented on',
         'image': isinstance(obj, Image),
         'SITE_URL': FROG_SITE_URL,
     })
