@@ -284,7 +284,6 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
             if (Frog.user !== null) {
                 this.fakeInput = new Element('input', {
                     'placeholder': 'Comment...',
-                    'autofocus': 'autofocus',
                     events: {
                         click: function(e) {
                             e.stop();

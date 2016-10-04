@@ -226,9 +226,8 @@ Frog.Viewer = new Class({
             var vid = this.objects[this.current];
             var dim = Frog.util.fitToRect(window.getWidth() - padding, window.getHeight() - padding, vid.width, vid.height);
             var scale = dim.width / vid.width;
-            var padTop = window.getHeight() / 2 - (this.player.height() * scale) / 2;
+            var padTop = window.getHeight() / 2 - (vid.height * scale) / 2;
             this.video.firstChild.setStyle('margin', parseInt(padTop) + 'px auto');
-            // this.video.setStyle('padding-left', padding / 2);
             this.video.firstChild.setStyle('width', vid.width * scale);
             this.video.firstChild.setStyle('height', vid.height * scale);
         }
@@ -299,7 +298,6 @@ Frog.Viewer = new Class({
         this.videoEl.height = vid.height;
         this.videoEl.setProperties({
             poster: vid.thumbnail,
-            controls: 'controls',
             autoplay: 'autoplay',
             loop: 'loop'
         });
