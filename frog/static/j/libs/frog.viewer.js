@@ -300,6 +300,7 @@ Frog.Viewer = new Class({
             poster: vid.thumbnail,
             autoplay: 'autoplay',
             loop: 'loop',
+            controls: 'controls',
             src: vid.video
         });
 
