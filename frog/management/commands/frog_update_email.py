@@ -31,7 +31,7 @@ from django.core.exceptions import ImproperlyConfigured
 
 from frog.models import Gallery, FROG_SITE_URL
 
-FROG_UPDATE_GROUP_EMAIL = getattr(settings, 'FROG_UPDATE_GROUP_EMAIL')
+FROG_UPDATE_GROUP_EMAIL = getattr(settings, 'FROG_UPDATE_GROUP_EMAIL', None)
 
 
 class Command(BaseCommand):
