@@ -63,7 +63,7 @@ except AttributeError:
 
 DefaultPrefs = {
     'backgroundColor': '000000',
-    'tileCount': 6,
+    'tileCount': 9,
     'batchSize': 300,
     'includeImage': True,
     'includeVideo': True,
@@ -102,6 +102,7 @@ class Piece(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     modified = models.DateTimeField(auto_now=True)
     thumbnail = models.ImageField(upload_to='%Y/%m/%d', max_length=255, blank=True, null=True)
+    custom_thumbnail = models.ImageField(upload_to='%Y/%m/%d', max_length=255, blank=True, null=True)
     width = models.IntegerField(default=0)
     height = models.IntegerField(default=0)
     foreign_path = models.TextField(blank=True)
@@ -196,6 +197,12 @@ class Piece(models.Model):
         self.save()
 
     def json(self):
+        thumbnail = ''
+        if self.custom_thumbnail:
+            thumbnail = self.custom_thumbnail.url
+        elif self.thumbnail:
+            thumbnail = self.thumbnail.url
+
         obj = {
             'id': self.id,
             'title': self.title,
@@ -215,7 +222,7 @@ class Piece(models.Model):
             'deleted': self.deleted,
             'hash': self.hash,
             'tags': [tag.json() for tag in self.tags.all()],
-            'thumbnail': self.thumbnail.url if self.thumbnail else '',
+            'thumbnail': thumbnail,
             'comment_count': self.comment_count,
             'like_count': self.like_count,
             'description': self.description,
