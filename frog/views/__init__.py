@@ -21,7 +21,7 @@
 
 import logging
 
-from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse, HttpResponseForbidden
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import authenticate, login, logout
@@ -103,6 +103,11 @@ def logout_(request):
         return JsonResponse({'value': 1})
 
     return HttpResponseRedirect('/frog')
+
+
+@login_required
+def auth(request):
+    return HttpResponse()
 
 
 def accessDenied(request):

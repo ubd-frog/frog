@@ -26,6 +26,8 @@ from frog import views
 from frog.rss import Daily, Weekly
 
 urlpatterns = [
+    # -- SSO
+    url(r'^auth$', views.auth),
     # -- Gallery
     url(r'^gallery$', views.gallery.index),
     url(r'^gallery/(?P<obj_id>\d+)$', views.gallery.index),
