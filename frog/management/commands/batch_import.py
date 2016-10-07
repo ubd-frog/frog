@@ -19,6 +19,7 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ##################################################################################################
 
+import datetime
 
 from optparse import make_option
 from django.core.management.base import BaseCommand
@@ -32,6 +33,7 @@ from frog.common import getRoot
 
 class Command(BaseCommand):
     def add_arguments(self, parser):
+        parser.add_argument('path')
         parser.add_argument(
             '--dirnames', '-d',
             action='store_true',
@@ -51,12 +53,17 @@ class Command(BaseCommand):
             default='noauthor',
             help='Username to use for images'
         )
+        parser.add_argument(
+            '--date',
+            type=lambda x: datetime.datetime.strptime(x, '%Y-%m-%d'),
+            help='Items older than this date will not be imported.  Format: YYYY-MM-DD'
+        )
 
     def handle(self, *args, **options):
         if options['topdir'] == '.':
-            options['topdir'] = args[0]
+            options['topdir'] = options['path']
 
-        files = path.Path(args[0]).walk()
+        files = path.Path(options['path']).walk()
         extensions = EXT['image'] + EXT['video']
         user = User.objects.get_or_create(
             username=options['user'],
@@ -65,6 +72,12 @@ class Command(BaseCommand):
         gallery = Gallery.objects.get(pk=1)
 
         for file_ in files:
+            if options['date']:
+                d = datetime.datetime.fromtimestamp(file_.mtime)
+                if d <= options['date']:
+                    self.stdout.write('Skipping {} as it is too old: {}'.format(file_, d))
+                    continue
+
             if file_.ext.lower() in extensions:
                 uniqueName = Piece.getUniqueID(file_, user)
                 if file_.ext.lower() in EXT['image']:
