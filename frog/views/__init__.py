@@ -99,15 +99,21 @@ def login_(request):
 def logout_(request):
     logout(request)
 
+    response = HttpResponseRedirect('/frog')
+    response.delete_cookie('sessionid')
+
     if request.is_ajax():
         return JsonResponse({'value': 1})
 
-    return HttpResponseRedirect('/frog')
+    return response
 
 
-@login_required
 def auth(request):
-    return HttpResponse()
+    response = HttpResponse()
+    if request.user.is_anonymous():
+        response.status_code = 401
+
+    return response
 
 
 def accessDenied(request):
