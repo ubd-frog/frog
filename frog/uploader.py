@@ -76,7 +76,7 @@ def upload(request):
                     raise MediaTypeError
                 model = models.Image
             else:
-                if Path(filename).ext not in EXT['video']:
+                if Path(filename).ext.lower() not in EXT['video']:
                     raise MediaTypeError
                 model = models.Video
 
