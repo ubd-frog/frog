@@ -31,7 +31,7 @@ from django.core.mail import send_mail
 from django.conf import settings
 
 from frog.models import Gallery, Image, Video, Tag, Piece, DefaultPrefs
-from frog.common import Result, getObjectsFromGuids, userToJson
+from frog.common import Result, getObjectsFromGuids, userToJson, getBranding
 from frog.uploader import upload
 from frog.signals import frog_auth_check
 from frog.send_file import send_zipfile
@@ -49,7 +49,7 @@ def index(request):
 
         if not request.user.is_anonymous():
             return HttpResponseRedirect('/frog/gallery/1')
-        return render(request, INDEX_HTML)
+        return render(request, INDEX_HTML, getBranding())
     else:
         return upload(request)
 

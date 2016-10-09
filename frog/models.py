@@ -68,6 +68,12 @@ DefaultPrefs = {
     'includeImage': True,
     'includeVideo': True,
 }
+BRANDING = {
+    'name': 'Frog',
+    'favicon': '/static/frog/i/favicon.ico',
+    'icon': '/static/frog/i/frog.png',
+    'link': 'https://github.com/theiviaxx/Frog',
+}
 ROOT = getRoot()
 
 
@@ -189,9 +195,10 @@ class Piece(models.Model):
         # -- First remove any artist tags
         for n in self.tags.filter(artist=True):
             self.tags.remove(n)
-        self.save()
+        
         if tag is None:
-            tag = Tag.objects.get_or_create(name=self.author.first_name.lower() + ' ' + self.author.last_name.lower(), defaults={'artist': True})[0]
+            name = self.author.get_full_name().lower()
+            tag = Tag.objects.get_or_create(name=name, defaults={'artist': True})[0]
         
         self.tags.add(tag)
         self.save()
@@ -376,8 +383,7 @@ class Video(Piece):
             g = Gallery.objects.get(pk=int(gal))
             g.videos.add(self)
 
-        artistTag = Tag.objects.get_or_create(name=self.author.first_name + ' ' + self.author.last_name)[0]
-        self.tags.add(artistTag)
+        self.tagArtist()
 
         for tagName in tags:
             tag = Tag.objects.get_or_create(name=tagName)[0]

@@ -39,7 +39,7 @@ from django.conf import settings
 
 import path
 
-from frog.models import Image, Video
+from frog.models import Image, Video, BRANDING
 from frog.plugin import FrogPluginRegistry
 
 
@@ -74,6 +74,13 @@ class Result(object):
             'values': self.values,
             'value': self.value,
         }
+
+
+def getBranding():
+    defualts = BRANDING.copy()
+    defualts.update(getattr(settings, 'FROG_BRANDING', {}))
+
+    return defualts
 
 
 def userToJson(user):
