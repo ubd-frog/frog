@@ -57,7 +57,7 @@ def upload(request):
             foreignPath = filename
 
         galleries = request.POST.get('galleries', '1').split(',')
-        tags = filter(None, request.POST.get('tags', '').split(','))
+        tags = [_.strip() for _ in request.POST.get('tags', '').split(',') if _]
 
         try:
             username = request.POST.get('user', False)

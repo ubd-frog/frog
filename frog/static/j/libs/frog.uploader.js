@@ -25,6 +25,7 @@ Frog.Uploader = new Class({
     initialize: function(id) {
         var self = this;
         this.id = id;
+        this.tags = '';
         this.element = new Element('div', {'id': 'frog_upload'}).inject(document.body, 'top');
         var list = new Element('div', {'id': 'frog_upload_files'}).inject(this.element);
         var uploader = new plupload.Uploader({
@@ -36,7 +37,8 @@ Frog.Uploader = new Class({
             url: '/frog/',
             headers: {"X-CSRFToken": Cookie.read('csrftoken')},
             multipart_params: {
-                'galleries': this.id.toString()
+                'galleries': this.id.toString(),
+                'tags': this.tags
             },
             filters: [
                 {title: "Image files", extensions: "jpg,png,tif,tiff"},
@@ -148,92 +150,119 @@ Frog.Uploader = new Class({
             store: store,
             items: [
                 {
-                    xtype: 'grid',
-                    store: store,
-                    columns: [
-                        {
-                            text     : 'File',
-                            flex     : 6,
-                            sortable : false,
-                            dataIndex: 'file'
-                        },
-                        {
-                            text     : 'Size',
-                            flex     : 1,
-                            sortable : false,
-                            dataIndex: 'size'
-                        },
-                        {
-                            text: 'Created',
-                            flex: 2,
-                            sortable: false,
-                            dataIndex: 'date',
-                            xtype: 'datecolumn',
-                            format:'Y-m-d'
-                        },
-                        {
-                            text     : '%',
-                            flex     : 1,
-                            sortable : false,
-                            dataIndex: 'percent'
-                        },
-                        {
-                            text: 'Status',
-                            flex: 2,
-                            sortable: false,
-                            dataIndex: 'status'
-                        },
-                        {
-                            xtype: 'actioncolumn',
-                            flex: 1,
-                            sortable: false,
-                            items: [
-                                {
-                                    text: 'remove',
-                                    icon: '/static/frog/i/delete.png',
-                                    handler: function(grid, rowIndex, colIndex) {
-                                        var rec = store.getAt(rowIndex);
-                                        var file = self.uploader.getFile(rec.get('id'));
-                                        self.uploader.removeFile(file);
-                                        store.remove([rec]);
-                                    }
-                                }
-                            ]
-                        }
-                    ],
-                    flex: 1,
-                    viewConfig: {
-                        stripeRows: true,
-                        getRowClass: function(record) {
-                            var c = record.get('unique');
-                            return (c) ? '' : 'red';
-                        }
-                    }
-                },
-                {
-                    xtype: 'container',
-                    layout: {
-                        type: 'hbox',
-                        pack: 'center'
+                    xtype: 'form',
+                    layout: 'anchor',
+                    defaults: {
+                        anchor: '100%'
                     },
                     items: [
                         {
-                            xtype: 'button',
-                            scale: 'medium',
-                            text: 'Upload Files',
-                            handler: function() {
-                                self.uploader.start();
+                            xtype: 'label',
+                            text: "Please enter at lease one tag for the uploaded items.  Use a comma to seperate tags."
+                        },
+                        {
+                            fieldLabel: 'Tags',
+                            xtype: 'textfield',
+                            name: 'tags',
+                            allowBlank: false
+
+                        },
+                        {
+                            xtype: 'grid',
+                            store: store,
+                            columns: [
+                                {
+                                    text     : 'File',
+                                    flex     : 6,
+                                    sortable : false,
+                                    dataIndex: 'file'
+                                },
+                                {
+                                    text     : 'Size',
+                                    flex     : 1,
+                                    sortable : false,
+                                    dataIndex: 'size'
+                                },
+                                {
+                                    text: 'Created',
+                                    flex: 2,
+                                    sortable: false,
+                                    dataIndex: 'date',
+                                    xtype: 'datecolumn',
+                                    format:'Y-m-d'
+                                },
+                                {
+                                    text     : '%',
+                                    flex     : 1,
+                                    sortable : false,
+                                    dataIndex: 'percent'
+                                },
+                                {
+                                    text: 'Status',
+                                    flex: 2,
+                                    sortable: false,
+                                    dataIndex: 'status'
+                                },
+                                {
+                                    xtype: 'actioncolumn',
+                                    flex: 1,
+                                    sortable: false,
+                                    items: [
+                                        {
+                                            text: 'remove',
+                                            icon: '/static/frog/i/delete.png',
+                                            handler: function(grid, rowIndex, colIndex) {
+                                                var rec = store.getAt(rowIndex);
+                                                var file = self.uploader.getFile(rec.get('id'));
+                                                self.uploader.removeFile(file);
+                                                store.remove([rec]);
+                                            }
+                                        }
+                                    ]
+                                }
+                            ],
+                            flex: 1,
+                            viewConfig: {
+                                stripeRows: true,
+                                getRowClass: function(record) {
+                                    var c = record.get('unique');
+                                    return (c) ? '' : 'red';
+                                }
                             }
                         },
                         {
-                            xtype: 'button',
-                            scale: 'medium',
-                            text: 'Cancel',
-                            handler: function() {
-                                self.element.hide();
-                                self.uploaderList.store.removeAll();
-                                self.uploaderList.hide();
-                            }
+                            xtype: 'container',
+                            layout: {
+                                type: 'hbox',
+                                pack: 'center'
+                            },
+                            items: [
+                                {
+                                    xtype: 'button',
+                                    scale: 'medium',
+                                    text: 'Upload Files',
+                                    disabled: true,
+                                    formBind: true,
+                                    handler: function() {
+                                        var params = self.uploader.getOption('multipart_params');
+                                        var win = this.up('window');
+                                        var form = win.down('form');
+                                        params['tags'] = form.getForm().getValues()['tags'];
+                                        self.uploader.setOption('multipart_params', params);
+                                        self.uploader.start();
+                                    }
+                                },
+                                {
+                                    xtype: 'button',
+                                    scale: 'medium',
+                                    text: 'Cancel',
+                                    handler: function() {
+                                        self.element.hide();
+                                        self.uploaderList.store.removeAll();
+                                        self.uploaderList.hide();
+                                    }
+                                }
+                            ]
                         }
                     ]
                 }
