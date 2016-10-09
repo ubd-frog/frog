@@ -3,27 +3,64 @@
     <head>
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <link id="page_favicon" href="{{favicon}}" rel="icon" type="image/x-icon" />
+        <link href="https://fonts.googleapis.com/css?family=Roboto:100,400" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.7/css/materialize.min.css">
 
-        <title>Frog Login</title>
-        <link rel="stylesheet" href="{{MEDIA_URL}}frog/c/login.css?b={{build}}">
+        <title>{{name}}</title>
+        <style>
+            body { font-family: Helvetica;background: #333;-webkit-font-smoothing: antialiased; }
+            form { width: 380px;margin: 4em auto;padding: 3em 2em 2em 2em;background: #666;border: 1px solid #777;box-shadow: rgba(0,0,0,0.14902) 0px 1px 1px 0px,rgba(0,0,0,0.09804) 0px 1px 2px 0px; }
+            footer { text-align: center; }
+            section { text-align:center; margin-top: 4em; }
+            /* label color */
+            .input-field label {
+             color: #9e9e9e;
+            }
+            /* label focus color */
+            .input-field input[type=email]:focus + label, .input-field input[type=password]:focus + label {
+             color: #8bc34a;
+            }
+            /* label underline focus color */
+            .input-field input[type=email]:focus, .input-field input[type=password]:focus {
+             border-bottom: 1px solid #8bc34a;
+             box-shadow: 0 1px 0 0 #8bc34a;
+            }
+            /* valid color */
+            .input-field input[type=email].valid, .input-field input[type=password].valid {
+             border-bottom: 1px solid #8bc34a;
+             box-shadow: 0 1px 0 0 #8bc34a;
+            }
+            /* invalid color */
+            .input-field input[type=email].invalid, .input-field input[type=password].invalid {
+             border-bottom: 1px solid #8bc34a;
+             box-shadow: 0 1px 0 0 #8bc34a;
+            }
+            /* icon prefix focus color */
+            .input-field .prefix.active {
+             color: #8bc34a;
+            }
+        </style>
     </head>
     <body>
-        <hgroup>
-            <h1>Frog Login</h1>
-        </hgroup>
+        <section class='light-green-text'>
+            <h2>{{name}}</h2>
+        </section>
         <form method='post' action='/frog/login'>
             {% csrf_token %}
-            <div class="group">
-                <input type="email" name='email'><span class="highlight" required='required'></span><span class="bar"></span>
-                <label>Email</label>
+            <div class='row'>
+                <div class='input-field col s12'>
+                    <input type="email" name='email' required='required'>
+                    <label>Email</label>
+                </div>
             </div>
-            <div class="group">
-                <input type="password" name='password'><span class="highlight" required='required'></span><span class="bar"></span>
-                <label>Email</label>
+            <div class='row'>
+                <div class='input-field col s12'>
+                    <input type="password" name='password' required='required'>
+                    <label>Password</label>
+                </div>
             </div>
-            <button type="submit" class="button buttonBlue">Login
-                <div class="ripples buttonRipples"><span class="ripplesCircle"></span></div>
-            </button>
+            <button class="btn waves-effect waves-light light-green" type="submit" name="action">Login</button>
         </form>
         {% if message %}
         <div id='msg-div' style='position: relative; top: -8px;'>
@@ -31,10 +68,10 @@
         </div>
         {% endif %}
         <footer>
-            <a href="http://frog.readthedocs.io/en/latest/" target="_blank"><img src="{{MEDIA_URL}}frog/i/frog.png"></a>
+            <a href="http://frog.readthedocs.io/en/latest/" target="_blank">frog</a>
         </footer>
 
         <script   src="https://code.jquery.com/jquery-2.2.4.min.js"   integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="   crossorigin="anonymous"></script>
-        <script src="{{MEDIA_URL}}frog/j/login.js?b={{build}}"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.7/js/materialize.min.js"></script>
     </body>
 </html>
