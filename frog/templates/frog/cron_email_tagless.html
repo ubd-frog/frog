@@ -1,0 +1,30 @@
+{% extends "frog/email.html" %}
+{% load tablecols %}
+
+{% block content %}
+    <a href="{{ link }}" class="btn-primary" itemprop="url" style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; color: #FFF; text-decoration: none; line-height: 2; font-weight: bold; text-align: center; cursor: pointer; display: inline-block; border-radius: 5px; text-transform: capitalize; background: #348eda; margin: 0; border-color: #348eda; border-style: solid; border-width: 10px 20px;">View Tagless Items</a>
+
+    <p>You have uploaded {{ items | length }} items to the main gallery without tags.  Please take a moment and add at least one tag to the following items:</p>
+
+    <table width="100%" cellpadding="0" cellspacing="0" style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; margin: 0;">
+        {% for row in items|tablecols:4 %}
+        <tr style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; margin: 0;">
+            {% for obj in row %}
+                {% if obj.thumbnail %}
+            <td class="content-block" style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; vertical-align: top; margin: 0; padding: 0 0 20px;" valign="top">
+                <a href='{{ obj.link }}'>
+                    <img src='{{SITE_URL}}/{{obj.thumbnail.url}}' {% if obj.width > obj.height %}width="200"{% else %}height="200"{% endif %} />
+                </a><br />
+                <a href='{{ obj.link }}' style="font-family: 'Helvetica Neue',Helvetica,Arial,sans-serif; box-sizing: border-box; font-size: 14px; color: #348eda; text-decoration: underline; margin: 0;">{{obj.title}}</a><br />
+                <span>{{obj.author.get_full_name}}</span>
+            </td>
+                {% endif %}
+            {% endfor %}
+        </tr>
+        {% endfor %}
+    </table>
+{% endblock %}
+
+{% block footer %}
+<a href="{{ link }}" class="btn-primary" itemprop="url" style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; color: #FFF; text-decoration: none; line-height: 2; font-weight: bold; text-align: center; cursor: pointer; display: inline-block; border-radius: 5px; text-transform: capitalize; background: #348eda; margin: 0; border-color: #348eda; border-style: solid; border-width: 10px 20px;">View Tagless Items</a>
+{% endblock %}

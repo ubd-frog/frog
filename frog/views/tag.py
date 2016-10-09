@@ -65,9 +65,16 @@ def get(request, obj_id=None):
     """
     res = Result()
     if obj_id:
-        obj = get_object_or_404(Tag, pk=obj_id)
+        if obj_id == '0':
+            obj = {
+                'id': 0,
+                'name': 'TAGLESS',
+                'artist': False,
+            }
+        else:
+            obj = get_object_or_404(Tag, pk=obj_id).json()
 
-        res.append(obj.json())
+        res.append(obj)
         return JsonResponse(res.asDict())
     else:
         for n in Tag.objects.all():

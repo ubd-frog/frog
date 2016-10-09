@@ -219,7 +219,12 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         Implements: Events,
         initialize: function(id, name) {
             this.id = id;
-            this.name = name || Frog.Tags.get(id);
+            if (this.id === 0) {
+                this.name = 'TAGLESS';
+            }
+            else {
+                this.name = name || Frog.Tags.get(id);
+            }
             this.isSearch = typeof(id) === 'string';
             this.element = new Element('li', {'class': 'frog-tag'});
             if (this.isSearch) {

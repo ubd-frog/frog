@@ -39,7 +39,7 @@ import logging
 from django.http import HttpResponseRedirect, JsonResponse
 from django.core.exceptions import ImproperlyConfigured, PermissionDenied
 from django.shortcuts import render
-from django.db.models import Q
+from django.db.models import Q, Count
 from django.contrib.contenttypes.models import ContentType
 from django.db import connection
 from django.contrib.auth.decorators import login_required
@@ -264,13 +264,20 @@ def _filter(request, object_, tags=None, models=(Image, Video), rng=None, more=F
                 searchQuery = ""
                 o = None
                 for item in bucket:
-                    # -- filter by tag
-                    if isinstance(item, six.integer_types):
+                    if item == 0:
+                        # -- filter by tagless
+                        idDict[m.model].annotate(num_tags=Count('tags'))
+                        if not o:
+                            o = Q()
+                        o |= Q(num_tags__lte=1)
+                        break
+                    elif isinstance(item, six.integer_types):
+                        # -- filter by tag
                         if not o:
                             o = Q()
                         o |= Q(tags__id=item)
-                    # -- add to search string
                     else:
+                        # -- add to search string
                         searchQuery += item + ' '
                         if not HAYSTACK:
                             if not o:
@@ -278,6 +285,7 @@ def _filter(request, object_, tags=None, models=(Image, Video), rng=None, more=F
                             # -- use a basic search
                             LOGGER.debug('search From LIKE')
                             o |= Q(title__icontains=item)
+
                 if HAYSTACK and searchQuery != "":
                     # -- once all tags have been filtered, filter by search
                     searchIDs = search(searchQuery, m.model_class())
@@ -289,7 +297,8 @@ def _filter(request, object_, tags=None, models=(Image, Video), rng=None, more=F
 
                 if o:
                     # -- apply the filters
-                    idDict[m.model] = idDict[m.model].filter(o)
+                    idDict[m.model] = idDict[m.model].annotate(num_tags=Count('tags')).filter(o)
+                    # idDict[m.model] = idDict[m.model].filter(o)
                 else:
                     idDict[m.model] = idDict[m.model].none()
 
