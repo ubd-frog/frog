@@ -1,6 +1,8 @@
 {{ object.title }}
 {{ object.user.get_full_name }}
-{{ object.created }}
+{{ object.created | date:"DATETIME_FORMAT" }}
+{{ object.created | date:"SHORT_DATETIME_FORMAT" }}
+{{ object.created | date:"%r" }}
 {% for tag in object.tags.all %}
 {{tag.name}}\n
 {% endfor %}
