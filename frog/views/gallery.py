@@ -87,14 +87,16 @@ def get(request, obj_id=None):
     else:
         res = Result()
         flat = bool(request.GET.get('flat'))
-        if request.user.is_anonymous():
-            objects = Gallery.objects.filter(security=Gallery.PUBLIC)
+
+        if request.user.is_authenticated():
+            objects = Gallery.objects.filter(Q(security__lte=Gallery.PRIVATE) | Q(owner=request.user))
         else:
-            objects = Gallery.objects.filter(Q(security__lt=Gallery.PRIVATE) | Q(owner=request.user))
+            objects = Gallery.objects.filter(security=Gallery.PUBLIC)
 
         objects = objects.filter(parent__isnull=True)
 
         for obj in objects:
+            print(obj)
             if flat:
                 res.append({'title': obj.title, 'id': obj.id});
                 for child in obj.gallery_set.all().order_by('title'):

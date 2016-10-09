@@ -23,6 +23,7 @@ import logging
 
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse, HttpResponseForbidden
 from django.shortcuts import render
+from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
@@ -58,6 +59,7 @@ def authInfo(request):
     return 
 
 
+@require_http_methods(['POST'])
 def login_(request):
     email = request.POST.get('email', 'noauthor@domain.com').lower()
     username = email.split('@')[0]
