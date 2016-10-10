@@ -84,13 +84,17 @@ def login_(request):
         return render(request, INDEX_HTML, {'message': 'User account not active'})
 
     # -- Create an artist tag for them
-    Tag.objects.get_or_create(name=user.first_name + ' ' + user.last_name, defaults={'artist': True})
+    Tag.objects.get_or_create(
+        name=user.get_full_name(),
+        defaults={'artist': True}
+    )
 
     login(request, user)
 
-    if not Gallery.objects.filter(title=user.username):
-        usergallery = Gallery(title=user.username, security=Gallery.PERSONAL)
-        usergallery.save()
+    usergallery = Gallery.objects.get_or_create(title=user.username)[0]
+    usergallery.owner = user
+    usergallery.security = Gallery.PERSONAL
+    usergallery.save()
 
     if request.is_ajax():
         return JsonResponse({'value': 1})

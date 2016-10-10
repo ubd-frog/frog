@@ -96,7 +96,6 @@ def get(request, obj_id=None):
         objects = objects.filter(parent__isnull=True)
 
         for obj in objects:
-            print(obj)
             if flat:
                 res.append({'title': obj.title, 'id': obj.id});
                 for child in obj.gallery_set.all().order_by('title'):
