@@ -452,7 +452,13 @@ Frog.UI = (function(Frog) {
                     new Request.JSON({
                         url: '/frog/tag/manage',
                         headers: {"X-CSRFToken": Cookie.read('csrftoken')},
-                        onSuccess: function() {}
+                        onSuccess: function(res) {
+                            res.values.each(function(item) {
+                                item.tags.each(function(tag) {
+                                    Frog.Tags.tags[tag.id] = tag.name.toLowerCase();
+                                });
+                            });
+                        }
                     }).POST({
                         add: add.join(','),
                         rem: rem.join(','),
