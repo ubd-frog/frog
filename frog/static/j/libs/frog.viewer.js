@@ -310,11 +310,12 @@ Frog.Viewer = new Class({
         }).inject(this.videoEl);
         this.videoEl.load();
         this.videoEl.play();
-        this.fitToWindow();
 
         if (!this.player) {
             this.player = videojs('frog_video_player');
         }
+
+        this.fitToWindow();
     },
     setImages: function(images, id) {
         if (typeof(id) === 'undefined') {
