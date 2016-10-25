@@ -328,7 +328,12 @@ Frog.Viewer = new Class({
         this.countLabel.set('text', id + '/' + images.length);
         
         var data = Frog.util.hashData();
-        data.viewer = this.objects.slice(0, this.LIMIT).map(function(item) { return item.guid; });
+        if (images.length > this.LIMIT) {
+            data.viewer = [images[id].guid];
+        }
+        else {
+            data.viewer = this.objects.map(function(item) { return item.guid; });
+        }
         location.hash = JSON.stringify(data);
     },
     setIndex: function(idx) {
