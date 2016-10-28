@@ -44,7 +44,7 @@ Frog.QueryBuilder = new Class({
         var froglink = new Element('a', {href: 'https://github.com/theiviaxx/Frog'}).inject(this.element);
         var frog = new Image().inject(froglink);
         frog.addClass('frog-logo');
-        frog.src = Frog.icon('frog');
+        frog.src = Frog.Branding.icon;
 
         // -- Remove empty buckets
         this.clean(data);

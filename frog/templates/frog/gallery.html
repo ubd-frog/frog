@@ -7,7 +7,7 @@
         <meta name="description" content="">
 
         <!-- Place favicon.ico and apple-touch-icon.png in the root directory: mathiasbynens.be/notes/touch-icons -->
-        <link id="page_favicon" href="{{favicon}}" rel="icon" type="image/x-icon" />
+        <link id="page_favicon" href="{{branding.favicon}}" rel="icon" type="image/x-icon" />
         <link rel="stylesheet" href="{{MEDIA_URL}}frog/c/ext-all-gray.css">
         <link rel="stylesheet" href="{{MEDIA_URL}}frog/c/font-awesome.min.css?b={{build}}">
         <link href="http://vjs.zencdn.net/5.10.8/video-js.css" rel="stylesheet">
@@ -31,6 +31,7 @@
             {% block script %}
             window.addEvent('domready', function() {
                 Frog.StaticRoot = '{{MEDIA_URL}}';
+                Frog.Branding = {{branding|safe|escape}};
 
                 {% if object.security < 2 %}
                 Frog.GalleryObject = new Frog.Gallery(undefined, {{object.id}}, {

@@ -57,7 +57,7 @@ except (ImportError, ImproperlyConfigured):
     HAYSTACK = False
 
 from frog.models import Gallery, Image, Video, UserPref
-from frog.common import Result, getObjectsFromGuids, getPutData
+from frog.common import Result, getObjectsFromGuids, getPutData, getBranding
 
 
 LOGGER = logging.getLogger('frog')
@@ -83,7 +83,7 @@ def get(request, obj_id=None):
         if obj.security != Gallery.PUBLIC and request.user.is_anonymous():
             return HttpResponseRedirect('/frog/access_denied')
 
-        return render(request, 'frog/gallery.html', {'object': obj})
+        return render(request, 'frog/gallery.html', {'object': obj, 'branding': getBranding()})
     else:
         res = Result()
         flat = bool(request.GET.get('flat'))
@@ -136,9 +136,11 @@ def post(request):
 @login_required
 def put(request, obj_id=None):
     """ Adds Image and Video objects to Gallery based on GUIDs """
-    guids = filter(None, request.PUT.get('guids', '').split(','))
+    data = request.PUT or json.loads(request.body)['body']
+    guids = data.get('guids', '').split(',')
+    move = data.get('from')
     security = request.PUT.get('security')
-    object_ = Gallery.objects.get(pk=obj_id)
+    gallery = Gallery.objects.get(pk=obj_id)
     
     if guids:
         objects = getObjectsFromGuids(guids)
@@ -146,18 +148,24 @@ def put(request, obj_id=None):
         images = filter(lambda x: isinstance(x, Image), objects)
         videos = filter(lambda x: isinstance(x, Video), objects)
 
-        object_.images.add(*images)
-        object_.videos.add(*videos)
+        gallery.images.add(*images)
+        gallery.videos.add(*videos)
+
+        if move:
+            fromgallery = Gallery.objects.get(pk=move)
+            fromgallery.images.remove(*images)
+            fromgallery.videos.remove(*videos)
+
     
     if security is not None:
-        object_.security = json.loads(security)
-        object_.save()
-        for child in object_.gallery_set.all():
-            child.security = object_.security
+        gallery.security = json.loads(security)
+        gallery.save()
+        for child in gallery.gallery_set.all():
+            child.security = gallery.security
             child.save()
 
     res = Result()
-    res.append(object_.json())
+    res.append(gallery.json())
 
     return JsonResponse(res.asDict())
 
@@ -165,15 +173,16 @@ def put(request, obj_id=None):
 @login_required
 def delete(request, obj_id=None):
     """ Removes ImageVideo objects from Gallery """
-    guids = request.DELETE.get('guids', '').split(',')
+    data = request.DELETE or json.loads(request.body)
+    guids = data.get('guids').split(',')
     objects = getObjectsFromGuids(guids)
-    object_ = Gallery.objects.get(pk=obj_id)
+    gallery = Gallery.objects.get(pk=obj_id)
 
     for o in objects:
         if isinstance(o, Image):
-            object_.images.remove(o)
+            gallery.images.remove(o)
         elif isinstance(o, Video):
-            object_.videos.remove(o)
+            gallery.videos.remove(o)
 
     res = Result()
 
