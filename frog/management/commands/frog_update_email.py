@@ -32,6 +32,7 @@ from django.core.exceptions import ImproperlyConfigured
 from frog.models import Gallery, FROG_SITE_URL
 
 FROG_UPDATE_GROUP_EMAIL = getattr(settings, 'FROG_UPDATE_GROUP_EMAIL', None)
+FROG_UPDATE_DAILY_GROUP_EMAIL = getattr(settings, 'FROG_UPDATE_DAILY_GROUP_EMAIL', FROG_UPDATE_GROUP_EMAIL)
 
 
 class Command(BaseCommand):
@@ -42,6 +43,11 @@ class Command(BaseCommand):
             default='weekly',
             help='Frequency type'
         )
+        parser.add_argument(
+            '--gallery', '-g',
+            default=1,
+            help='Gallery to send emails about'
+        )
 
     def handle(self, *args, **kwargs):
         if FROG_UPDATE_GROUP_EMAIL is None:
@@ -51,29 +57,30 @@ class Command(BaseCommand):
         interval = kwargs.get('intervalType', 'weekly')
         if interval == 'daily':
             delta = 1
+            from_email, to = FROG_UPDATE_DAILY_GROUP_EMAIL, FROG_UPDATE_DAILY_GROUP_EMAIL
         else:
             delta = 7
+            from_email, to = FROG_UPDATE_GROUP_EMAIL, FROG_UPDATE_GROUP_EMAIL
         previous = today - datetime.timedelta(delta)
 
-        galleries = Gallery.objects.all()
+        gallery = Gallery.objects.get(pk=kwargs['gallery'])
 
-        for g in galleries:
-            images = g.images.filter(created__range=(previous, today))
-            videos = g.videos.filter(created__range=(previous, today))
+        images = gallery.images.filter(created__range=(previous, today))
+        videos = gallery.videos.filter(created__range=(previous, today))
 
-            if not images and not videos:
-                continue
+        if not images and not videos:
+            return
 
-            html = render_to_string(
-                'frog/cron_email.html',
-                {'images': images, 'videos': videos, 'SITE_URL': FROG_SITE_URL, 'gallery': g}
-            )
-            subject = '{name} ({interval}) for {date}'.format(
-                interval=interval.capitalize(),
-                name=g.title,
-                date=today.strftime('%m/%d/%Y'),
-            )
-            from_email, to = FROG_UPDATE_GROUP_EMAIL, FROG_UPDATE_GROUP_EMAIL
-            text_content = 'Only html supported'
-            send_mail(subject, text_content, from_email, [to], html_message=html)
-            self.stdout.write('Found {} images and {} videos'.format(len(images), len(videos)))
+        html = render_to_string(
+            'frog/cron_email.html',
+            {'images': images, 'videos': videos, 'SITE_URL': FROG_SITE_URL, 'gallery': gallery}
+        )
+        subject = '{name} ({interval}) for {date}'.format(
+            interval=interval.capitalize(),
+            name=gallery.title,
+            date=today.strftime('%m/%d/%Y'),
+        )
+        
+        text_content = 'Only html supported'
+        send_mail(subject, text_content, from_email, [to], html_message=html)
+        self.stdout.write('Found {} images and {} videos'.format(len(images), len(videos)))
