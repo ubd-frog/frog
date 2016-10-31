@@ -422,14 +422,14 @@ class Video(Piece):
         source = ROOT / self.source.name
         thumbnail = source.parent / '_{}.jpg'.format(source.namebase)
 
-        if image is None:
-            # -- Save thumbnail and put into queue
-            poster = source.parent / '__{}.jpg'.format(source.namebase)
-            cmd = [FROG_FFMPEG, '-i', str(source), '-ss', '1', '-vframes', '1', str(thumbnail), '-y']
-            proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-            proc.communicate()
-            image = pilImage.open(thumbnail)
-            image.save(poster)
+        # -- Save thumbnail and put into queue
+        poster = source.parent / '__{}.jpg'.format(source.namebase)
+        cmd = [FROG_FFMPEG, '-i', str(source), '-ss', '1', '-vframes', '1', str(thumbnail), '-y']
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        proc.communicate()
+        image = pilImage.open(thumbnail)
+        image.save(poster)
+        self.poster = poster.replace(ROOT, '')
 
         size = FROG_THUMB_SIZE
         if self.width < size and self.height < size:
