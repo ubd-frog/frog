@@ -53,7 +53,7 @@ def index(request, obj_id):
         return get(request, obj_id)
     elif request.method == 'PUT':
         getPutData(request)
-        return put(request)
+        return put(request, obj_id)
 
 
 def get(request, obj_id):
@@ -110,7 +110,8 @@ def put(request, obj_id):
     """
     res = Result()
     c = Comment.objects.get(pk=obj_id)
-    content = request.PUT.get('comment', None)
+    data = request.PUT or json.loads(request.body)['body']
+    content = data.get('comment', None)
     if content:
         c.comment = content
         c.save()
