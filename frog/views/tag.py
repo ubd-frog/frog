@@ -105,6 +105,8 @@ def post(request):
 
     if created:
         res.message = "Created"
+    else:
+        res.isError = True
 
     res.append(tag.json())
 
