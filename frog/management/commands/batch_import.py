@@ -23,12 +23,23 @@ import datetime
 
 from optparse import make_option
 from django.core.management.base import BaseCommand
+from django.contrib.auth import get_user
 
 import path
 
 from frog.models import Gallery, Image, Video, Piece
 from frog.uploader import EXT, User
 from frog.common import getRoot
+
+
+CACHE = {}
+
+def getAuthor(username):
+    username = username.lower()
+    if username not in CACHE:
+        CACHE[username] = get_user(username)
+    
+    return CACHE[username]
 
 
 class Command(BaseCommand):
@@ -65,7 +76,7 @@ class Command(BaseCommand):
 
         files = path.Path(options['path']).walk()
         extensions = EXT['image'] + EXT['video']
-        user = User.objects.get_or_create(
+        baseuser = User.objects.get_or_create(
             username=options['user'],
             defaults={'first_name': 'No', 'last_name': 'Author', 'email': 'none@gmail.com'}
         )[0]
@@ -79,6 +90,11 @@ class Command(BaseCommand):
                     continue
 
             if file_.ext.lower() in extensions:
+                try:
+                    user = getAuthor(file_.owner)
+                except NotImplementedError:
+                    user = baseuser
+
                 uniqueName = Piece.getUniqueID(file_, user)
                 if file_.ext.lower() in EXT['image']:
                     model = Image
@@ -100,6 +116,7 @@ class Command(BaseCommand):
                 obj.hash = hashVal
                 obj.foreign_path = file_
                 obj.title = objPath.namebase
+                obj.created = datetime.datetime.fromtimestamp(file_.mtime)
                 obj.gallery_set.add(gallery)
 
                 tags = []
