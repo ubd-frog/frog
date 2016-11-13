@@ -47,7 +47,7 @@ urlpatterns = [
     url(r'^pref/$', views.userpref.index),
     # -- Comments
     url(r'^comment/$', views.comment.commentList),
-    url(r'^comment/(?P<obj_id>\d+)$', views.comment.index),
+    url(r'^comment/(?P<obj_id>\d+)/$', views.comment.index),
     # -- RSS
     url(r'^rss/(?P<obj_id>\d+)/daily$', Daily()),
     url(r'^rss/(?P<obj_id>\d+)/weekly$', Weekly()),
