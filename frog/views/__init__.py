@@ -20,6 +20,7 @@
 ##################################################################################################
 
 import logging
+import json
 
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse, HttpResponseForbidden
 from django.shortcuts import render
@@ -61,27 +62,41 @@ def authInfo(request):
 
 @require_http_methods(['POST'])
 def login_(request):
-    email = request.POST.get('email', 'noauthor@domain.com').lower()
+    data = request.POST or json.loads(request.body)['body']
+    email = data['email'].lower()
     username = email.split('@')[0]
     password = request.POST.get('password')
+    result = Result()
     
     if password is None:
-        # -- SimpleAuth
-        user = authenticate(
-            username=username,
-            first_name=request.POST.get('first_name', 'no').lower(),
-            last_name=request.POST.get('last_name', 'author').lower(),
-            email=email
-        )
+        if not email:
+            result.message = 'Please enter an email address'
+            result.isError = True
+        else:
+            # -- SimpleAuth
+            user = authenticate(
+                username=username,
+                first_name=request.POST.get('first_name', 'no').lower(),
+                last_name=request.POST.get('last_name', 'author').lower(),
+                email=email
+            )
     else:
         # -- LDAP
         user = authenticate(username=username, password=password)
         
         if user is None:
-            return render(request, INDEX_HTML, {'message': 'Invalid Credentials'})
+            result.message = 'Invalid Credentials'
+            result.isError = True
 
-    if not user.is_active:
-        return render(request, INDEX_HTML, {'message': 'User account not active'})
+        if not user.is_active:
+            result.message = 'User account not active'
+            result.isError = True
+    
+    if result.isError:
+        if request.is_ajax():
+            return JsonResponse(result.asDict())
+        else:
+            return render(request, INDEX_HTML, result.asDict())
 
     # -- Create an artist tag for them
     Tag.objects.get_or_create(
@@ -97,7 +112,7 @@ def login_(request):
     usergallery.save()
 
     if request.is_ajax():
-        return JsonResponse({'value': 1})
+        return JsonResponse(result.asDict())
 
     return HttpResponseRedirect('/frog/gallery/1')
 
@@ -229,6 +244,10 @@ def getUser(request):
     else:
         data['user'] = userToJson(request.user)
         data['gallery'] = None
+        personal = Gallery.objects.filter(owner=request.user, security=Gallery.PERSONAL)
+        if personal:
+            data['personal_gallery'] = personal[0].json()
+        data['prefs'] = request.user.frog_prefs.get_or_create(user=request.user)[0].json()
         galleryid = request.GET.get('gallery')
         if galleryid is not None:
             gallery = Gallery.objects.filter(pk=galleryid, owner=request.user)
