@@ -32,15 +32,21 @@ Piece API
     DELETE  /video/id  Flags the video as deleted in the database
 """
 
+import json
+
 from django.shortcuts import render
 from django.http import JsonResponse
+from django.http.request import RawPostDataException
 from django.views.decorators.csrf import csrf_exempt
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.contrib.auth.decorators import login_required
 
+from path import Path
+
 from frog.models import Image, Video, Tag, Piece, FROG_SITE_URL
-from frog.common import Result, getPutData, getObjectsFromGuids
+from frog.common import Result, getPutData, getObjectsFromGuids, getRoot
+from frog.uploader import handle_uploaded_file
 
 
 def image(request, obj_id):
@@ -131,7 +137,12 @@ def get(request, obj):
 
 @login_required
 def post(request, obj):
-    tags = request.POST.get('tags', '').split(',')
+    try:
+        data = request.POST or json.loads(request.body)['body']
+    except RawPostDataException:
+        data = request.POST
+    tags = data.get('tags', '').split(',')
+    resetthumbnail = data.get('reset-thumbnail', False)
     res = Result()
     for tag in tags:
         try:
@@ -142,19 +153,33 @@ def post(request, obj):
                 res.append(t.json())
         obj.tags.add(t)
 
+    if request.FILES:
+        # -- Handle thumbnail upload
+        f = request.FILES.get('file')
+        relativedest = Path(obj.source.name).parent / f.name
+        dest = getRoot() / relativedest
+        handle_uploaded_file(dest, f)
+        obj.custom_thumbnail = relativedest
+        obj.save()
+    
+    if resetthumbnail:
+        obj.custom_thumbnail = None
+        obj.save()
+    
+    res.value = obj.json()
+
     return JsonResponse(res.asDict())
 
 
 @login_required
 def put(request, obj):
-    obj.title = request.PUT.get('title', obj.title)
-    obj.description = request.PUT.get('description', obj.description)
-    if request.FILES:
-        # -- Handle thumbanil upload
-        pass
+    data = request.POST or json.loads(request.body)['body']
+    obj.title = data.get('title', obj.title)
+    obj.description = data.get('description', obj.description)
     obj.save()
 
     res = Result()
+    res.append(obj.json())
     return JsonResponse(res.asDict())
 
 
