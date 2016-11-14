@@ -41,8 +41,8 @@ except AttributeError:
     raise ImproperlyConfigured('FROG_FFMPEG and FROG_FFPROBE are required')
 
 FROG_SCRUB_DURATION = getattr(settings, 'FROG_SCRUB_DURATION', 60)
-FROG_FFMPEG_ARGS = getattr(settings, 'FROG_FFMPEG_ARGS', '-vcodec libx264 -b:v {}k -acodec aac -b:a 56k -ac 2 -y')
-FROG_SCRUB_FFMPEG_ARGS = getattr(settings, 'FROG_SCRUB_FFMPEG_ARGS', '-vcodec libx264 -b:v {}k -x264opts keyint=1:min-keyint=1 -acodec aac -b:a 56k -ac 2 -y')
+FROG_FFMPEG_ARGS = getattr(settings, 'FROG_FFMPEG_ARGS', '-vcodec libx264 -b:v {0}k -acodec aac -b:a 56k -ac 2 -y')
+FROG_SCRUB_FFMPEG_ARGS = getattr(settings, 'FROG_SCRUB_FFMPEG_ARGS', '-vcodec libx264 -b:v {0}k -x264opts keyint=1:min-keyint=1 -acodec aac -b:a 56k -ac 2 -y')
 
 TIMEOUT = 1
 ROOT = getRoot()
@@ -94,14 +94,14 @@ class VideoThread(Thread):
 
                 # -- Get the video information
                 videodata = video.info()
-                isH264 = 'h264' in videodata['streams'][0]['codec_name'].lower() and sourcepath.ext == '.mp4'
-                scrub = float(videodata['streams'][0]['duration']) <= FROG_SCRUB_DURATION
+                isH264 = 'h264' in videodata['codec'] and sourcepath.ext == '.mp4'
+                scrub = videodata['duration'] <= FROG_SCRUB_DURATION
 
                 tempfile = sourcepath.parent / 'temp.mp4'
                 outfile = sourcepath.parent / '{}.mp4'.format(video.hash)
 
                 # -- Further processing is needed if not h264 or needs to be scrubbable
-                if not isH264 or scrub or self._alwaysconvert or item.force:
+                if not isH264 or scrub or self._alwaysconvert:
                     LOGGER.info('Converting video: %s' % video.guid)
                     item.message = 'Converting to MP4...'
                     item.save()

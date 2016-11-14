@@ -373,9 +373,9 @@ class Video(Piece):
 
         # -- Get info
         videodata = self.info()
-        self.width = videodata['streams'][0]['width']
-        self.height = videodata['streams'][0]['height']
-        self.framerate = int(videodata['streams'][0]['avg_frame_rate'].split('/')[0])
+        self.width = videodata['width']
+        self.height = videodata['height']
+        self.framerate = videodata['framerate']
 
         self.generateThumbnail()
 
@@ -470,9 +470,25 @@ class Video(Piece):
         ]
         try:
             output = subprocess.check_output(cmd)
-            return json.loads(output)
         except subprocess.CalledProcessError as err:
-            return None
+            output = ''
+
+        rawdata = json.loads(output)
+        framerates = rawdata['streams'][0]['avg_frame_rate'].split('/')
+        if len(framerates) == 2:
+            framerate = int(framerates[0]) / int(framerates[1])
+        else:
+            framerate = int(framerates[0])
+        
+        data = {
+            'width': rawdata['streams'][0]['width'],
+            'height': rawdata['streams'][0]['height'],
+            'framerate': framerate,
+            'codec': rawdata['streams'][0]['codec_name'].lower(),
+            'duration': float(rawdata['streams'][0]['duration']),
+        }
+
+        return data
 
 
 class VideoQueue(models.Model):
