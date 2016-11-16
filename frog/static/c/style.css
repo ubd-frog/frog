@@ -369,14 +369,15 @@ a:hover { color: #fff; }
         opacity: 1.0;
     }
     .thumbnail.selected {
-        border-color: #626f7d;
-        background: #4b5560;
+        border-color: #abcbe4;
+        background: #9abbd4;
     }
         .thumbnail.selected img {
-            transform: translateZ(0px) scale3d(0.8, 0.8, 1);
+            transform: translateZ(0px) scale3d(0.9, 0.9, 1);
+            opacity: 0.5;
         }
     .thumbnail.selected:hover {
-        background: #4b5560;
+        background: #829fb8;
     }
 
     .thumbnail .tag-hover {
