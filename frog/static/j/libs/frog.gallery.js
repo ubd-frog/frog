@@ -225,6 +225,9 @@ Frog.Gallery = new Class({
                 if (data.viewer && !self.viewer.isOpen) {
                     self.openViewer(data.viewer);
                 }
+                else if (!Frog.Prefs.tourGallery) {
+                    Frog.Tour("gallery");
+                }
             }
         }).GET(this.requestData);
     },
@@ -278,7 +281,23 @@ Frog.Gallery = new Class({
     },
     viewImages: function(e, el) {
         e.stop();
-        if (window.event.shiftKey) {
+        if (window.event.ctrlKey) {
+            var parent = el;
+            while (!parent.hasClass('thumbnail')) {
+                parent = parent.parentElement;
+                if (parent === null) {
+                    break;
+                }
+            }
+            if (parent) {
+                if (parent.hasClass('selected')) {
+                    parent.removeClass('selected');
+                }
+                else {
+                    parent.addClass('selected');
+                }
+            }
+
             return;
         }
         if (this.options.altclick && e.control) {
@@ -287,6 +306,8 @@ Frog.Gallery = new Class({
 
             return true;
         }
+        
+        // hopscotch.endTour(false);
         
         this.y = window.getScroll().y;
         var selection = $$('.thumbnail.selected');
@@ -310,7 +331,6 @@ Frog.Gallery = new Class({
             objects = Array.clone(this.objects);
             this.viewer.show();
             this.viewer.setImages(objects, id);
-
         }
     },
     openViewer: function(guids) {

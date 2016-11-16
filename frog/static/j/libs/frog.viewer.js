@@ -355,7 +355,7 @@ Frog.Viewer = new Class({
         this.author.set('text', obj.author.username);
         this.date.set('text', new Date(obj.created).format('%Y.%M.%d'));
         var description = obj.description;
-        if (this.objects[this.current].author.username === Frog.user.username && !description) {
+        if (this.isOwner()) {
             description = '<description>';
         }
         this.description.set('text', description);
@@ -363,7 +363,7 @@ Frog.Viewer = new Class({
         this.countLabel.set('text', (idx + 1) + '/' + this.objects.length);
 
         this.title.addEvent('dblclick', function (event) {
-            if (this.objects[this.current].author.username !== Frog.user.username) {
+            if (!this.isOwner()) {
                 return;
             }
             event.stop();
@@ -384,7 +384,7 @@ Frog.Viewer = new Class({
             this.editKeyboard.activate();
         }.bind(this));
         this.description.addEvent('dblclick', function (event) {
-            if (this.objects[this.current].author.username !== Frog.user.username) {
+            if (!this.isOwner()) {
                 return;
             }
             event.stop();
@@ -399,6 +399,10 @@ Frog.Viewer = new Class({
             el.addEvent('blur', this._submitEdits.bind(this));
             this.editKeyboard.activate();
         }.bind(this));
+
+        if (!Frog.Prefs.tourViewer && this.isOwner()) {
+            Frog.Tour('viewer');
+        }
     },
     _loadCallback: function() {
         this.xform = this.main = $M([
@@ -445,6 +449,7 @@ Frog.Viewer = new Class({
         this.clear();
         this.image.src = Frog.loading.src;
         this.element.show();
+        this.element.setStyle('background-color', Frog.Prefs.backgroundColor);
 
         this.img.addEvent('mousedown', this.events.down);
         window.addEvent('mouseup', this.events.up);
@@ -453,7 +458,6 @@ Frog.Viewer = new Class({
         window.addEvent('resize', this.events.resize);
         document.body.addClass('noscroll');
         document.body.addClass('noselect');
-        this.element.setStyle('background-color', '#' + Frog.Prefs.backgroundColor);
 
         this.keyboard.activate();
         this.fireEvent('onShow', [this]);
@@ -461,6 +465,7 @@ Frog.Viewer = new Class({
         this.resize();
     },
     hide: function() {
+        hopscotch.endTour(false);
         this.element.hide();
 
         this.img.removeEvent('mousedown', this.events.down);
@@ -481,11 +486,18 @@ Frog.Viewer = new Class({
         this.fireEvent('onHide', [this]);
         this.isOpen = false;
         this.resize();
+    },
+    isOwner: function() {
+        if (this.objects[this.current]) {
+            return this.objects[this.current].author.username === Frog.user.username
+        }
+        return false;
     }
 });
 
 Frog.Viewer.Shelf = new Class({
     Implements: Events,
+    Limit: Math.floor(window.innerWidth / 54),
     initialize: function() {
         var self = this;
         this.shelf = new Element('div', {id: 'frog_shelf'});
@@ -510,7 +522,7 @@ Frog.Viewer.Shelf = new Class({
         var self = this;
         this.shelfContainer.empty();
         // -- Populate with thumbnails
-        var limit = 15;
+        var limit = self.Limit;
         if (objects.length < limit) {
             this.shelf.show();
             objects.each(function(item, idx) {

@@ -9,7 +9,8 @@
         <!-- Place favicon.ico and apple-touch-icon.png in the root directory: mathiasbynens.be/notes/touch-icons -->
         <link id="page_favicon" href="{{branding.favicon}}" rel="icon" type="image/x-icon" />
         <link rel="stylesheet" href="{{MEDIA_URL}}frog/c/ext-all-gray.css">
-        <link rel="stylesheet" href="{{MEDIA_URL}}frog/c/font-awesome.min.css?b={{build}}">
+        <link rel="stylesheet" href="{{MEDIA_URL}}frog/c/font-awesome.min.css">
+        <link rel="stylesheet" href="{{MEDIA_URL}}frog/c/hopscotch.min.css">
         <link href="http://vjs.zencdn.net/5.10.8/video-js.css" rel="stylesheet">
         <link rel="stylesheet" href="{{MEDIA_URL}}frog/c/style.css?b={{build}}">
         {% for stylesheet in plugins.css%}
@@ -76,6 +77,7 @@
         <script src="{{MEDIA_URL}}frog/j/libs/plupload.full.min.js"></script>
         <script src="{{MEDIA_URL}}frog/j/libs/Meio.Autocomplete.min.js"></script>
         <script src="{{MEDIA_URL}}frog/j/libs/sylvester.js"></script>
+        <script src="{{MEDIA_URL}}frog/j/libs/hopscotch.min.js"></script>
         <script src="http://vjs.zencdn.net/5.10.8/video.js"></script>
 
         <!-- scripts concatenated and minified via build script -->
@@ -87,6 +89,7 @@
         <script src="{{MEDIA_URL}}frog/j/libs/frog.uploader.js?b={{build}}"></script>
         <script src="{{MEDIA_URL}}frog/j/libs/frog.ui.js?b={{build}}"></script>
         <script src="{{MEDIA_URL}}frog/j/libs/frog.gallery.js?b={{build}}"></script>
+        <script src="{{MEDIA_URL}}frog/j/libs/frog.tour.js?b={{build}}"></script>
         <script src="{{MEDIA_URL}}frog/j/libs/selection.js?b={{build}}"></script>
 
         <script src="{{MEDIA_URL}}frog/j/plugins.js"></script>
