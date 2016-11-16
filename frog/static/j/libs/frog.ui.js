@@ -327,19 +327,19 @@ Frog.UI = (function(Frog) {
     function buildPrefMenu() {
         var colorMenu = Ext.create('Ext.menu.ColorPicker', {
             height: 24,
+            hideOnClick: true,
             handler: function(cm, color){
                 Frog.Prefs.set('backgroundColor', JSON.stringify('#' + color));
             }
         });
         colorMenu.picker.colors = ['000000', '424242', '999999', 'FFFFFF'];
         var tileSizeHandler = function(item, checked) {
-            if (!checked) {
-                Frog.Prefs.set('tileCount', size);
-                return;
-            }
             var size = item.value;
+            // if (!checked) {
+            //     Frog.Prefs.set('tileCount', size);
+            //     return;
+            // }
             Frog.Prefs.set('tileCount', size, ChangeObserver.fire.bind(ChangeObserver));
-            item.parentMenu.hide();
         }
         var batchSize = Ext.create('Ext.form.field.Number', {
             value: Frog.Prefs.batchSize,
@@ -365,10 +365,12 @@ Frog.UI = (function(Frog) {
                             value: 6,
                             checked: Frog.Prefs.tileCount === 6,
                             group: 'theme',
+                            hideOnClick: true,
                             checkHandler: tileSizeHandler
                         }, {
                             text: 'Medium (9)',
                             value: 9,
+                            hideOnClick: true,
                             checked: Frog.Prefs.tileCount === 9,
                             group: 'theme',
                             checkHandler: tileSizeHandler
@@ -376,34 +378,11 @@ Frog.UI = (function(Frog) {
                             text: 'Small (12)',
                             value: 12,
                             checked: Frog.Prefs.tileCount === 12,
+                            hideOnClick: true,
                             group: 'theme',
                             checkHandler: tileSizeHandler
                         }
                     ]
-                },
-                {
-                    text: 'Item Request Size',
-                    menu: [
-                        batchSize
-                    ]
-                }, {
-                    xtype: 'menucheckitem',
-                    text: 'Include Images',
-                    checked: Frog.Prefs.include_image,
-                    checkHandler: function(item, checked) {
-                        Frog.Prefs.set('include_image', checked);
-                        item.parentMenu.hide();
-                        ChangeObserver.fire(Frog.Prefs);;
-                    }
-                }, {
-                    xtype: 'menucheckitem',
-                    text: 'Include Video',
-                    checked: Frog.Prefs.include_video,
-                    checkHandler: function(item, checked) {
-                        Frog.Prefs.set('include_video', checked);
-                        item.parentMenu.hide();
-                        ChangeObserver.fire(Frog.Prefs);;
-                    }
                 }
             ]
         });
