@@ -7,14 +7,11 @@
         <title>Edit Tags</title>
         <meta name="description" content="">
 
-        <!-- Place favicon.ico and apple-touch-icon.png in the root directory: mathiasbynens.be/notes/touch-icons -->
-
         <link rel="stylesheet" href="{{MEDIA_URL}}frog/c/ext-all-gray.css">
         <link rel="stylesheet" href="{{MEDIA_URL}}frog/c/style.css">
 
         <script src="{{MEDIA_URL}}frog/j/mootoolsCore.js"></script>
 {% endif %}
-
         <style>
             #tag_manage {
                 position: relative;
@@ -32,12 +29,7 @@
                 font-size: 12px;
             }
             #tag_manage section {
-                position: relative;
-                float: left;
-                width: 30%;
-                height: 100%;
-                margin: 9px;
-                padding: 4px;
+                padding: 14px;
             }
             #tag_manage ul {
                 position: relative;
@@ -48,46 +40,42 @@
                 padding: 0;
                 border: 1px solid #666;
             }
-            #frog_tag_search {
-                position: relative;
-                width: 298px;
-                height: 24px;
-                margin: 4px 0;
-                font-size: 20px;
-                z-index: 2000;
-            }
         </style>
     </head>
     <body>
-        <div id="tag_manage" class='x-border-box'>
-            <section id='frog_add'>
-                <header>To Add</header>
-                <p>Drag tags here to add them to the current selection</p>
-                <ul>
-
-                </ul>
-                <input type='search' id='frog_tag_search' />
-            </section>
-            <section id='frog_sel'>
-                <header>Selection</header>
-                <p>These tags are on at least one item of the current selection</p>
-                <ul>
-                    {% for tag in tags %}
-                    <li class="frog-tag" data-frog_tag_id="{{tag.id}}">
-                        <span></span>
-                        {{tag.name}}
-                        <div></div>
-                    </li>
-                    {% endfor %}
-                </ul>
-            </section>
-            <section id='frog_rem'>
-                <header>To Remove</header>
-                <p>Drag tags here to remove them from the current selection</p>
-                <ul>
-
-                </ul>
-            </section>
+        <div id="tag_manage" class='x-border-box container'>
+            <div>
+                <form class="form-inline">
+                    <header>Add Tags</header>
+                    <input type='search' id='frog_tag_search' class="form-control" /> <button class="btn btn-primary">Add</button>
+                </form>
+            </div>
+            <hr />
+            <div class="row">
+                <section id='frog_add' class="col-md-4">
+                    <header>Add To Selection</header>
+                    <p>Drag tags here to add them to the current selection</p>
+                    <ul></ul>
+                </section>
+                <section id='frog_sel' class="col-md-4">
+                    <header>Selection</header>
+                    <p>These tags are on at least one item of the current selection</p>
+                    <ul>
+                        {% for tag in tags %}
+                        <li class="frog-tag" data-frog_tag_id="{{tag.id}}">
+                            <span></span>
+                            {{tag.name}}
+                            <div></div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </section>
+                <section id='frog_rem' class="col-md-4">
+                    <header>Remove From Selection</header>
+                    <p>Drag tags here to remove them from the current selection</p>
+                    <ul></ul>
+                </section>
+            </div>
         </div>
 {% if not isAjax %}
         <!-- JavaScript at the bottom for fast page loading -->
