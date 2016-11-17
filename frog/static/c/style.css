@@ -282,6 +282,13 @@ body {
     height: auto;
 }
 
+pre {
+    color: inherit;
+    background-color: inherit;
+    border: none;
+    padding: 0;
+}
+
 
 
 body > div {
