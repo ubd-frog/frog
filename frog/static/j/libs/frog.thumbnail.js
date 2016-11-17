@@ -96,6 +96,9 @@ Frog.Thumbnail = new Class({
         }).inject(this.imgLink);
 
         var tags = new Element('div', {'class': 'tag-hover gradient'}).inject(this.element);
+        if (Frog.Prefs.semi_transparent) {
+            tags.addClass('tag-hover-semi');
+        }
         this.title = new Element('span', {'text': this.object.title}).inject(tags);
         var artistDiv = new Element('div').inject(tags);
         this.artist = new Element('a', {'href': "javascript:void(0);", 'class': 'frog-tag'}).inject(artistDiv);

@@ -334,12 +334,7 @@ Frog.UI = (function(Frog) {
         });
         colorMenu.picker.colors = ['000000', '424242', '999999', 'FFFFFF'];
         var tileSizeHandler = function(item, checked) {
-            var size = item.value;
-            // if (!checked) {
-            //     Frog.Prefs.set('tileCount', size);
-            //     return;
-            // }
-            Frog.Prefs.set('tileCount', size, ChangeObserver.fire.bind(ChangeObserver));
+            Frog.Prefs.set('tileCount', item.value, ChangeObserver.fire.bind(ChangeObserver));
         }
         var batchSize = Ext.create('Ext.form.field.Number', {
             value: Frog.Prefs.batchSize,
@@ -383,6 +378,22 @@ Frog.UI = (function(Frog) {
                             checkHandler: tileSizeHandler
                         }
                     ]
+                },
+                {
+                    xtype: 'menucheckitem',
+                    text: "Always Show Thumbnail Info",
+                    checked: Frog.Prefs.semi_transparent,
+                    hideOnClick: true,
+                    checkHandler: function(item, checked) {
+                        Frog.Prefs.set('semi_transparent', checked, function() {
+                            if (checked) {
+                                $$('.tag-hover').addClass('tag-hover-semi');
+                            }
+                            else {
+                                $$('.tag-hover').removeClass('tag-hover-semi');
+                            }
+                        });
+                    }
                 }
             ]
         });
@@ -399,10 +410,9 @@ Frog.UI = (function(Frog) {
             title: 'Edit Tags',
             icon: Frog.icon('tag_orange'),
             closable: true,
-            resizable: false,
             modal: true,
             width: 800,
-            height: 600,
+            height: 650,
             layout: 'fit',
             bodyStyle: 'padding: 5px;',
             items: [{

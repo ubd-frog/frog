@@ -281,7 +281,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
                     }
                 }
             }).inject(document.body);
-            this.element = new Element('div', {id: 'frog_comments_block'}).inject(this.container);
+            this.element = new Element('div', {id: 'frog_comments_block', 'class': 'well'}).inject(this.container);
             this.container.hide();
             
             this.top = new Element('div').inject(this.element);

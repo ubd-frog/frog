@@ -277,6 +277,11 @@ body {
     border-color: #eed3d7;
 }
 
+/* Bootstrap overrides */
+.form-control {
+    height: auto;
+}
+
 
 
 body > div {
@@ -402,6 +407,9 @@ a:hover { color: #fff; }
         -moz-transition: opacity 0.3s 0.0s;
         -ms-transition: background 0.3s 0.0s;
         -ms-transition: opacity 0.3s 0.0s;
+    }
+    .thumbnail .tag-hover-semi {
+        opacity: 0.5;
     }
     .thumbnail:hover .tag-hover {
         opacity: 1;
@@ -871,10 +879,10 @@ li.frog-tag {
 #frog_comments_block {
     position: relative;
     width: 600px;
-    margin: 0 auto;
+    margin: 32px auto;
     max-height: 800px;
-    margin: 0 auto;
     background: #292929;
+    border-color: #444;
 }
     #frog_comments_block > div:first-child {
         width: 100%;
@@ -921,6 +929,9 @@ li.frog-tag {
     font-size: 12px;
     font-family: Verdana;
     padding: 4px 12px;
+    color: inherit;
+    background-color: inherit;
+    border: none;
 }
 #frog_comments span {
     font-size: 10px;
