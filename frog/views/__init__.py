@@ -29,7 +29,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.core.mail import send_mail
+from django.core.mail import mail_managers
 from django.conf import settings
 
 from frog.models import Gallery, Image, Video, Tag, Piece, DefaultPrefs
@@ -54,10 +54,6 @@ def index(request):
         return render(request, INDEX_HTML, getBranding())
     else:
         return upload(request)
-
-
-def authInfo(request):
-    return 
 
 
 @require_http_methods(['POST'])
@@ -201,9 +197,8 @@ def artistLookup(request):
 
 @login_required
 def helpMe(request):
-    msg = request.POST.get('message')
-    toAddr = [m[1] for m in settings.MANAGERS]
-    send_mail('Frog Help', msg, request.user.email, toAddr)
+    msg = '{} is in need of assistance:\n\n{}'.format(request.user.email, request.POST.get('message'))
+    mail_managers('Frog Help', msg)
 
     return HttpResponse()
 
