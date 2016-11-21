@@ -22,13 +22,14 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 Frog.UI = (function(Frog) {
     var self = this;
-    var ID, Store, ToolBar, SwitchArtistWindow;
-    var navmenu = Ext.create('Ext.menu.Menu', {hideMode: 'display'});
+    var ID, Store, ToolBar;
+    var navmenu = Ext.create('Ext.menu.Menu');
     
     var uploadEnabled = false;
     var advancedFilter = Frog.Prefs.advanced_filter;
 
     self.renderCallback = null;
+    Ext.tip.QuickTipManager.init();
 
 
     // -- Models
@@ -37,8 +38,6 @@ Frog.UI = (function(Frog) {
         fields: [
             {name: 'id'},
             {name: 'title'},
-            {name: 'image_count', type: 'int'},
-            {name: 'video_count', type: 'int'},
             {name: 'owner'},
             {name: 'description'}
         ]
@@ -60,7 +59,7 @@ Frog.UI = (function(Frog) {
             }
         }
     });
-    Ext.create('Ext.data.Store', {
+    var GalleryStore = Ext.create('Ext.data.Store', {
         autoLoad: true,
         autoSync: true,
         model: 'Gallery',
@@ -98,9 +97,9 @@ Frog.UI = (function(Frog) {
     });
 
     ToolBar = Ext.create('Ext.toolbar.Toolbar');
-    RemoveObserver = new Frog.Observer();
-    ChangeObserver = new Frog.Observer();
-    FilterObserver = new Frog.Observer();
+    var RemoveObserver = new Frog.Observer();
+    var ChangeObserver = new Frog.Observer();
+    var FilterObserver = new Frog.Observer();
 
     function setId(id) {
         ID = id;
@@ -112,11 +111,28 @@ Frog.UI = (function(Frog) {
 
     function render(el) {
         ToolBar.render(el);
-        // -- Navigation panel
-        navmenu.add(buildNav());
+        GalleryStore.on('load', function() {
+            navmenu.removeAll();
+            navmenu.add({
+                text: 'Create Gallery',
+                icon: Frog.icon('add'),
+                handler: createHandler
+            });
+            navmenu.add('-');
+            for (var i=0;i<this.getCount();++i) {
+                var item = this.getAt(i);
+                var icon = (Frog.GalleryObject.id === item.get('id')) ? Frog.icon('tick') : null;
+                navmenu.add({
+                    text: this.getAt(i).get('title'),
+                    icon: icon,
+                    href: '/frog/gallery/' + item.get('id')
+                });
+            }
+        });
         ToolBar.add({
-            text: 'Navigation',
-            icon: Frog.icon('compass'),
+            text: 'Galleries',
+            icon: Frog.icon('photos'),
+            tooltip: 'Switch to different galleries you have access to',
             menu: navmenu
         });
         // -- Check for user
@@ -132,34 +148,47 @@ Frog.UI = (function(Frog) {
                         ToolBar.add({
                             id: 'frogBrowseButton',
                             text: 'Upload',
-                            icon: Frog.icon('add')
+                            icon: Frog.icon('add'),
+                            tooltip: 'Browse for files to upload or drag them into the browser'
                         });
                     }
                     // -- Edit Tags button
                     ToolBar.add({
-                        text: 'Edit Tags',
+                        text: 'Tags',
                         icon: Frog.icon('tag_orange'),
+                        tooltip: 'Add or remove tags from selected items',
                         handler: editTagsHandler
                     });
                     var menuconfig = {
                         hideMode: 'display',
                         items: [
                             {
-                                text: 'Remove Selected',
+                                text: 'Remove Items',
                                 icon: Frog.icon('cross'),
                                 handler: removeHandler
                             },
                             {
-                                text: 'Copy to Gallery',
+                                text: 'Copy',
                                 icon: Frog.icon('page_white_copy'),
-                                handler: copyHandler
+                                handler: Frog.copy
                             },
+                            {
+                                text: 'Cut',
+                                icon: Frog.icon('cut'),
+                                handler: Frog.cut
+                            },
+                            {
+                                text: 'Paste',
+                                icon: Frog.icon('page_white_paste'),
+                                disabled: window.localStorage.getItem('clipboard') === null,
+                                handler: Frog.paste
+                            },
+                            '-',
                             {
                                 text: 'Download Sources',
                                 icon: Frog.icon('compress'),
                                 handler: downloadHandler
                             },
-                            '-',
                             {
                                 text: 'Switch Artist',
                                 icon: Frog.icon('user_edit'),
@@ -167,15 +196,6 @@ Frog.UI = (function(Frog) {
                             }
                         ]
                     };
-                    if (res.value.gallery) {
-                        if (res.value.gallery.parent === null) {
-                            menuconfig.items.push({
-                                text: 'Add Sub Gallery',
-                                icon: Frog.icon('application_view_tile'),
-                                handler: addSubGalleryHandler
-                            });
-                        }
-                    }
                     if (res.value.gallery !== null) {
                         menuconfig.items.push('-');
                         menuconfig.items.push(
@@ -217,10 +237,12 @@ Frog.UI = (function(Frog) {
                     ToolBar.add({
                         text: 'Filter',
                         icon: Frog.icon('filter'),
+                        tooltip: 'Toggle between normal and advanced filtering',
                         enableToggle: true,
                         pressed: advancedFilter,
                         toggleHandler: function(btn) {
                             advancedFilter = btn.pressed;
+                            btn.setText((advancedFilter) ? 'Advanced Filter' : 'Filter');
                             Frog.Prefs.set('advanced_filter', advancedFilter);
                             FilterObserver.fire(advancedFilter);
                             if (advancedFilter) {
@@ -232,17 +254,24 @@ Frog.UI = (function(Frog) {
                         }
                     });
                     ToolBar.add('-');
-                    
+                    // -- Preferences Menu
+                    ToolBar.add({
+                        text: 'Preferences',
+                        icon: Frog.icon('cog'),
+                        menu: buildPrefMenu()
+                    });
+                    ToolBar.add('-');
                     // -- Help button
                     ToolBar.add({
+                        text: 'Help',
                         icon: Frog.icon('help'),
                         handler: helpHandler
                     });
-                    // -- Preferences Menu
                     ToolBar.add({
-                        icon: Frog.icon('cog'),
-                        menu: buildPrefMenu()
-                    });                    
+                        text: "Documentation",
+                        icon: Frog.icon("book"),
+                        href: "http://frog.readthedocs.io/en/latest/index.html#user-guide"
+                    })
                 }
         
                 if (self.renderCallback !== null) {
@@ -276,54 +305,7 @@ Frog.UI = (function(Frog) {
         });
     }
 
-
     // Private
-    function buildNav() {
-        Store.load();
-        var grid = Ext.create('Ext.tree.Panel', {
-            width: 600,
-            height: 300,
-            frame: true,
-            title: 'Galleries',
-            hideMode: 'display',
-            store: Store,
-            rootVisible: false,
-            useArrows: true,
-            singleExpand: true,
-            columns: [{
-                xtype: 'treecolumn',
-                text: 'Title',
-                flex: 2,
-                sortable: true,
-                dataIndex: 'title'
-            }, {
-                text: 'Images',
-                flex: 1,
-                sortable: true,
-                dataIndex: 'image_count',
-                field: {
-                    xtype: 'textfield'
-                }
-            }, {
-                text: 'Videos',
-                flex: 1,
-                sortable: true,
-                dataIndex: 'video_count',
-                field: {
-                    xtype: 'textfield'
-                }
-            }, {
-                text: 'Description',
-                flex: 2,
-                dataIndex: 'description'
-            }]
-        });
-        grid.on('itemClick', function(view, rec, item) {
-            location.href = '/frog/gallery/' + rec.data.id;
-        });
-
-        return grid;
-    }
     function buildPrefMenu() {
         var colorMenu = Ext.create('Ext.menu.ColorPicker', {
             height: 24,
@@ -335,7 +317,7 @@ Frog.UI = (function(Frog) {
         colorMenu.picker.colors = ['000000', '424242', '999999', 'FFFFFF'];
         var tileSizeHandler = function(item, checked) {
             Frog.Prefs.set('tileCount', item.value, ChangeObserver.fire.bind(ChangeObserver));
-        }
+        };
         var batchSize = Ext.create('Ext.form.field.Number', {
             value: Frog.Prefs.batchSize,
             minValue: 0,
@@ -345,7 +327,7 @@ Frog.UI = (function(Frog) {
             Frog.Prefs.set('batchSize', val);
         });
 
-        var menu = Ext.create('Ext.menu.Menu', {
+        var prefmenu = Ext.create('Ext.menu.Menu', {
             hideMode: 'display',
             items: [
                 {
@@ -398,7 +380,7 @@ Frog.UI = (function(Frog) {
             ]
         });
 
-        return menu;
+        return prefmenu;
     }
     function editTagsHandler() {
         var guids = [];
@@ -406,8 +388,18 @@ Frog.UI = (function(Frog) {
             var guid = Frog.util.getData(item, 'frog_guid');
             guids.push(guid);
         });
+
+        if (guids.length === 0) {
+            Ext.MessageBox.show({
+                title: 'Selection Error',
+                msg: 'Please select at least one item to mange tags for',
+                buttons: Ext.MessageBox.OK
+            });
+            return;
+        }
+
         var win = Ext.create('widget.window', {
-            title: 'Edit Tags',
+            title: 'Tags',
             icon: Frog.icon('tag_orange'),
             closable: true,
             modal: true,
@@ -464,158 +456,6 @@ Frog.UI = (function(Frog) {
         });
         win.show();
     }
-    function editMetaHandler() {
-        if ($$('.selected').length === 0) {
-            return;
-        }
-        var guid = Frog.util.getData($$('.selected')[0], 'frog_guid');
-        Ext.define('Meta', {
-            extend: 'Ext.data.Model',
-            fields: [
-                {name: 'title', type: 'string'},
-                {name: 'description', type: 'string'},
-                {name: 'thumbnail', type: 'string'}
-            ]
-        });
-        var store = Ext.create('Ext.data.Store', {
-            model: 'Meta',
-            proxy: {
-                type: 'ajax',
-                url: '/frog/piece/' + guid,
-                reader: {
-                    type: 'json',
-                    root: 'value'
-                }
-            }
-        });
-
-        var form = Ext.create('Ext.form.Panel', {
-            items: [{
-                xtype:'fieldset',
-                items: [{
-                    xtype: 'textfield',
-                    name: 'title',
-                    fieldLabel: 'Title',
-                    store: store,
-                    valueField: 'title'
-                }, {
-                    xtype: 'textarea',
-                    name: 'description',
-                    fieldLabel: 'Description',
-                    store: store,
-                    valueField: 'decription'
-                }
-                ]
-            }],
-        });
-
-
-        var win = Ext.create('widget.window', {
-            title: 'Edit Meta',
-            icon: Frog.icon('pencil'),
-            closable: true,
-            resizable: false,
-            modal: true,
-            width: 400,
-            // height: 300,
-            layout: 'fit',
-            bodyStyle: 'padding: 5px;',
-            items: [{
-                xtype: 'grid',
-                store: store,
-                columns: [
-                    {
-                        text     : 'File',
-                        flex     : 6,
-                        sortable : false,
-                        dataIndex: 'file'
-                    },
-                    {
-                        text     : 'Size',
-                        flex     : 1,
-                        sortable : false,
-                        dataIndex: 'size'
-                    },
-                    {
-                        text: 'Created',
-                        flex: 2,
-                        sortable: false,
-                        dataIndex: 'date',
-                        xtype: 'datecolumn',
-                        format:'Y-m-d'
-                    },
-                    {
-                        text     : '%',
-                        flex     : 1,
-                        sortable : false,
-                        dataIndex: 'percent'
-                    },
-                    {
-                        text: 'Status',
-                        flex: 2,
-                        sortable: false,
-                        dataIndex: 'status'
-                    },
-                    {
-                        xtype: 'actioncolumn',
-                        flex: 1,
-                        sortable: false,
-                        items: [
-                            {
-                                text: 'remove',
-                                icon: '/static/frog/i/delete.png',
-                                handler: function(grid, rowIndex, colIndex) {
-                                    var rec = store.getAt(rowIndex);
-                                    var file = self.uploader.getFile(rec.get('id'));
-                                    self.uploader.removeFile(file);
-                                    store.remove([rec]);
-                                }
-                            }
-                        ]
-                    }
-                ],
-                flex: 1,
-                viewConfig: {
-                    stripeRows: true,
-                    getRowClass: function(record) {
-                        var c = record.get('unique');
-                        return (c) ? '' : 'red';
-                    }
-                }
-            }],
-            buttons: [{
-                text: 'Save',
-                handler: function() {
-                    var data = form.getValues(false, true)
-                    new Request.JSON({
-                        url: '/frog/piece/' + guid + '/',
-                        emulation: false,
-                        onSuccess: function(res) {
-                            $$('.selected')[0].getElements('.tag-hover > span')[0].set('text', data.title);
-                            var obj = Frog.GalleryObject.getObjectFromGuid(guid);
-                            obj.title = data.title;
-                            obj.description = data.description;
-                        }
-                    }).PUT(data);
-                    win.close();
-                    Frog.GalleryObject.keyboard.activate();
-                }
-            },{
-                text: 'Cancel',
-                handler: function() {
-                    win.close();
-                    Frog.GalleryObject.keyboard.activate();
-                }
-            }]
-        });
-        win.add(form);
-        win.show();
-        Frog.GalleryObject.keyboard.relinquish();
-        store.on('load', function(store, records, successful, eOpts) {
-            form.loadRecord(records[0]);
-        });
-        store.load();
-    }
     function removeHandler(silent) {
         if (typeof(silent) === 'undefined') {
             silent = false;
@@ -630,128 +470,61 @@ Frog.UI = (function(Frog) {
         });
         RemoveObserver.fire({ids: ids, silent: silent});
     }
-    function copyHandler() {
-        var win = Ext.create('widget.window', {
-            title: 'Copy to Gallery',
-            icon: Frog.icon('page_white_copy'),
-            closable: true,
-            resizable: false,
-            modal: true,
-            width: 600,
-            height: 330,
-            bodyStyle: 'padding: 5px;'
-        });
-        win.show();
+    function createHandler() {
+        var form = Ext.create('Ext.form.Panel', {
+            items: [
+                {
+                    fieldLabel: 'Title',
+                    xtype: 'textfield',
+                    name: 'title'
 
-        var fp = Ext.create('Ext.FormPanel', {
-            items: [{
-                xtype: 'label',
-                text: "Copy images to a new Gallery:"
-            }, {
-                xtype:'fieldset',
-                title: 'New Gallery',
-                items: [
-                    {
-                        fieldLabel: 'Title',
-                        xtype: 'textfield',
-                        name: 'title'
-
-                    }, {
-                        fieldLabel: 'Description',
-                        xtype: 'textfield',
-                        name: 'description'
-                    }, {
-                        fieldLabel: 'Security Level',
-                        xtype: 'combobox',
-                        name: 'security',
-                        editable: false,
-                        store: 'security',
-                        displayField: 'name',
-                        valueField: 'value',
-                        value: 0
-                    }
-                ]
-            }, {
-                xtype: 'label',
-                text: 'Or choose an existing one:'
-            }, {
-                xtype:'fieldset',
-                title: 'Existing Gallery',
-                items: [
-                    {
-                        xtype: 'combobox',
-                        editable: false,
-                        store: 'galleries',
-                        displayField: 'title',
-                        valueField: 'id',
-                        id: 'frog_gallery_id'
-                    }
-                ]
-            }, {
-                xtype: 'checkbox',
-                fieldLabel: 'Move Items?',
-                name: 'move'
-            }],
+                }, {
+                    fieldLabel: 'Description',
+                    xtype: 'textareafield',
+                    name: 'description'
+                }, {
+                    fieldLabel: 'Security Level',
+                    xtype: 'combobox',
+                    name: 'security',
+                    editable: false,
+                    store: 'security',
+                    displayField: 'name',
+                    valueField: 'value',
+                    value: 0
+                }
+            ],
             buttons: [{
                 text: 'Submit',
                 handler: function() {
-                    var data = fp.getForm().getValues();
+                    var data = form.getForm().getValues();
                     var selected = $$('.thumbnail.selected');
-                    var obj = {};
 
-                    data.id = data['frog_gallery_id-inputEl'];
-                    if (typeof(data.id) === 'undefined' && data.title === '') {
+                    if (data.title === '') {
                         Ext.MessageBox.show({
                             title: 'Missing Information',
-                            msg: 'Please enter a title or choose an existing gallery',
+                            msg: 'Please enter a title',
                             buttons: Ext.MessageBox.OK,
                             icon: Ext.MessageBoxINFO
                         });
-                        
+
                         return false;
                     }
 
-                    // -- New Gallery
-                    if (data.title !== '') {
-                        // -- Create the new gallery first synchronously
-                        new Request.JSON({
-                            url: '/frog/gallery',
-                            async: false,
-                            headers: {"X-CSRFToken": Cookie.read('csrftoken')},
-                            onSuccess: function(res) {
-                                data.id = res.value.id;
-                            }
-                        }).POST({title: data.title, description: data.description, security: data.security});
-                    }
-
-                    guids = [];
-                    selected.each(function(item) {
-                        guids.push(Frog.util.getData(item, 'frog_guid'));
-                    });
-                    obj.guids = guids.join(',');
-
-                    if (data.move === 'on' && data.id !== ID) {
-                        obj.move = ID;
-                    }
-
                     new Request.JSON({
-                        url: '/frog/gallery/' + data.id,
-                        emulation: false,
+                        url: '/frog/gallery',
+                        async: false,
                         headers: {"X-CSRFToken": Cookie.read('csrftoken')},
                         onSuccess: function(res) {
-                            Store.load();
-                            Ext.MessageBox.confirm('Confirm', 'Would you like to visit this gallery now?', function(res) {
-                                if (res === 'yes') {
-                                    window.location = '/frog/gallery/' + data.id;
-                                }
+                            msg('Gallery "' + res.value.title + '" added successfully', 'alert-success');
+                            data.id = res.value.id;
+                            navmenu.add({
+                                text: res.value.title,
+                                href: '/frog/gallery/' + res.value.id
                             });
                         }
-                    }).PUT(obj);
-                    win.close();
+                    }).POST(data);
 
-                    if (typeof(obj.move) !== 'undefined') {
-                        removeHandler(true);
-                    }
+                    win.close();
                 }
             },{
                 text: 'Cancel',
@@ -760,7 +533,17 @@ Frog.UI = (function(Frog) {
                 }
             }]
         });
-        win.add(fp);
+        var win = Ext.create('widget.window', {
+            title: 'Create Gallery',
+            icon: Frog.icon('photos'),
+            closable: true,
+            resizable: false,
+            modal: true,
+            bodyStyle: 'padding: 5px;',
+            width: 400,
+            items: [form]
+        });
+        win.show();
     }
     function downloadHandler() {
         var selected = $$('.thumbnail.selected');
@@ -774,42 +557,7 @@ Frog.UI = (function(Frog) {
         var win = Frog.UI.SwitchArtist();
         win.show();
     }
-    function addSubGalleryHandler() {
-        Ext.MessageBox.prompt('Name', 'Please enter a title for the new gallery:', function(res, text) {
-            if (res === 'ok') {
-                new Request.JSON({
-                    url: '/frog/gallery',
-                    headers: {"X-CSRFToken": Cookie.read('csrftoken')},
-                    onSuccess: function(res) {
-                        Ext.MessageBox.alert('Gallery', res.message);
-                        Store.load();
-                    }
-                }).POST({parent: ID, title: text});
-            }
-        });
-    }
     function helpHandler() {
-        var win = Ext.create('widget.window', {
-            title: 'Ask for Help',
-            icon: Frog.icon('help'),
-            closable: true,
-            closeAction: 'hide',
-            resizable: false,
-            modal: true,
-            width: 600,
-            height: 400,
-            bodyPadding: 10,
-            bodyStyle: 'padding: 5px; background: transparent;'
-        });
-        win.show();
-        win.add({
-            xtype: 'label',
-            text: "Have a question, problem or suggestion?",
-            style: {
-                'font-size': '14px',
-                'font-weight': 'bold'
-            }
-        })
         var fp = Ext.create('Ext.FormPanel', {
             items: [
             {
@@ -835,7 +583,30 @@ Frog.UI = (function(Frog) {
                 }
             }]
         });
-        win.add(fp)
+        var win = Ext.create('widget.window', {
+            title: 'Ask for Help',
+            icon: Frog.icon('help'),
+            closable: true,
+            closeAction: 'hide',
+            resizable: false,
+            modal: true,
+            width: 600,
+            height: 400,
+            bodyPadding: 10,
+            bodyStyle: 'padding: 5px; background: transparent;',
+            items: [
+                {
+                    xtype: 'label',
+                    text: "Have a question, problem or suggestion?",
+                    style: {
+                        'font-size': '14px',
+                        'font-weight': 'bold'
+                    }
+                },
+                fp
+            ]
+        });
+        win.show();
     }
     function securityHandler(item, event) {
         var store = Ext.getStore('security');
@@ -844,42 +615,6 @@ Frog.UI = (function(Frog) {
             emulation: false,
             headers: {"X-CSRFToken": Cookie.read('csrftoken')}
         }).PUT({security: store.findRecord('name', item.text).data.value});
-    }
-    function addPrivateMenu() {
-        var id = this.id;
-        var makepublic = managemenu.add({
-            text: 'Make public',
-            icon: Frog.icon('world'),
-            handler: function() {
-                Ext.MessageBox.confirm('Confirm', 'Are you sure you want to make this public?', function(res) {
-                    if (res === 'yes') {
-                        new Request.JSON({
-                            url: '/frog/gallery/' + ID,
-                            emulation: false,
-                            headers: {"X-CSRFToken": Cookie.read('csrftoken')}
-                        }).PUT({security: 0});
-                        managemenu.remove(makepublic);
-                        managemenu.remove(makeprotected);
-                    }
-                });
-            }
-        });
-        var makeprotected = managemenu.add({
-            text: 'Make protected',
-            icon: Frog.icon('world'),
-            handler: function() {
-                Ext.MessageBox.confirm('Confirm', 'Are you sure you want to make this protected?', function(res) {
-                    if (res === 'yes') {
-                        new Request.JSON({
-                            url: '/frog/gallery/' + ID,
-                            emulation: false,
-                            headers: {"X-CSRFToken": Cookie.read('csrftoken')}
-                        }).PUT({security: 1});
-                        managemenu.remove(makepublic);
-                    }
-                });
-            }
-        });
     }
 
     function addLoginAction() {
@@ -976,12 +711,13 @@ Frog.UI.SwitchArtist = function() {
             fieldLabel: 'Artist Name',
             store: 'artists',
             queryMode: 'remote',
-            minChars: 3,
+            minChars: 2,
             displayField: 'name',
-            name: 'artist_name'
+            name: 'artist_name',
+            focusOnToFront: true
         }],
         buttons: [{
-            text: 'Send',
+            text: 'Save',
             handler: function() {
                 var value = this.up('form').getForm().getFieldValues();
                 switchArtistCallback(value.artist_name);
