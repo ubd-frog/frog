@@ -57,6 +57,37 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
         return Frog.pixel;
     }
+    Frog.cut = function() {
+        var value = {
+            'guids': $$('.selected').map(function(_) { return Frog.util.getData(_, 'frog_guid'); }),
+            'id': Frog.GalleryObject.id
+        };
+        window.localStorage.setItem('clipboard', JSON.stringify(value));
+    }
+    Frog.copy = function() {
+        var value = {
+            'guids': $$('.selected').map(function(_) { return Frog.util.getData(_, 'frog_guid'); }),
+            'id': null
+        };
+        window.localStorage.setItem('clipboard', JSON.stringify(value));
+    }
+    Frog.paste = function() {
+        var key = 'clipboard';
+        var item = JSON.parse(window.localStorage.getItem(key));
+        if (item.id !== null) {
+            item.from = item.id;
+        }
+        item.guids = item.guids.join(',');
+        window.localStorage.removeItem(key);
+        new Request.JSON({
+            url: '/frog/gallery/' + Frog.GalleryObject.id,
+            emulation: false,
+            headers: {"X-CSRFToken": Cookie.read('csrftoken')},
+            onSuccess: function(res) {
+                Frog.GalleryObject.request();
+            }
+        }).PUT(item);
+    }
     Frog.util = {
         fitToRect: function(rectW, rectH, width, height) {
             var iratio = width / height;
@@ -227,12 +258,16 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
             }
             this.isSearch = typeof(id) === 'string';
             this.element = new Element('li', {'class': 'frog-tag'});
+            var icon = 'tag';
             if (this.isSearch) {
-                this.element.addClass('frog-tag-search');
+                icon = 'search';
+            }
+            else if (this.isDate) {
+                icon = 'calendar';
             }
             Frog.util.setData(this.element, 'frog_tag_id', this.id);
             
-            new Element('span').inject(this.element);
+            new Element('i', {'class': 'fa fa-' + icon}).inject(this.element);
             new Element('a', {href: 'javascript:void(0);', text: this.name.capitalize(), 'class': 'frog-tag'}).inject(this.element);
             this.closeButton = new Element('div', {
                 text: 'x',

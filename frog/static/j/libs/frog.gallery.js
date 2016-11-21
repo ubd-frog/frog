@@ -64,7 +64,7 @@ Frog.Gallery = new Class({
             var commentEl = $(self.thumbnails[id]).getElements('.frog-comment-bubble')[0];
             var count = commentEl.get('text').toInt();
             commentEl.set('text', count + 1);
-        })
+        });
 
         // -- Instance objects
         Frog.UI.addEvent('remove', this.removeItems.bind(this));
@@ -75,7 +75,6 @@ Frog.Gallery = new Class({
         });
         Frog.UI.addEvent('render', function() {
             if (self.options.upload) {
-                var uploaderElement = $('upload');
                 self.uploader = new Frog.Uploader(self.id);
                 self.uploader.addEvent('complete', function() {
                     self.request();
@@ -107,7 +106,10 @@ Frog.Gallery = new Class({
                 'ctrl+a': function(e) { e.stop(); $$('.thumbnail').addClass('selected'); },
                 'ctrl+d': function(e) { e.stop(); $$('.thumbnail').removeClass('selected'); },
                 'tab': function(e) { e.stop(); Frog.UI.editTags(); },
-                'esc': function(e) { e.stop(); $$('.thumbnail').removeClass('selected'); }
+                'esc': function(e) { e.stop(); $$('.thumbnail').removeClass('selected'); },
+                'ctrl+c': function(e) { e.stop(); Frog.copy(); },
+                'ctrl+x': function(e) { e.stop(); Frog.cut(); },
+                'ctrl+v': function(e) { e.stop(); Frog.paste(); }
             }
         });
 
@@ -138,7 +140,6 @@ Frog.Gallery = new Class({
             }
         });
         $(this.builder).inject(this.container, 'before');
-        //this.builder.sortables.addLists($$('.frog-bucket'));
     },
     clear: function() {
         this.objects = [];
@@ -179,7 +180,7 @@ Frog.Gallery = new Class({
         if (typeof(this.requestData.filters) === 'undefined') {
             this.requestData.filters = "[[]]";
         }
-        this.requestData.filters
+
         if (Frog.Prefs.include_image) {
             this.requestData.models.push('image');
         }
