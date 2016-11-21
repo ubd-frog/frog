@@ -105,7 +105,7 @@ Frog.Thumbnail = new Class({
 
         this.like = new Element('a ', {
             'class': 'frog-like',
-            'html': '<i class="fa fa-thumbs-o-up"></i> <span>' + this.object.like_count + '</span>'
+            'html': '<i class="fa fa-thumbs-up"></i> <span>' + this.object.like_count + '</span>'
         }).inject(tags).addEvent('click', function(e) {
             e.stop();
             new Request.JSON({
@@ -118,9 +118,9 @@ Frog.Thumbnail = new Class({
             }).POST();
         }.bind(this));
 
-        new Element('div', {
+        new Element('a', {
             'class': 'frog-comment-bubble',
-            text: this.object.comment_count,
+            'html': '<i class="fa fa-comment"></i> <span>' + this.object.comment_count + '</span>',
             events: {
                 click: function(e) {
                     e.stop();
