@@ -41,7 +41,7 @@ Frog.QueryBuilder = new Class({
 
         // -- Add our main element
         this.element = new Element('div', {id: 'frog_builder'});
-        var froglink = new Element('a', {href: 'https://github.com/theiviaxx/Frog'}).inject(this.element);
+        var froglink = new Element('a', {href: Frog.Branding.link, target: '_blank', rel: 'noopener noreferrer'}).inject(this.element);
         var frog = new Image().inject(froglink);
         frog.addClass('frog-logo');
         frog.src = Frog.Branding.icon;
@@ -197,9 +197,14 @@ Frog.Bucket = new Class({
     initialize: function() {
         this.element = new Element('ul', {'class': 'frog-bucket'});
         this.li = new Element('li').inject(this.element);
-        this.input = new Element('input', {placeholder: "Search"}).inject(this.li);
+        var placeholder = (Frog.Prefs.advanced_filter) ? 'Advanced Filter' : 'Filter';
+        this.input = new Element('input', {placeholder: placeholder}).inject(this.li);
         this.tags = [];
         this.completer = null;
+        Frog.UI.addEvent('filter', function(state) {
+            var placeholder = (state) ? 'Advanced Filter' : 'Filter';
+            this.input.setProperty('placeholder', placeholder);
+        }.bind(this));
 
         this.events = {
             keyUp: this.keyUpEvent.bind(this),
@@ -286,10 +291,10 @@ Frog.Bucket = new Class({
                 path: 'name',
                 formatItem: function(text, data) {
                     if (data.id === 0) {
-                        return '<span class="search"></span>' + data.name
+                        return '<i class="fa fa-search"></i>' + data.name
                     }
                     else {
-                        return '<span></span>' + data.name
+                        return '<i class="fa fa-tag"></i>' + data.name
                     }
                 }
             },
