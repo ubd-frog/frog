@@ -43,6 +43,7 @@ urlpatterns = [
     url(r'^tag/(?P<obj_id>\d+)$', views.tag.index),
     url(r'^tag/search$', views.tag.search),
     url(r'^tag/manage$', views.tag.manage),
+    url(r'^tag/merge/(?P<obj_id>\d+)$', views.tag.merge),
     # -- User prefs
     url(r'^pref/$', views.userpref.index),
     # -- Comments
@@ -58,6 +59,7 @@ urlpatterns = [
     url(r'^artistlookup$', views.artistLookup),
     url(r'^isunique$', views.isUnique),
     url(r'^getuser$', views.getUser),
+    url(r'branding$', views.branding),
     # -- Authentication
     url(r'^login$', views.login_),
     url(r'^logout$', views.logout_),

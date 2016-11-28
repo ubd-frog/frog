@@ -252,3 +252,10 @@ def getUser(request):
     res.append(data)
 
     return JsonResponse(res.asDict())
+
+
+def branding(request):
+    res = Result()
+    res.append(getBranding())
+
+    return JsonResponse(res.asDict())

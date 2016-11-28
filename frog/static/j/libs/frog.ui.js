@@ -270,7 +270,7 @@ Frog.UI = (function(Frog) {
                     ToolBar.add({
                         text: "Documentation",
                         icon: Frog.icon("book"),
-                        href: "http://frog.readthedocs.io/en/latest/index.html#user-guide"
+                        href: Frog.Branding.link
                     })
                 }
         

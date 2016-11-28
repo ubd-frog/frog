@@ -110,10 +110,11 @@ def get(request, obj_id=None):
 def post(request):
     """ Create a Gallery """
     defaultname = 'New Gallery %i' % Gallery.objects.all().count()
-    title = request.POST.get('title', defaultname)
-    description = request.POST.get('description', '')
-    security = int(request.POST.get('security', Gallery.PUBLIC))
-    parentid = request.POST.get('parent')
+    data = request.POST or json.loads(request.body)['body']
+    title = data.get('title', defaultname)
+    description = data.get('description', '')
+    security = int(data.get('security', Gallery.PUBLIC))
+    parentid = data.get('parent')
     if parentid:
         parent = Gallery.objects.get(pk=int(parentid))
         g, created = parent.gallery_set.get_or_create(title=title)

@@ -71,15 +71,19 @@ def post(request):
     :type val: primitive
     :returns: json
     """
-    key = request.POST.get('key', None)
-    val = request.POST.get('val', None)
+    data = request.POST or json.loads(request.body)['body']
+    key = data.get('key', None)
+    val = data.get('val', None)
     res = Result()
-    if key and val:
+    if key is not None and val is not None:
         obj, created = UserPref.objects.get_or_create(user=request.user)
         if created:
             obj.data = json.dumps(DefaultPrefs.copy())
             obj.save()
-        val = json.loads(val)
+        try:
+            val = json.loads(val)
+        except TypeError:
+            pass
         obj.setKey(key, val)
         obj.save()
         res.append(obj.json())

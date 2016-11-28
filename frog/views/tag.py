@@ -39,8 +39,9 @@ from django.shortcuts import render, get_object_or_404
 from django.db import connection
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_http_methods
 
-from frog.models import Tag
+from frog.models import Tag, Image, Video
 from frog.common import Result, getObjectsFromGuids, getPutData
 
 
@@ -245,8 +246,33 @@ def manage(request):
         return JsonResponse(res.asDict())
 
 
+@login_required()
+@require_http_methods(['POST'])
+def merge(request, obj_id):
+    """Merges multiple tags into a single tag and all related objects are reassigned"""
+    res = Result()
+    if request.POST:
+        tags = json.loads(request.POST['tags'])
+    else:
+        tags = json.loads(request.body)['body']['tags']
+
+    guids = []
+    images = Image.objects.filter(tags__id__in=tags)
+    guids += [_.guid for _ in images]
+    videos = Video.objects.filter(tags__id__in=tags)
+    guids += [_.guid for _ in videos]
+    # -- Remove all tags from objects
+    _manageTags(tags, guids, add=False)
+    # -- Add merged tag to all objects
+    _manageTags([obj_id], guids, add=True)
+    # -- Delete old tags
+    Tag.objects.filter(pk__in=tags).delete()
+
+    return JsonResponse(res.asDict())
+
+
 def _manageTags(tagList, guids, add=True):
-    """ Adds or Removed Guids from Tags """
+    """ Adds or Removes Guids from Tags """
     objects = getObjectsFromGuids(guids)
     tags = []
     for tag in tagList:
