@@ -78,22 +78,21 @@ def post(request):
 
     if guid:
         obj = getObjectsFromGuids([guid,])[0]
-        c = Comment()
-        c.comment = data.get('comment', 'No comment')
-        c.user = request.user
-        c.user_name = request.user.get_full_name()
-        c.user_email = request.user.email
-        c.content_object = obj
-        c.site_id = get_current_site(request).id
-        c.save()
+        comment = Comment()
+        comment.comment = data.get('comment', 'No comment')
+        comment.user = request.user
+        comment.user_name = request.user.get_full_name()
+        comment.user_email = request.user.email
+        comment.content_object = obj
+        comment.site_id = get_current_site(request).id
+        comment.save()
 
         obj.comment_count += 1
         obj.save()
-        
-        if request.user != obj.author:
-            __email(c, obj)
 
-        res.append(commentToJson(c))
+        emailComment(comment, obj, request)
+
+        res.append(commentToJson(comment))
     else:
         res.isError = True
         res.message = "No guid provided"
@@ -153,11 +152,17 @@ def commentList(request):
     return render(request, 'frog/comment_list.html', {'comments': comments, 'guid': guid, 'id': id})
 
 
-def __email(comment, obj):
+def emailComment(comment, obj, request):
     """Returns a serialized object
     :param obj: Asset object that has the new comment
     :type obj_id: object
     """
+    if not obj.author.frog_prefs.get().json()['emailComments']:
+        return
+
+    if obj.author == request.user:
+        return
+
     html = render_to_string('frog/comment_email.html', {
         'user': comment.user,
         'comment': comment.comment,

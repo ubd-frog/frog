@@ -64,9 +64,10 @@ except AttributeError:
 DefaultPrefs = {
     'backgroundColor': '000000',
     'tileCount': 9,
-    'batchSize': 300,
-    'includeImage': True,
-    'includeVideo': True,
+    'emailComments': True,
+    'emailLikes': True,
+    'thumbnailPadding': 0,
+    'semiTransparent': False,
 }
 BRANDING = {
     'name': 'Frog',
@@ -550,7 +551,10 @@ class UserPref(models.Model):
     data = models.TextField(default=json.dumps(DefaultPrefs))
 
     def json(self):
-        return json.loads(self.data)
+        temp = DefaultPrefs.copy()
+        temp.update(json.loads(self.data))
+
+        return temp
 
     def setKey(self, key, val):
         data = json.loads(self.data)

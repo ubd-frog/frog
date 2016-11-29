@@ -194,6 +194,12 @@ def delete(request, obj):
 
 
 def emailLike(request, obj):
+    if not obj.author.frog_prefs.get().json()['emailLikes']:
+        return
+
+    if obj.author == request.user:
+        return
+
     html = render_to_string('frog/comment_email.html', {
         'user': request.user,
         'object': obj,

@@ -52,10 +52,7 @@ def get(request):
     :returns: json
     """
     res = Result()
-    obj, created = UserPref.objects.get_or_create(user=request.user)
-    if created:
-        obj.data = json.dumps(DefaultPrefs.copy())
-        obj.save()
+    obj, created = UserPref.objects.get_or_create(user=request.user, defaults={'data': json.dumps(DefaultPrefs.copy())})
     res.append(obj.json())
 
     return JsonResponse(res.asDict())
