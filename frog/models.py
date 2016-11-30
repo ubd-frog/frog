@@ -62,7 +62,7 @@ except AttributeError:
 
 
 DefaultPrefs = {
-    'backgroundColor': '000000',
+    'backgroundColor': '#000000',
     'tileCount': 9,
     'emailComments': True,
     'emailLikes': True,

@@ -79,7 +79,7 @@ def post(request):
             obj.save()
         try:
             val = json.loads(val)
-        except TypeError:
+        except (TypeError, ValueError):
             pass
         obj.setKey(key, val)
         obj.save()

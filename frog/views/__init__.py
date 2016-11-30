@@ -236,8 +236,11 @@ def getUser(request):
     if request.user.is_anonymous():
         res.isError = True
         data['prefs'] = DefaultPrefs
+    elif request.GET.get('q'):
+        return JsonResponse(res.asDict())
     else:
         data['user'] = userToJson(request.user)
+        data['user']['isManager'] = any(request.user.groups.filter(name='manager'))
         data['gallery'] = None
         personal = Gallery.objects.filter(owner=request.user, security=Gallery.PERSONAL)
         if personal:
