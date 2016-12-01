@@ -59,6 +59,7 @@ urlpatterns = [
     url(r'^artistlookup$', views.artistLookup),
     url(r'^isunique$', views.isUnique),
     url(r'^getuser$', views.getUser),
+    url(r'^userlist', views.userList),
     url(r'branding$', views.branding),
     # -- Authentication
     url(r'^login$', views.login_),

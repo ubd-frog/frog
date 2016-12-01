@@ -63,49 +63,44 @@ def login_(request):
     username = email.split('@')[0]
     password = request.POST.get('password')
     result = Result()
-    
-    if password is None:
-        if not email:
-            result.message = 'Please enter an email address'
-            result.isError = True
-        else:
-            # -- SimpleAuth
-            user = authenticate(
-                username=username,
-                first_name=request.POST.get('first_name', 'no').lower(),
-                last_name=request.POST.get('last_name', 'author').lower(),
-                email=email
-            )
-    else:
-        # -- LDAP
+    user = None
+
+    if email:
         user = authenticate(username=username, password=password)
-        
-        if user is None:
-            result.message = 'Invalid Credentials'
-            result.isError = True
+    else:
+        result.message = 'Please enter an email address'
+        result.isError = True
+
+    if user:
+        first_name = request.POST.get('first_name')
+        last_name = request.POST.get('last_name')
+        if first_name:
+            user.first_name = first_name
+        if last_name:
+            user.last_name = last_name
 
         if not user.is_active:
             result.message = 'User account not active'
             result.isError = True
-    
+    else:
+        result.message = 'Invalid Credentials'
+        result.isError = True
+
     if result.isError:
         if request.is_ajax():
             return JsonResponse(result.asDict())
         else:
             return render(request, INDEX_HTML, result.asDict())
 
+    login(request, user)
+
     # -- Create an artist tag for them
     Tag.objects.get_or_create(
         name=user.get_full_name(),
         defaults={'artist': True}
     )
-
-    login(request, user)
-
-    usergallery = Gallery.objects.get_or_create(title=user.username)[0]
-    usergallery.owner = user
-    usergallery.security = Gallery.PERSONAL
-    usergallery.save()
+    # -- Create their personal gallery
+    Gallery.objects.get_or_create(title=user.username, defaults={'owner': user, 'security': Gallery.PERSONAL})
 
     if request.is_ajax():
         return JsonResponse(result.asDict())
@@ -156,23 +151,31 @@ def download(request):
 
 
 @login_required
+@require_http_methods(['POST'])
 def switchArtist(request):
-    artist = request.POST.get('artist', None)
-    guids = request.POST.get('guids', '').split(',')
+    data = request.POST or json.loads(request.body)['body']
+    artist = data.get('artist', None)
+    guids = data.get('guids', '').split(',')
+
     res = Result()
     if artist:
-        first, last = artist.lower().split(' ')
-        author = User.objects.get_or_create(first_name=first, last_name=last, defaults={
-            'username': '%s%s' % (first[0], last),
-        })[0]
-        tag = Tag.objects.get_or_create(name=artist.lower(), defaults={'artist': True})[0]
+        if isinstance(artist, int):
+            author = User.objects.get(pk=artist)
+            tag = Tag.objects.get_or_create(name=author.get_full_name().lower(), defaults={'artist': True})[0]
+        else:
+            first, last = artist.lower().split(' ')
+            author = User.objects.get_or_create(first_name=first, last_name=last, defaults={
+                'username': '%s%s' % (first[0], last),
+            })[0]
+            tag = Tag.objects.get_or_create(name=artist.lower(), defaults={'artist': True})[0]
+
         objects = getObjectsFromGuids(guids)
         for n in objects:
             n.author = author
             n.tagArtist(tag)
 
         res.append(userToJson(author))
-        res.value['tag'] = Tag.objects.get(name=artist.lower()).id
+        res.value['tag'] = tag.id
     else:
         res.isError = True
         res.message = "No artist provided"
@@ -253,6 +256,16 @@ def getUser(request):
                 data['gallery'] = gallery[0].json()
 
     res.append(data)
+
+    return JsonResponse(res.asDict())
+
+
+@login_required()
+def userList(request):
+    res = Result()
+
+    for user in User.objects.filter(is_active=True):
+        res.append(userToJson(user))
 
     return JsonResponse(res.asDict())
 
