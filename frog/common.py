@@ -168,12 +168,13 @@ def getObjectsFromGuids(guids):
     objects = img + vid
     sortedobjects = []
 
-    while guids:
-        for obj in iter(objects):
-            if obj.guid == guids[0]:
-                sortedobjects.append(obj)
-                guids.pop(0)
-                break
+    if objects:
+        while guids:
+            for obj in iter(objects):
+                if obj.guid == guids[0]:
+                    sortedobjects.append(obj)
+                    guids.pop(0)
+                    break
 
     return sortedobjects
 
