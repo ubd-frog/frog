@@ -152,6 +152,18 @@ def delete(request):
     return JsonResponse(res.asDict())
 
 
+@login_required
+def resolve(request, name):
+    res = Result()
+    tag = Tag.objects.filter(name__iexact=name)
+    if tag:
+        res.append(tag[0].json())
+    else:
+        res.isError = True
+
+    return JsonResponse(res.asDict())
+
+
 def search(request):
     """
     Search for Tag objects and returns a Result object with a list of searialize Tag

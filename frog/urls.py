@@ -41,6 +41,7 @@ urlpatterns = [
     # -- Tag
     url(r'^tag/$', views.tag.index),
     url(r'^tag/(?P<obj_id>\d+)$', views.tag.index),
+    url(r'^tag/resolve/(?P<name>\w+)$', views.tag.resolve),
     url(r'^tag/search$', views.tag.search),
     url(r'^tag/manage$', views.tag.manage),
     url(r'^tag/merge/(?P<obj_id>\d+)$', views.tag.merge),
@@ -60,6 +61,7 @@ urlpatterns = [
     url(r'^isunique$', views.isUnique),
     url(r'^getuser$', views.getUser),
     url(r'^userlist', views.userList),
+    url(r'^csrf$', views.csrf),
     url(r'branding$', views.branding),
     # -- Authentication
     url(r'^login$', views.login_),

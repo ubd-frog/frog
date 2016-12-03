@@ -25,7 +25,7 @@ import json
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse, HttpResponseForbidden
 from django.shortcuts import render
 from django.views.decorators.http import require_http_methods
-from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
@@ -45,6 +45,7 @@ INDEX_HTML = getattr(settings, 'FROG_INDEX', 'frog/index.html')
 
 
 @csrf_exempt
+@ensure_csrf_cookie
 def index(request):
     if request.method == 'GET':
         frog_auth_check.send(sender=None, request=request)
@@ -56,7 +57,7 @@ def index(request):
         return upload(request)
 
 
-@require_http_methods(['POST'])
+@require_http_methods(['GET', 'POST'])
 def login_(request):
     data = request.POST or json.loads(request.body)['body']
     email = data['email'].lower()
@@ -264,9 +265,15 @@ def getUser(request):
 def userList(request):
     res = Result()
 
-    for user in User.objects.filter(is_active=True):
+    for user in User.objects.filter(is_active=True).order_by('first_name'):
         res.append(userToJson(user))
 
+    return JsonResponse(res.asDict())
+
+
+@ensure_csrf_cookie
+def csrf(request):
+    res = Result()
     return JsonResponse(res.asDict())
 
 
