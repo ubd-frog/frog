@@ -62,7 +62,7 @@ def login_(request):
     data = request.POST or json.loads(request.body)['body']
     email = data['email'].lower()
     username = email.split('@')[0]
-    password = request.POST.get('password')
+    password = data.get('password')
     result = Result()
     user = None
 
