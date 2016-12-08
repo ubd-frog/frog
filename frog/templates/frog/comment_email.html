@@ -2,25 +2,17 @@
 
 {% block content %}
     <p>
-        {% if image %}
-        {{user}} {{action_type}} your image <a href='{{SITE_URL}}/frog/image/{{object.id}}'>{{object.title}}</a>
-        {% else %}
-        {{user}} {{action_type}} your image <a href='{{SITE_URL}}/frog/video/{{object.id}}'>{{object.title}}</a>
-        {% endif %}
+        {{user}} {{action_type}} your image <a href='{{SITE_URL}}/v/0/{{object.guid}}'>{{object.title}}</a>
     </p>
 
     <p>
-        {% if image %}
-        <a href='{{SITE_URL}}/frog/image/{{object.id}}'>
-        {% else %}
-        <a href='{{SITE_URL}}/frog/video/{{object.id}}'>
-        {% endif %}
-        <img src="{{SITE_URL}}{{object.thumbnail.url}}" {% if img.width > img.height %}width="200"{% else %}height="200"{% endif %} />
+        <a href='{{SITE_URL}}/v/0/{{object.guid}}'>
+            <img src="{{SITE_URL}}{{object.thumbnail.url}}" {% if img.width > img.height %}width="200"{% else %}height="200"{% endif %} />
         </a>
     </p>
     {{comment}}
 {% endblock %}
 
 {% block footer %}
-<a href="{{SITE_URL}}/frog/{% if image %}image{% else %}video{% endif %}/{{object.id}}" class="btn-primary" itemprop="url" style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; color: #FFF; text-decoration: none; line-height: 2; font-weight: bold; text-align: center; cursor: pointer; display: inline-block; border-radius: 5px; text-transform: capitalize; background: #348eda; margin: 0; border-color: #348eda; border-style: solid; border-width: 10px 20px;">View Image</a>
+<a href="{{SITE_URL}}/v/0/{{object.guid}}" class="btn-primary" itemprop="url" style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; color: #FFF; text-decoration: none; line-height: 2; font-weight: bold; text-align: center; cursor: pointer; display: inline-block; border-radius: 5px; text-transform: capitalize; background: #348eda; margin: 0; border-color: #348eda; border-style: solid; border-width: 10px 20px;">View Image</a>
 {% endblock %}
