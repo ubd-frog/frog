@@ -32,7 +32,9 @@ Piece API
     DELETE  /video/id  Flags the video as deleted in the database
 """
 
+import os
 import json
+from collections import namedtuple
 
 from django.shortcuts import render
 from django.http import JsonResponse
@@ -44,7 +46,7 @@ from django.contrib.auth.decorators import login_required
 
 from path import Path
 
-from frog.models import Image, Video, Tag, Piece, FROG_SITE_URL
+from frog.models import Image, Video, Tag, Piece, FROG_SITE_URL, cropBox, pilImage
 from frog.common import Result, getPutData, getObjectsFromGuids, getRoot
 from frog.uploader import handle_uploaded_file
 
@@ -143,7 +145,9 @@ def post(request, obj):
         data = request.POST
     tags = data.get('tags', '').split(',')
     resetthumbnail = data.get('reset-thumbnail', False)
+    crop = data.get('crop')
     res = Result()
+
     for tag in tags:
         try:
             t = Tag.objects.get(pk=int(tag))
@@ -153,6 +157,9 @@ def post(request, obj):
                 res.append(t.json())
         obj.tags.add(t)
 
+    if crop:
+        obj.generateThumbnail(box=[int(_) for _ in crop])
+
     if request.FILES:
         # -- Handle thumbnail upload
         f = request.FILES.get('file')
@@ -160,9 +167,20 @@ def post(request, obj):
         dest = getRoot() / relativedest
         handle_uploaded_file(dest, f)
         obj.custom_thumbnail = relativedest
+
+        image = pilImage.open(dest)
+        sizeinterface = namedtuple('sizeinterface', 'width,height')
+        size = sizeinterface(*image.size)
+        box, width, height = cropBox(size)
+        # Resize
+        image.thumbnail((width, height), pilImage.ANTIALIAS)
+        # Crop from center
+        image.crop(box).save(dest)
+
         obj.save()
     
     if resetthumbnail:
+        os.unlink(getRoot() / obj.custom_thumbnail.name)
         obj.custom_thumbnail = None
         obj.save()
     
