@@ -34,6 +34,7 @@ Piece API
 
 import os
 import json
+import time
 from collections import namedtuple
 
 from django.shortcuts import render
@@ -46,7 +47,7 @@ from django.contrib.auth.decorators import login_required
 
 from path import Path
 
-from frog.models import Image, Video, Tag, Piece, FROG_SITE_URL, cropBox, pilImage
+from frog.models import Image, Video, Tag, Piece, FROG_SITE_URL, cropBox, pilImage, FROG_THUMB_SIZE
 from frog.common import Result, getPutData, getObjectsFromGuids, getRoot
 from frog.uploader import handle_uploaded_file
 
@@ -158,7 +159,34 @@ def post(request, obj):
         obj.tags.add(t)
 
     if crop:
-        obj.generateThumbnail(box=[int(_) for _ in crop])
+        box = [int(_) for _ in crop]
+        # -- Handle thumbnail upload
+        source = Path(obj.source.name)
+        relativedest = source.parent / '{:.0f}{}'.format(time.time(), source.ext)
+        dest = getRoot() / relativedest
+        source = getRoot() / source
+        source.copy(dest)
+        obj.custom_thumbnail = relativedest
+
+        image = pilImage.open(dest)
+        ratio = float(obj.width) / float(obj.height)
+        if ratio >= 1.0:
+            width = FROG_THUMB_SIZE * ratio
+            height = FROG_THUMB_SIZE
+            tnratio = float(obj.height) / float(FROG_THUMB_SIZE)
+        else:
+            width = FROG_THUMB_SIZE
+            height = FROG_THUMB_SIZE / ratio
+            tnratio = float(obj.width) / float(FROG_THUMB_SIZE)
+
+        box = [int(_ / tnratio) for _ in box]
+
+        # Resize
+        image.thumbnail((width, height), pilImage.ANTIALIAS)
+        # Crop from center
+        image.crop(box).save(dest)
+
+        obj.save()
 
     if request.FILES:
         # -- Handle thumbnail upload

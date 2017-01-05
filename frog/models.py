@@ -354,13 +354,13 @@ class Image(Piece):
         else:
             ratio = float(self.width) / float(self.height)
             if ratio >= 1.0:
-                width = settings.FROG_THUMB_SIZE * ratio
-                height = settings.FROG_THUMB_SIZE
-                tnratio = float(self.height) / float(settings.FROG_THUMB_SIZE)
+                width = FROG_THUMB_SIZE * ratio
+                height = FROG_THUMB_SIZE
+                tnratio = float(self.height) / float(FROG_THUMB_SIZE)
             else:
-                width = settings.FROG_THUMB_SIZE
-                height = settings.FROG_THUMB_SIZE / ratio
-                tnratio = float(self.width) / float(settings.FROG_THUMB_SIZE)
+                width = FROG_THUMB_SIZE
+                height = FROG_THUMB_SIZE / ratio
+                tnratio = float(self.width) / float(FROG_THUMB_SIZE)
 
             box = [int(_ / tnratio) for _ in box]
 
@@ -458,13 +458,13 @@ class Video(Piece):
         else:
             ratio = float(self.width) / float(self.height)
             if ratio >= 1.0:
-                width = settings.FROG_THUMB_SIZE * ratio
-                height = settings.FROG_THUMB_SIZE
-                tnratio = float(self.height) / float(settings.FROG_THUMB_SIZE)
+                width = FROG_THUMB_SIZE * ratio
+                height = FROG_THUMB_SIZE
+                tnratio = float(self.height) / float(FROG_THUMB_SIZE)
             else:
-                width = settings.FROG_THUMB_SIZE
-                height = settings.FROG_THUMB_SIZE / ratio
-                tnratio = float(self.width) / float(settings.FROG_THUMB_SIZE)
+                width = FROG_THUMB_SIZE
+                height = FROG_THUMB_SIZE / ratio
+                tnratio = float(self.width) / float(FROG_THUMB_SIZE)
 
             box = [int(_ / tnratio) for _ in box]
 
