@@ -158,6 +158,12 @@ def post(request, obj):
                 res.append(t.json())
         obj.tags.add(t)
 
+    if obj.custom_thumbnail and (crop or request.FILES or resetthumbnail):
+        try:
+            os.unlink(getRoot() / obj.custom_thumbnail.name)
+        except (WindowsError, IOError):
+            pass
+
     if crop:
         box = [int(_) for _ in crop]
         # -- Handle thumbnail upload
@@ -169,22 +175,13 @@ def post(request, obj):
         obj.custom_thumbnail = relativedest
 
         image = pilImage.open(dest)
-        ratio = float(obj.width) / float(obj.height)
-        if ratio >= 1.0:
-            width = FROG_THUMB_SIZE * ratio
-            height = FROG_THUMB_SIZE
-            tnratio = float(obj.height) / float(FROG_THUMB_SIZE)
-        else:
-            width = FROG_THUMB_SIZE
-            height = FROG_THUMB_SIZE / ratio
-            tnratio = float(obj.width) / float(FROG_THUMB_SIZE)
 
-        box = [int(_ / tnratio) for _ in box]
-
-        # Resize
-        image.thumbnail((width, height), pilImage.ANTIALIAS)
         # Crop from center
-        image.crop(box).save(dest)
+        image = image.crop(box)
+        image.load()
+        # Resize
+        image.thumbnail((FROG_THUMB_SIZE, FROG_THUMB_SIZE), pilImage.ANTIALIAS)
+        image.save(dest)
 
         obj.save()
 
@@ -208,7 +205,6 @@ def post(request, obj):
         obj.save()
     
     if resetthumbnail:
-        os.unlink(getRoot() / obj.custom_thumbnail.name)
         obj.custom_thumbnail = None
         obj.save()
     
