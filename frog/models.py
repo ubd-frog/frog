@@ -118,15 +118,16 @@ class Tag(models.Model):
             'id': self.id,
             'name': self.name,
             'artist': self.artist,
+            'count': self.count if hasattr(self, 'count') else 0,
         }
 
         return obj
 
-    def count(self):
-        i = self.image_set.all().count()
-        v = self.video_set.all().count()
-
-        return i + v
+    # def count(self):
+    #     i = self.image_set.all().count()
+    #     v = self.video_set.all().count()
+    #
+    #     return i + v
 
 
 class Piece(models.Model):

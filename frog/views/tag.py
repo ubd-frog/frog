@@ -37,6 +37,7 @@ import json
 
 from django.shortcuts import render, get_object_or_404
 from django.db import connection
+from django.db.models import Count
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
@@ -78,8 +79,16 @@ def get(request, obj_id=None):
         res.append(obj)
         return JsonResponse(res.asDict())
     else:
-        for n in Tag.objects.all():
-            res.append(n.json())
+        if request.GET.get('count'):
+            itags = Tag.objects.all().annotate(icount=Count('image'))
+            vtags = Tag.objects.all().annotate(vcount=Count('video'))
+
+            for i, tag in enumerate(itags):
+                tag.count = itags[i].icount + vtags[i].vcount
+                res.append(tag.json())
+        else:
+            for tag in Tag.objects.all():
+                res.append(tag.json())
 
         return JsonResponse(res.asDict())
 

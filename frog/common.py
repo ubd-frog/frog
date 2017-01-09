@@ -163,6 +163,7 @@ def getObjectsFromGuids(guids):
     :type guids: list
     :returns: list
     """
+    guids = guids[:]
     img = list(Image.objects.filter(guid__in=guids))
     vid = list(Video.objects.filter(guid__in=guids))
     objects = img + vid

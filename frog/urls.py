@@ -44,7 +44,7 @@ urlpatterns = [
     url(r'^tag/resolve/(?P<name>\w+)$', views.tag.resolve),
     url(r'^tag/search$', views.tag.search),
     url(r'^tag/manage$', views.tag.manage),
-    url(r'^tag/merge/(?P<obj_id>\d+)$', views.tag.merge),
+    url(r'^tag/merge/(?P<obj_id>\d+)/$', views.tag.merge),
     # -- User prefs
     url(r'^pref/$', views.userpref.index),
     # -- Comments
