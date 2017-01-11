@@ -22,3 +22,4 @@ pip-log.txt
 # Emacs backup files
 *~
 \#*#
+.cache/v/cache/lastfailed
