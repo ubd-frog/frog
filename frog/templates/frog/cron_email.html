@@ -10,10 +10,10 @@
         <tr style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; margin: 0;">
             {% for obj in row %}
             <td class="content-block" style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; vertical-align: top; margin: 0; padding: 0 0 20px;" valign="top">
-                <a href='{{SITE_URL}}/frog/image/{{obj.id}}'>
+                <a href='{{SITE_URL}}/frog/v/0/{{obj.guid}}'>
                     <img src='{{SITE_URL}}/{{obj.thumbnail.url}}' {% if obj.width > obj.height %}width="200"{% else %}height="200"{% endif %} />
                 </a><br />
-                <a href='{{SITE_URL}}/frog/image/{{obj.id}}' style="font-family: 'Helvetica Neue',Helvetica,Arial,sans-serif; box-sizing: border-box; font-size: 14px; color: #348eda; text-decoration: underline; margin: 0;">{{obj.title}}</a><br />
+                <a href='{{SITE_URL}}/frog/v/0/{{obj.guid}}' style="font-family: 'Helvetica Neue',Helvetica,Arial,sans-serif; box-sizing: border-box; font-size: 14px; color: #348eda; text-decoration: underline; margin: 0;">{{obj.title}}</a><br />
                 <span>{{obj.author.get_full_name}}</span>
             </td>
             {% endfor %}
@@ -26,10 +26,10 @@
         <tr style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; margin: 0;">
             {% for obj in row %}
             <td class="content-block" style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; vertical-align: top; margin: 0; padding: 0 0 20px;" valign="top">
-                <a href='{{SITE_URL}}/frog/video/{{obj.id}}'>
+                <a href='{{SITE_URL}}/frog/v/0/{{obj.guid}}'>
                     <img src='{{SITE_URL}}/{{obj.thumbnail.url}}' {% if obj.width > obj.height %}width="200"{% else %}height="200"{% endif %} />
                 </a><br />
-                <a href='{{SITE_URL}}/frog/video/{{obj.id}}' style="font-family: 'Helvetica Neue',Helvetica,Arial,sans-serif; box-sizing: border-box; font-size: 14px; color: #348eda; text-decoration: underline; margin: 0;">{{obj.title}}</a><br />
+                <a href='{{SITE_URL}}/frog/v/0/{{obj.guid}}' style="font-family: 'Helvetica Neue',Helvetica,Arial,sans-serif; box-sizing: border-box; font-size: 14px; color: #348eda; text-decoration: underline; margin: 0;">{{obj.title}}</a><br />
                 <span>{{obj.author.get_full_name}}</span>
             </td>
             {% endfor %}
