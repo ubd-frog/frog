@@ -43,10 +43,6 @@ As mentioned before, when media is stored in a network folder, browsing is cumbe
 User Guide
 ==========
 
-.. raw:: html
-
-    <div style='width: 100%;text-align: center;'><iframe width="560" height="315" src="http://www.youtube.com/embed/Brfzw7CyuGo" frameborder="0" allowfullscreen></iframe></div>
-
 The user guide is for those actually using an instllation of Frog.  It goes over the UI and how to interact and add content.
 
 .. toctree::
