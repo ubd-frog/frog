@@ -123,12 +123,6 @@ class Tag(models.Model):
 
         return obj
 
-    # def count(self):
-    #     i = self.image_set.all().count()
-    #     v = self.video_set.all().count()
-    #
-    #     return i + v
-
 
 class Piece(models.Model):
     AssetType = 0
@@ -626,10 +620,3 @@ class Like(models.Model):
             'date': self.date.isoformat(),
             'object_guid': self.content_object.guid,
         }
-
-
-class RSSStorage(models.Model):
-    date = models.DateTimeField(auto_now_add=True)
-    interval = models.CharField(max_length=6)
-    data = models.TextField()
-    gallery = models.ForeignKey(Gallery, related_name='rss_storage')
