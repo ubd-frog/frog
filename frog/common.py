@@ -34,14 +34,12 @@ try:
 except ImportError:
     import json
 
-from django.http import HttpResponse
 from django.conf import settings
 
 import path
 
 from frog.models import Image, Video, BRANDING
 from frog.plugin import FrogPluginRegistry
-
 
 
 class Result(object):
@@ -99,6 +97,7 @@ def userToJson(user):
 
     return obj
 
+
 def commentToJson(comment):
     """Returns a serializable Comment dict
 
@@ -131,6 +130,7 @@ def getPutData(request):
     setattr(request, 'PUT', dataDict)
     setattr(request, 'DELETE', dataDict)
 
+
 def getHashForFile(f):
     """Returns a hash value for a file
 
@@ -148,13 +148,16 @@ def getHashForFile(f):
 
     return hashVal.hexdigest()
 
+
 def getRoot():
     """Convenience to return the media root with forward slashes"""
     return path.Path(settings.MEDIA_ROOT.replace('\\', '/'))
 
+
 def uniqueID(size=6, chars=string.ascii_uppercase + string.digits):
     """A quick and dirty way to get a unique string"""
     return ''.join(random.choice(chars) for x in xrange(size))
+
 
 def getObjectsFromGuids(guids):
     """Gets the model objects based on a guid list
@@ -219,6 +222,7 @@ def getPluginContext():
     }
 
     return data
+
 
 def __discoverPlugins():
     """ Discover the plugin classes contained in Python files, given a

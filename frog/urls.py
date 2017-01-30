@@ -23,7 +23,6 @@ from django.conf.urls import patterns, url
 
 # import views
 from frog import views
-from frog.rss import Daily, Weekly
 
 urlpatterns = [
     # -- SSO
@@ -48,9 +47,6 @@ urlpatterns = [
     # -- Comments
     url(r'^comment/$', views.comment.commentList),
     url(r'^comment/(?P<obj_id>\d+)/$', views.comment.index),
-    # -- RSS
-    url(r'^rss/(?P<obj_id>\d+)/daily$', Daily()),
-    url(r'^rss/(?P<obj_id>\d+)/weekly$', Weekly()),
     # -- Misc functions
     url(r'^download$', views.download),
     url(r'^switchartist$', views.switchArtist),
