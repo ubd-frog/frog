@@ -37,10 +37,10 @@ import json
 import time
 from collections import namedtuple
 
-from django.shortcuts import render
 from django.http import JsonResponse
 from django.http.request import RawPostDataException
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.contrib.auth.decorators import login_required
@@ -48,16 +48,15 @@ from django.contrib.auth.decorators import login_required
 from path import Path
 
 from frog.models import Image, Video, Tag, Piece, FROG_SITE_URL, cropBox, pilImage, FROG_THUMB_SIZE
-from frog.common import Result, getPutData, getObjectsFromGuids, getRoot
+from frog.common import Result, getPutData, getObjectsFromGuids, getRoot, getBranding
 from frog.uploader import handle_uploaded_file
 
 
+@require_http_methods(['POST', 'PUT', 'DELETE'])
 def image(request, obj_id):
     """Handles a request based on method and calls the appropriate function"""
     obj = Image.objects.get(pk=obj_id)
-    if request.method == 'GET':
-        return get(request, obj)
-    elif request.method == 'POST':
+    if request.method == 'POST':
         return post(request, obj)
     elif request.method == 'PUT':
         getPutData(request)
@@ -67,12 +66,11 @@ def image(request, obj_id):
         return delete(request, obj)
 
 
+@require_http_methods(['POST', 'PUT', 'DELETE'])
 def video(request, obj_id):
     """Handles a request based on method and calls the appropriate function"""
     obj = Video.objects.get(pk=obj_id)
-    if request.method == 'GET':
-        return get(request, obj)
-    elif request.method == 'POST':
+    if request.method == 'POST':
         return post(request, obj)
     elif request.method == 'PUT':
         getPutData(request)
@@ -104,7 +102,6 @@ def data(request, guid):
 @login_required
 def getGuids(request):
     res = Result()
-    data = {}
     
     guids = request.GET.get('guids', '').split(',')
     for _ in getObjectsFromGuids(guids):
@@ -127,15 +124,6 @@ def like(request, guid):
     res.append(obj.json())
 
     return JsonResponse(res.asDict())
-
-
-def get(request, obj):
-    if isinstance(obj, Image):
-        template = 'frog/image.html'
-    else:
-        template = 'frog/video.html'
-
-    return render(request, template, {'object': obj})
 
 
 @login_required
@@ -250,8 +238,10 @@ def emailLike(request, obj):
         'image': isinstance(obj, Image),
         'SITE_URL': FROG_SITE_URL,
     })
-    subject, from_email, to = '{} liked {}'.format(request.user.username, obj.title), request.user.email, obj.author.email
+    subject = '{}: {} liked {}'.format(getBranding()['name'], request.user.username, obj.title)
+    fromemail = request.user.email
+    to = obj.author.email
     text_content = 'This is an important message.'
     html_content = html
 
-    send_mail(subject, text_content, from_email, [to], html_message=html_content)
+    send_mail(subject, text_content, fromemail, [to], html_message=html_content)
