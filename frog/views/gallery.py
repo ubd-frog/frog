@@ -226,7 +226,7 @@ def _filter(request, object_, tags=None, models=(Image, Video), more=False):
     data = {}
 
     LOGGER.debug('init: %f' % (time.clock() - NOW))
-    gRange = 100
+    gRange = 300
 
     # -- Gat all IDs for each model
     for m in models:
