@@ -70,3 +70,7 @@ mode shipped with setuptools.
 2. cd Frog
 3. python setup.py develop
 
+
+######Made with PyCharm
+
+[![alt text](https://github.com/theiviaxx/Frog/raw/master/docs/source/_static/logo_PyCharm.png "PyCharm")](https://www.jetbrains.com/pycharm/)
