@@ -31,6 +31,7 @@ urlpatterns = [
     url(r'^gallery$', views.gallery.index),
     url(r'^gallery/(?P<obj_id>\d+)$', views.gallery.index),
     url(r'^gallery/(?P<obj_id>\d+)/filter$', views.gallery.filterObjects),
+    url(r'^gallery/(?P<obj_id>\d+)/subscribe$', views.gallery.subscribe),
     # -- Piece
     url(r'^like/(?P<guid>\w+)$', views.piece.like),
     url(r'^piece/(?P<guid>\w+)/$', views.piece.data),

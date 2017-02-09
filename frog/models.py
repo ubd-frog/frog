@@ -620,3 +620,18 @@ class Like(models.Model):
             'date': self.date.isoformat(),
             'object_guid': self.content_object.guid,
         }
+
+
+class GallerySubscription(models.Model):
+    WEEKLY, DAILY = range(2)
+    gallery = models.ForeignKey(Gallery)
+    user = models.ForeignKey(User)
+    frequency = models.SmallIntegerField(default=WEEKLY)
+
+    def json(self):
+        return {
+            'id': self.id,
+            'gallery': self.gallery.json(),
+            'user': self.user.id,
+            'frequency': self.frequency,
+        }

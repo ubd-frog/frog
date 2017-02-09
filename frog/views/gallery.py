@@ -36,12 +36,12 @@ import time
 import functools
 import logging
 
-from django.http import HttpResponseRedirect, JsonResponse
+from django.http import JsonResponse
 from django.core.exceptions import ImproperlyConfigured, PermissionDenied
-from django.shortcuts import render
 from django.db.models import Q, Count
-from django.contrib.contenttypes.models import ContentType
 from django.db import connection
+from django.views.decorators.http import require_POST
+from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.decorators import login_required
 from django.conf import settings
 
@@ -56,8 +56,8 @@ try:
 except (ImportError, ImproperlyConfigured):
     HAYSTACK = False
 
-from frog.models import Gallery, Image, Video, UserPref
-from frog.common import Result, getObjectsFromGuids, getPutData, getBranding
+from frog.models import Gallery, Image, Video, GallerySubscription
+from frog.common import Result, getObjectsFromGuids, getPutData
 
 
 LOGGER = logging.getLogger('frog')
@@ -181,6 +181,7 @@ def delete(request, obj_id=None):
     return JsonResponse(res.asDict())
 
 
+@login_required
 def filterObjects(request, obj_id):
     """
     Filters Gallery for the requested ImageVideo objects.  Returns a Result object with 
@@ -374,3 +375,19 @@ def search(query, model):
         results = sqs.raw_search('*{}*'.format(query)).models(model)
 
     return [o.pk for o in results]
+
+
+@require_POST
+@login_required
+def subscribe(request, obj_id):
+    gallery = Gallery.objects.get(pk=obj_id)
+    data = request.POST or json.loads(request.body)['body']
+    frequency = data.get('frequency', GallerySubscription.WEEKLY)
+
+    sub, created = GallerySubscription.objects.get_or_create(gallery=gallery, user=request.user, frequency=frequency)
+
+    if not created:
+        # -- it already existed so delete it
+        sub.delete()
+
+    return JsonResponse(Result().asDict())

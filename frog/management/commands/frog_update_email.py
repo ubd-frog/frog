@@ -20,19 +20,16 @@
 ##################################################################################################
 
 import datetime
-from optparse import make_option
+from urlparse import urlparse
 
 from django.core.management.base import BaseCommand
 from django.template.loader import render_to_string
 from django.core.mail import send_mail
 from django.utils import timezone
 from django.conf import settings
-from django.core.exceptions import ImproperlyConfigured
 
-from frog.models import Gallery, FROG_SITE_URL
-
-FROG_UPDATE_GROUP_EMAIL = getattr(settings, 'FROG_UPDATE_GROUP_EMAIL', None)
-FROG_UPDATE_DAILY_GROUP_EMAIL = getattr(settings, 'FROG_UPDATE_DAILY_GROUP_EMAIL', FROG_UPDATE_GROUP_EMAIL)
+from frog.models import GallerySubscription, FROG_SITE_URL
+from frog.common import getBranding
 
 
 class Command(BaseCommand):
@@ -43,44 +40,46 @@ class Command(BaseCommand):
             default='weekly',
             help='Frequency type'
         )
-        parser.add_argument(
-            '--gallery', '-g',
-            default=1,
-            help='Gallery to send emails about'
-        )
 
     def handle(self, *args, **kwargs):
-        if FROG_UPDATE_GROUP_EMAIL is None:
-            raise ImproperlyConfigured('FROG_UPDATE_GROUP_EMAIL is required for email updates')
-
+        branding = getBranding()
         today = timezone.now()
         interval = kwargs.get('intervalType', 'weekly')
+        sender = 'notifications@{}'.format(urlparse(settings.FROG_SITE_URL).netloc)
         if interval == 'daily':
             delta = 1
-            from_email, to = FROG_UPDATE_DAILY_GROUP_EMAIL, FROG_UPDATE_DAILY_GROUP_EMAIL
+            subs = GallerySubscription.objects.filter(frequency=GallerySubscription.DAILY)
         else:
             delta = 7
-            from_email, to = FROG_UPDATE_GROUP_EMAIL, FROG_UPDATE_GROUP_EMAIL
-        previous = today - datetime.timedelta(delta)
+            subs = GallerySubscription.objects.filter(frequency=GallerySubscription.WEEKLY)
 
-        gallery = Gallery.objects.get(pk=kwargs['gallery'])
+        for sub in subs:
+            html = renderEmail(sub.gallery, delta)
 
-        images = gallery.images.filter(created__range=(previous, today))
-        videos = gallery.videos.filter(created__range=(previous, today))
+            subject = '{site}:{name} ({interval}) for {date}'.format(
+                interval=interval.capitalize(),
+                name=sub.gallery.title,
+                date=today.strftime('%m/%d/%Y'),
+                site=branding['name'],
+            )
 
-        if not images and not videos:
-            return
+            text_content = ''
+            send_mail(subject, text_content, sender, [sub.user.email], html_message=html)
 
-        html = render_to_string(
-            'frog/cron_email.html',
-            {'images': images, 'videos': videos, 'SITE_URL': FROG_SITE_URL, 'gallery': gallery}
-        )
-        subject = '{name} ({interval}) for {date}'.format(
-            interval=interval.capitalize(),
-            name=gallery.title,
-            date=today.strftime('%m/%d/%Y'),
-        )
-        
-        text_content = 'Only html supported'
-        send_mail(subject, text_content, from_email, [to], html_message=html)
-        self.stdout.write('Found {} images and {} videos'.format(len(images), len(videos)))
+
+def renderEmail(gallery, delta):
+    today = timezone.now()
+    previous = today - datetime.timedelta(delta)
+
+    images = gallery.images.filter(created__range=(previous, today))
+    videos = gallery.videos.filter(created__range=(previous, today))
+
+    if not images and not videos:
+        return
+
+    html = render_to_string(
+        'frog/cron_email.html',
+        {'images': images, 'videos': videos, 'SITE_URL': FROG_SITE_URL, 'gallery': gallery}
+    )
+
+    return html
