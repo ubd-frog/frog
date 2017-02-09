@@ -30,7 +30,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 
-from frog.models import Gallery, Image, Video, Tag, Piece, DefaultPrefs
+from frog.models import Gallery, Image, Video, Tag, Piece, DefaultPrefs, GallerySubscription
 from frog.common import Result, getObjectsFromGuids, userToJson, getBranding
 from frog.uploader import upload
 from frog.send_file import send_zipfile
@@ -86,8 +86,7 @@ def login_(request):
         name=user.get_full_name(),
         defaults={'artist': True}
     )
-    # -- Create their personal gallery
-    Gallery.objects.get_or_create(title=user.username, defaults={'owner': user, 'security': Gallery.PERSONAL})
+    GallerySubscription.objects.get_or_create(gallery=Gallery.objects.get(pk=1), user=user, frequency=GallerySubscription.WEEKLY)
 
     return JsonResponse(result.asDict())
 
