@@ -55,6 +55,8 @@ class Command(BaseCommand):
 
         for sub in subs:
             html = renderEmail(sub.gallery, delta)
+            if html is None:
+                continue
 
             subject = '{site}:{name} ({interval}) for {date}'.format(
                 interval=interval.capitalize(),
