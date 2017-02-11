@@ -22,52 +22,41 @@
 import logging
 import json
 
-from django.http import HttpResponse, HttpResponseRedirect, JsonResponse, HttpResponseForbidden
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.core.mail import mail_managers
-from django.conf import settings
 
-from frog.models import Gallery, Image, Video, Tag, Piece, DefaultPrefs
+from frog.models import Gallery, Image, Video, Tag, Piece, DefaultPrefs, GallerySubscription
 from frog.common import Result, getObjectsFromGuids, userToJson, getBranding
 from frog.uploader import upload
-from frog.signals import frog_auth_check
 from frog.send_file import send_zipfile
 from frog.views import comment, gallery, piece, tag, userpref
 
 
 LOGGER = logging.getLogger('frog')
-INDEX_HTML = getattr(settings, 'FROG_INDEX', 'frog/index.html')
 
 
 @csrf_exempt
 @ensure_csrf_cookie
+@require_http_methods(['POST'])
 def index(request):
-    if request.method == 'GET':
-        frog_auth_check.send(sender=None, request=request)
-
-        if not request.user.is_anonymous():
-            return HttpResponseRedirect('/frog/gallery/1')
-        return render(request, INDEX_HTML, getBranding())
-    else:
-        return upload(request)
+    return upload(request)
 
 
 @require_http_methods(['GET', 'POST'])
 def login_(request):
     data = request.POST or json.loads(request.body)['body']
     email = data['email'].lower()
-    username = email.split('@')[0]
     password = data.get('password')
     result = Result()
     user = None
 
     if email:
-        user = authenticate(username=username, password=password)
+        user = authenticate(username=email, password=password)
     else:
         result.message = 'Please enter an email address'
         result.isError = True
@@ -88,10 +77,7 @@ def login_(request):
         result.isError = True
 
     if result.isError:
-        if request.is_ajax():
-            return JsonResponse(result.asDict())
-        else:
-            return render(request, INDEX_HTML, result.asDict())
+        return JsonResponse(result.asDict())
 
     login(request, user)
 
@@ -100,13 +86,9 @@ def login_(request):
         name=user.get_full_name(),
         defaults={'artist': True}
     )
-    # -- Create their personal gallery
-    Gallery.objects.get_or_create(title=user.username, defaults={'owner': user, 'security': Gallery.PERSONAL})
+    GallerySubscription.objects.get_or_create(gallery=Gallery.objects.get(pk=1), user=user, frequency=GallerySubscription.WEEKLY)
 
-    if request.is_ajax():
-        return JsonResponse(result.asDict())
-
-    return HttpResponseRedirect('/frog/gallery/1')
+    return JsonResponse(result.asDict())
 
 
 def logout_(request):
@@ -115,10 +97,7 @@ def logout_(request):
     response = HttpResponseRedirect('/frog')
     response.delete_cookie('sessionid')
 
-    if request.is_ajax():
-        return JsonResponse({'value': 1})
-
-    return response
+    return JsonResponse({'value': 1})
 
 
 def auth(request):
@@ -139,14 +118,14 @@ def download(request):
 
     if guids:
         objects = getObjectsFromGuids(guids)
-        fileList = {}
+        filelist = {}
         for n in objects:
             files = n.getFiles()
-            fileList.setdefault(n.author.username, [])
+            filelist.setdefault(n.author.username, [])
             for name, file_ in files.iteritems():
-                fileList[n.author.username].append([file_, name])
+                filelist[n.author.username].append([file_, name])
 
-        response = send_zipfile(request, fileList)
+        response = send_zipfile(request, filelist)
         
         return response
 
@@ -197,14 +176,6 @@ def artistLookup(request):
         res.append(userToJson(user))
 
     return JsonResponse(res.values, safe=False)
-
-
-@login_required
-def helpMe(request):
-    msg = '{} is in need of assistance:\n\n{}'.format(request.user.email, request.POST.get('message'))
-    mail_managers('Frog Help', msg)
-
-    return HttpResponse()
 
 
 def isUnique(request):

@@ -32,7 +32,6 @@ Comment API
 
 import json
 
-from django.shortcuts import render
 from django.core.mail import send_mail
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -43,7 +42,7 @@ from django.contrib.sites.shortcuts import get_current_site
 
 from django_comments.models import Comment
 
-from frog.common import Result, commentToJson, getObjectsFromGuids, getPutData
+from frog.common import Result, commentToJson, getObjectsFromGuids, getPutData, getBranding
 from frog.models import Image, FROG_SITE_URL
 
 
@@ -133,30 +132,24 @@ def commentList(request):
 
     comments = []
     guid = request.GET.get('guid', None)
-    id = request.GET.get('id', 0)
+
     if guid:
         obj = getObjectsFromGuids([guid])[0]
         if obj.AssetType == 1:
             model = 'image'
         else:
             model = 'video'
-        contentType = ContentType.objects.get(app_label="frog", model=model)
-        comments = Comment.objects.filter(object_pk=obj.id, content_type=contentType)
+        contenttype = ContentType.objects.get(app_label="frog", model=model)
+        comments = Comment.objects.filter(object_pk=obj.id, content_type=contenttype)
 
-    if request.GET.get('json'):
-        res = Result()
-        for comment in comments:
-            res.append(commentToJson(comment))
-        return JsonResponse(res.asDict())
-    
-    return render(request, 'frog/comment_list.html', {'comments': comments, 'guid': guid, 'id': id})
+    res = Result()
+    for comment in comments:
+        res.append(commentToJson(comment))
+    return JsonResponse(res.asDict())
 
 
 def emailComment(comment, obj, request):
-    """Returns a serialized object
-    :param obj: Asset object that has the new comment
-    :type obj_id: object
-    """
+    """Send an email to the author about a new comment"""
     if not obj.author.frog_prefs.get().json()['emailComments']:
         return
 
@@ -171,8 +164,11 @@ def emailComment(comment, obj, request):
         'image': isinstance(obj, Image),
         'SITE_URL': FROG_SITE_URL,
     })
-    subject, from_email, to = 'Comment from %s' % comment.user_name, comment.user_email, obj.author.email
+
+    subject = '{}: Comment from {}'.format(getBranding()['name'], comment.user_name)
+    fromemail = comment.user_email
+    to = obj.author.email
     text_content = 'This is an important message.'
     html_content = html
 
-    send_mail(subject, text_content, from_email, [to], html_message=html_content)
+    send_mail(subject, text_content, fromemail, [to], html_message=html_content)

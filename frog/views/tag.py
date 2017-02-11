@@ -54,10 +54,10 @@ def index(request, obj_id=None):
         return post(request)
     elif request.method == 'PUT':
         getPutData(request)
-        return put(request)
+        return put(request, obj_id)
     elif request.method == 'DELETE':
         getPutData(request)
-        return delete(request)
+        return delete(request, obj_id)
 
 
 def get(request, obj_id=None):
@@ -124,7 +124,7 @@ def post(request):
 
 
 @login_required
-def put(request):
+def put(request, obj_id=None):
     """Adds tags from objects resolved from guids
 
     :param tags: Tags to add
@@ -133,17 +133,25 @@ def put(request):
     :type guids: list
     :returns: json
     """
-    tagList = filter(None, request.PUT.get('tags', '').split(','))
-    guids = request.PUT.get('guids', '').split(',')
     res = Result()
+    data = request.PUT or json.loads(request.body)['body']
+    if obj_id:
+        # -- Edit the tag
+        tag = Tag.objects.get(pk=obj_id)
+        tag.name = data.get('name', tag.name)
+        tag.artist = data.get('artist', tag.artist)
+        tag.save()
+    else:
+        tags = [_ for _ in data.get('tags', '').split(',') if _]
+        guids = [_ for _ in data.get('guids', '').split(',') if _]
 
-    _manageTags(tagList, guids)
+        _manageTags(tags, guids)
 
     return JsonResponse(res.asDict())
 
 
 @login_required
-def delete(request):
+def delete(request, obj_id=None):
     """Removes tags from objects resolved from guids
 
     :param tags: Tags to remove
@@ -152,11 +160,25 @@ def delete(request):
     :type guids: list
     :returns: json
     """
-    tagList = filter(None, request.DELETE.get('tags', '').split(','))
-    guids = request.DELETE.get('guids', '').split(',')
     res = Result()
 
-    _manageTags(tagList, guids, add=False)
+    if obj_id:
+        # -- Delete the tag itself
+        tag = Tag.objects.get(pk=obj_id)
+        guids = []
+        images = Image.objects.filter(tags__id=obj_id)
+        guids += [_.guid for _ in images]
+        videos = Video.objects.filter(tags__id=obj_id)
+        guids += [_.guid for _ in videos]
+        # -- Remove all tags from objects
+        _manageTags([tag.id], guids, add=False)
+        # -- Delete old tags
+        tag.delete()
+    else:
+        tags = [_ for _ in request.DELETE.get('tags', '').split(',') if _]
+        guids = [_ for _ in request.DELETE.get('guids', '').split(',') if _]
+
+        _manageTags(tags, guids, add=False)
 
     return JsonResponse(res.asDict())
 

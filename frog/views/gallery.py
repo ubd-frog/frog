@@ -36,12 +36,12 @@ import time
 import functools
 import logging
 
-from django.http import HttpResponseRedirect, JsonResponse
+from django.http import JsonResponse
 from django.core.exceptions import ImproperlyConfigured, PermissionDenied
-from django.shortcuts import render
 from django.db.models import Q, Count
-from django.contrib.contenttypes.models import ContentType
 from django.db import connection
+from django.views.decorators.http import require_POST
+from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.decorators import login_required
 from django.conf import settings
 
@@ -56,8 +56,8 @@ try:
 except (ImportError, ImproperlyConfigured):
     HAYSTACK = False
 
-from frog.models import Gallery, Image, Video, UserPref
-from frog.common import Result, getObjectsFromGuids, getPutData, getBranding
+from frog.models import Gallery, Image, Video, GallerySubscription
+from frog.common import Result, getObjectsFromGuids, getPutData
 
 
 LOGGER = logging.getLogger('frog')
@@ -81,9 +81,7 @@ def get(request, obj_id=None):
     if obj_id:
         obj = Gallery.objects.get(pk=obj_id)
         if obj.security != Gallery.PUBLIC and request.user.is_anonymous():
-            return HttpResponseRedirect('/frog/access_denied')
-
-        return render(request, 'frog/gallery.html', {'object': obj, 'branding': getBranding()})
+            raise PermissionDenied
     else:
         res = Result()
         flat = bool(request.GET.get('flat'))
@@ -114,15 +112,9 @@ def post(request):
     title = data.get('title', defaultname)
     description = data.get('description', '')
     security = int(data.get('security', Gallery.PUBLIC))
-    parentid = data.get('parent')
-    if parentid:
-        parent = Gallery.objects.get(pk=int(parentid))
-        g, created = parent.gallery_set.get_or_create(title=title)
-        g.security = parent.security
-    else:
-        g, created = Gallery.objects.get_or_create(title=title)
-        g.security = security
 
+    g, created = Gallery.objects.get_or_create(title=title)
+    g.security = security
     g.description = description
     g.owner = request.user
     g.save()
@@ -156,7 +148,6 @@ def put(request, obj_id=None):
             fromgallery = Gallery.objects.get(pk=move)
             fromgallery.images.remove(*images)
             fromgallery.videos.remove(*videos)
-
     
     if security is not None:
         gallery.security = json.loads(security)
@@ -190,6 +181,7 @@ def delete(request, obj_id=None):
     return JsonResponse(res.asDict())
 
 
+@login_required
 def filterObjects(request, obj_id):
     """
     Filters Gallery for the requested ImageVideo objects.  Returns a Result object with 
@@ -201,7 +193,6 @@ def filterObjects(request, obj_id):
         raise PermissionDenied()
 
     tags = json.loads(request.GET.get('filters', '[[]]'))
-    rng = request.GET.get('rng', None)
     more = json.loads(request.GET.get('more', 'false'))
     models = request.GET.get('models', 'image,video')
     if models == '':
@@ -211,18 +202,16 @@ def filterObjects(request, obj_id):
 
     models = [ContentType.objects.get(app_label='frog', model=x) for x in models.split(',')]
 
-    return _filter(request, obj, tags=tags, rng=rng, models=models, more=more)
+    return _filter(request, obj, tags=tags, models=models, more=more)
 
 
-def _filter(request, object_, tags=None, models=(Image, Video), rng=None, more=False):
+def _filter(request, object_, tags=None, models=(Image, Video), more=False):
     """Filters Piece objects from self based on filters, search, and range
 
     :param tags: List of tag IDs to filter
     :type tags: list
     :param models: List of model classes to filter on
     :type models: list
-    :param rng: Range of objects to return. i.e. 0:100
-    :type rng: str
     :param more -- bool, Returns more of the same filtered set of images based on session range
 
     return list, Objects filtered
@@ -239,17 +228,6 @@ def _filter(request, object_, tags=None, models=(Image, Video), rng=None, more=F
 
     LOGGER.debug('init: %f' % (time.clock() - NOW))
     gRange = 300
-    request.session.setdefault('frog_range', '0:%i' % gRange)
-
-    if rng:
-        s, e = [int(x) for x in rng.split(':')]
-    else:
-        if more:
-            s = int(request.session.get('frog_range', '0:%i' % gRange).split(':')[1])
-            e = s + gRange
-            s, e = 0, gRange
-        else:
-            s, e = 0, gRange
 
     # -- Gat all IDs for each model
     for m in models:
@@ -318,19 +296,16 @@ def _filter(request, object_, tags=None, models=(Image, Video), rng=None, more=F
         # -- Get all ids of filtered objects, this will be a very fast query
         idDict[m.model] = list(idDict[m.model].values_list('id', flat=True))
         LOGGER.debug(m.model + '_queried_ids: %f' % (time.clock() - NOW))
-
-        res.message = str(s) + ':' + str(e)
         
         # -- perform the main query to retrieve the objects we want
         objDict[m.model] = m.model_class().objects.filter(id__in=idDict[m.model]).select_related('author').prefetch_related('tags')
-        if not rng:
-            objDict[m.model] = objDict[m.model][:gRange]
+        objDict[m.model] = objDict[m.model][:gRange]
         objDict[m.model] = list(objDict[m.model])
         LOGGER.debug(m.model + '_queried_obj: %f' % (time.clock() - NOW))
     
     # -- combine and sort all objects by date
     objects = _sortObjects(**objDict) if len(models) > 1 else objDict.values()[0]
-    objects = objects[s:e]
+    objects = objects[:gRange]
     LOGGER.debug('sorted: %f' % (time.clock() - NOW))
 
     # -- serialize objects
@@ -342,8 +317,6 @@ def _filter(request, object_, tags=None, models=(Image, Video), rng=None, more=F
                 data['last_%s_id' % m.model] = i.id
         res.append(i.json())
     LOGGER.debug('serialized: %f' % (time.clock() - NOW))
-
-    request.session['frog_range'] = ':'.join((str(s),str(e)))
 
     LOGGER.debug('total: %f' % (time.clock() - NOW))
     request.session['last_image_id'] = lastIDs.get('last_image_id', 0)
@@ -392,9 +365,29 @@ def _sortByCreated(a, b):
 
 def search(query, model):
     """ Performs a search query and returns the object ids """
-    query = '%s*' % query.strip()
+    query = query.strip()
     LOGGER.debug(query)
     sqs = SearchQuerySet()
-    sqs = sqs.raw_search('*{0}*'.format(query)).models(model)
+    results = sqs.raw_search('{}*'.format(query)).models(model)
+    if not results:
+        results = sqs.raw_search('*{}'.format(query)).models(model)
+    if not results:
+        results = sqs.raw_search('*{}*'.format(query)).models(model)
 
-    return [o.pk for o in sqs]
+    return [o.pk for o in results]
+
+
+@require_POST
+@login_required
+def subscribe(request, obj_id):
+    gallery = Gallery.objects.get(pk=obj_id)
+    data = request.POST or json.loads(request.body)['body']
+    frequency = data.get('frequency', GallerySubscription.WEEKLY)
+
+    sub, created = GallerySubscription.objects.get_or_create(gallery=gallery, user=request.user, frequency=frequency)
+
+    if not created:
+        # -- it already existed so delete it
+        sub.delete()
+
+    return JsonResponse(Result().asDict())

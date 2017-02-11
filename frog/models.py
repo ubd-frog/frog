@@ -123,12 +123,6 @@ class Tag(models.Model):
 
         return obj
 
-    # def count(self):
-    #     i = self.image_set.all().count()
-    #     v = self.video_set.all().count()
-    #
-    #     return i + v
-
 
 class Piece(models.Model):
     AssetType = 0
@@ -628,8 +622,16 @@ class Like(models.Model):
         }
 
 
-class RSSStorage(models.Model):
-    date = models.DateTimeField(auto_now_add=True)
-    interval = models.CharField(max_length=6)
-    data = models.TextField()
-    gallery = models.ForeignKey(Gallery, related_name='rss_storage')
+class GallerySubscription(models.Model):
+    WEEKLY, DAILY = range(2)
+    gallery = models.ForeignKey(Gallery)
+    user = models.ForeignKey(User)
+    frequency = models.SmallIntegerField(default=WEEKLY)
+
+    def json(self):
+        return {
+            'id': self.id,
+            'gallery': self.gallery.json(),
+            'user': self.user.id,
+            'frequency': self.frequency,
+        }

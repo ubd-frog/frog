@@ -23,7 +23,6 @@ from django.conf.urls import patterns, url
 
 # import views
 from frog import views
-from frog.rss import Daily, Weekly
 
 urlpatterns = [
     # -- SSO
@@ -32,16 +31,15 @@ urlpatterns = [
     url(r'^gallery$', views.gallery.index),
     url(r'^gallery/(?P<obj_id>\d+)$', views.gallery.index),
     url(r'^gallery/(?P<obj_id>\d+)/filter$', views.gallery.filterObjects),
-    # -- Image/Video
-    url(r'^image/(?P<obj_id>\d+)$', views.piece.image),
-    url(r'^video/(?P<obj_id>\d+)$', views.piece.video),
+    url(r'^gallery/(?P<obj_id>\d+)/subscribe$', views.gallery.subscribe),
+    # -- Piece
     url(r'^like/(?P<guid>\w+)$', views.piece.like),
     url(r'^piece/(?P<guid>\w+)/$', views.piece.data),
     url(r'^p$', views.piece.getGuids),
     # -- Tag
     url(r'^tag/$', views.tag.index),
-    url(r'^tag/(?P<obj_id>\d+)$', views.tag.index),
-    url(r'^tag/resolve/(?P<name>\w+)$', views.tag.resolve),
+    url(r'^tag/(?P<obj_id>\d+)/$', views.tag.index),
+    url(r'^tag/resolve/(?P<name>[\w\s\.]+)$', views.tag.resolve),
     url(r'^tag/search$', views.tag.search),
     url(r'^tag/manage$', views.tag.manage),
     url(r'^tag/merge/(?P<obj_id>\d+)/$', views.tag.merge),
@@ -50,12 +48,8 @@ urlpatterns = [
     # -- Comments
     url(r'^comment/$', views.comment.commentList),
     url(r'^comment/(?P<obj_id>\d+)/$', views.comment.index),
-    # -- RSS
-    url(r'^rss/(?P<obj_id>\d+)/daily$', Daily()),
-    url(r'^rss/(?P<obj_id>\d+)/weekly$', Weekly()),
     # -- Misc functions
     url(r'^download$', views.download),
-    url(r'^help/', views.helpMe),
     url(r'^switchartist$', views.switchArtist),
     url(r'^artistlookup$', views.artistLookup),
     url(r'^isunique$', views.isUnique),

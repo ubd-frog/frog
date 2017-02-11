@@ -14,9 +14,8 @@ reqs = [str(ir.req) for ir in install_reqs]
 setup(
     name='django-frog',
     description='Media server built on django',
-    long_description=('A server and client solution to viewing '
-                      ' and filtering large image and video collections'),
-    version='1.1.0',
+    long_description='A server solution to viewing and filtering large image and video collections',
+    version='2.0.0',
     author='Brett Dixon',
     author_email='theiviaxx@gmail.com',
     license='MIT',
