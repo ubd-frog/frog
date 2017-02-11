@@ -2,7 +2,6 @@
 {% load tablecols %}
 
 {% block content %}
-    <meta itemprop="name" content="Confirm Email" style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; margin: 0;" />
     <table width="100%" cellpadding="0" cellspacing="0" style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; margin: 0;">
         {% if images %}
         <tr><td colspan="4"><h2>Images</h2></td></tr>
@@ -10,10 +9,10 @@
         <tr style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; margin: 0;">
             {% for obj in row %}
             <td class="content-block" style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; vertical-align: top; margin: 0; padding: 0 0 20px;" valign="top">
-                <a href='{{SITE_URL}}/frog/v/0/{{obj.guid}}'>
+                <a href='{{SITE_URL}}/v/0/{{obj.guid}}'>
                     <img src='{{SITE_URL}}{{obj.thumbnail.url}}' width="200" height="200" />
                 </a><br />
-                <a href='{{SITE_URL}}/frog/v/0/{{obj.guid}}' style="font-family: 'Helvetica Neue',Helvetica,Arial,sans-serif; box-sizing: border-box; font-size: 14px; color: #348eda; text-decoration: underline; margin: 0;">{{obj.title}}</a><br />
+                <a href='{{SITE_URL}}/v/0/{{obj.guid}}' style="font-family: 'Helvetica Neue',Helvetica,Arial,sans-serif; box-sizing: border-box; font-size: 14px; color: #348eda; text-decoration: underline; margin: 0;">{{obj.title}}</a><br />
                 <span>{{obj.author.get_full_name}}</span>
             </td>
             {% endfor %}
@@ -26,10 +25,10 @@
         <tr style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; margin: 0;">
             {% for obj in row %}
             <td class="content-block" style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; vertical-align: top; margin: 0; padding: 0 0 20px;" valign="top">
-                <a href='{{SITE_URL}}/frog/v/0/{{obj.guid}}'>
+                <a href='{{SITE_URL}}/v/0/{{obj.guid}}'>
                     <img src='{{SITE_URL}}{{obj.thumbnail.url}}' width="200" height="200" />
                 </a><br />
-                <a href='{{SITE_URL}}/frog/v/0/{{obj.guid}}' style="font-family: 'Helvetica Neue',Helvetica,Arial,sans-serif; box-sizing: border-box; font-size: 14px; color: #348eda; text-decoration: underline; margin: 0;">{{obj.title}}</a><br />
+                <a href='{{SITE_URL}}/v/0/{{obj.guid}}' style="font-family: 'Helvetica Neue',Helvetica,Arial,sans-serif; box-sizing: border-box; font-size: 14px; color: #348eda; text-decoration: underline; margin: 0;">{{obj.title}}</a><br />
                 <span>{{obj.author.get_full_name}}</span>
             </td>
             {% endfor %}
