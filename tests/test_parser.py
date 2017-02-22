@@ -2,14 +2,29 @@ import re
 
 import pytest
 from django.db.models import Q
+# from frog.models import Gallery, Image, Video
 
 
-def parse(string):
-    return []
+def parseUserInput(string):
+    string = string.lower()
+    # -- Split by and to get buckets
+    buckets = string.split(' and ')
+    ors = []
+    for bucket in buckets:
+        ors.append(bucket.replace(' or ', '|'))
+
+    url = '+'.join(ors)
+
+    return url
 
 
-def toURL(query):
-    return ''
+def dumps(url):
+    query = []
+    buckets = url.split('+')
+    for bucket in buckets:
+        query.append(bucket.split('|'))
+
+    return query
 
 
 # -- Objects
@@ -19,65 +34,97 @@ c = ['bar', 'baz']
 d = ['baz']
 e = ['foo', 'bar', 'baz', 'bit']
 
-"""
-Proposed Changes:
+USER_INPUT = "Foo and Bar and Baz"
+QUERY = [['Foo', 'Bar', 'Baz']]
+URL = "Foo+Bar+Baz"
 
-* buckets are ORed together
-* bucket members are ANDed together
-* A trailing "+" will signal a perenthesis AND
-  * This is on the client side
-* Support parenthetical queries
-  * ["foo", ["bar", "baz"]] AND
-  * ["foo", [["bar"], ["baz"]] OR
-"""
+# USER_INPUT > URL > QUERY
+#              URL > QUERY
 
 
 def test_parser():
-    assert parse('Foo and Bar and Baz') == [['Foo', 'Bar', 'Baz']]
-    assert toURL([['Foo', 'Bar', 'Baz']]) == "Foo+Bar+Baz"
-    # -- []
-    o = Q(name='foo')
-    o &= Q(name='bar')
-    o &= Q(name='baz')
+    userinput = 'Foo and Bar and Baz'
+    query = [['foo'], ['bar'], ['baz']]
+    url = "foo+bar+baz"
+    assert parseUserInput(userinput) == url
+    assert dumps(url) == query
+    # -- [e]
 
-    assert parse('Foo and Bar or Baz') == [['Foo', 'Bar'], ['Baz']]
-    assert toURL([['Foo', 'Bar'], ['Baz']]) == "Foo+Bar/Baz"
-    # -- [b, c, d]
-    o = Q(name='foo')
-    o &= Q(name='bar')
-    o |= Q(name='baz')
+    # userinput = 'Foo and Bar or Baz'
+    # query = [['foo', 'baz'], ['bar', 'baz']]
+    # url = "foo+bar|baz"
+    # assert parseUserInput(userinput) == url
+    # assert dumps(url) == query
 
-    assert parse('Foo or Bar or Baz') == [['Foo'], ['Bar'], ['Baz']]
-    assert toURL([['Foo'], ['Bar'], ['Baz']]) == "Foo/Bar/Baz"
-    # -- [a, b, c, d]
-    o = Q(name='foo')
-    o |= Q(name='bar')
-    o |= Q(name='baz')
+    userinput = 'Foo or Bar and Baz'
+    query = [['foo', 'bar'], ['baz']]
+    url = "foo|bar+baz"
+    assert parseUserInput(userinput) == url
+    assert dumps(url) == query
 
-    assert parse('Foo or Bar and Baz') == [['Foo'], ['Bar', 'Baz']]
-    assert toURL([['Foo'], ['Bar', 'Baz']]) == "Foo/Bar+Baz"
-    # -- [a, b, c] -> [c]
-    o = Q(name='foo')
-    o |= Q(name='bar')
-    o &= Q(name='baz')
+    userinput = 'Foo or Bar or Baz'
+    query = [['foo', 'bar', 'baz']]
+    url = "foo|bar|baz"
+    assert parseUserInput(userinput) == url
+    assert dumps(url) == query
 
-    assert parse('Foo and (Bar or Baz)') == [['Foo', [['Baz'], ['Baz']]]]
-    assert toURL([['Foo', [['Baz'], ['Baz']]]]) == "Foo+/Bar/Baz"
-    # -- [a, b, e] -> [b, e]
-    o = Q(name='foo')
-    o &= (Q(name='bar') | Q(name='baz'))
+    userinput = 'Foo or Bar or Baz and Bit'
+    query = [['foo', 'bar', 'baz'], ['bit']]
+    url = "foo|bar|baz+bit"
+    assert parseUserInput(userinput) == url
+    assert dumps(url) == query
 
-    assert parse('Foo or (Bar and Baz)') == [['Foo', ['Baz', 'Baz']]]
-    assert toURL([['Foo', [['Baz'], ['Baz']]]]) == "Foo/Bar+Baz"
-    # -- [a, b, e, c]
-    o = Q(name='foo')
-    o |= (Q(name='bar') & Q(name='baz'))
+    userinput = 'Foo'
+    query = [['foo']]
+    url = "foo"
+    assert parseUserInput(userinput) == url
+    assert dumps(url) == query
 
-    assert parse('Foo and Bar and (Baz or Bit)') == ['Foo', 'Bar', [['Baz'], ['Bit']]]
-    assert toURL(['Foo', 'Bar', [['Baz'], ['Bit']]]) == "Foo+Bar+/Baz/Bit"
-    # -- [b, e]        -> [e]
-    # -- (foo and bar) -> (baz or bit)
-    o = Q(name='foo')
-    o &= Q(name='bar')
-    o &= (Q(name='baz') | Q(name='bit'))
+
+    # query = [['Foo', 'Bar'], ['Baz']]
+    # assert parseUserInput('Foo and Bar or Baz') == query
+    # assert dumps(query) == "Foo+Bar/Baz"
+    # # -- [b, c, d]
+    # o = Q(name='foo')
+    # o &= Q(name='bar')
+    # o |= Q(name='baz')
+    #
+    # query = [['Foo'], ['Bar'], ['Baz']]
+    # assert parseUserInput('Foo or Bar or Baz') == query
+    # assert dumps(query) == "Foo/Bar/Baz"
+    # # -- [a, b, c, d]
+    # o = Q(name='foo')
+    # o |= Q(name='bar')
+    # o |= Q(name='baz')
+    #
+    # query = [['Foo'], ['Bar', 'Baz']]
+    # assert parseUserInput('Foo or Bar and Baz') == query
+    # assert dumps(query) == "Foo/Bar+Baz"
+    # # -- [a, b, c] -> [c]
+    # o = Q(name='foo')
+    # o |= Q(name='bar')
+    # o &= Q(name='baz')
+    #
+    # query = [['Foo', [['Baz'], ['Baz']]]]
+    # assert parseUserInput('Foo and (Bar or Baz)') == query
+    # assert dumps(query) == "Foo+/Bar/Baz"
+    # # -- [a, b, e] -> [b, e]
+    # o = Q(name='foo')
+    # o &= (Q(name='bar') | Q(name='baz'))
+    #
+    # query = [['Foo', ['Baz', 'Baz']]]
+    # assert parseUserInput('Foo or (Bar and Baz)') == query
+    # assert dumps(query) == "Foo/Bar+Baz"
+    # # -- [a, b, e, c]
+    # o = Q(name='foo')
+    # o |= (Q(name='bar') & Q(name='baz'))
+    #
+    # query = ['Foo', 'Bar', [['Baz'], ['Bit']]]
+    # assert parseUserInput('Foo and Bar and (Baz or Bit)') == query
+    # assert dumps(query) == "Foo+Bar+/Baz/Bit"
+    # # -- [b, e]        -> [e]
+    # # -- (foo and bar) -> (baz or bit)
+    # o = Q(name='foo')
+    # o &= Q(name='bar')
+    # o &= (Q(name='baz') | Q(name='bit'))
 
