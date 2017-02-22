@@ -37,7 +37,7 @@ import json
 
 from django.shortcuts import render, get_object_or_404
 from django.db import connection
-from django.db.models import Count
+from django.db.models import Count, Q
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
@@ -186,7 +186,7 @@ def delete(request, obj_id=None):
 @login_required
 def resolve(request, name):
     res = Result()
-    tag = Tag.objects.filter(name__iexact=name)
+    tag = Tag.objects.filter(Q(name__iexact=name) | Q(id=name))
     if tag:
         res.append(tag[0].json())
     else:
