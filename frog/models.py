@@ -514,6 +514,9 @@ class VideoQueue(models.Model):
     status = models.SmallIntegerField(default=QUEUED, choices=STATUS)
     message = models.TextField(blank=True, null=True)
 
+    def __unicode__(self):
+        return '<VideoQueue: {}:{}>'.format(self.video, self.status)
+
 
 class Gallery(models.Model):
     PUBLIC, PRIVATE, PERSONAL = (0, 1, 2)
@@ -595,7 +598,7 @@ class Guid(object):
             self.int = self.AssetTypes[type_id] + obj_id
         self.guid = format(self.int, 'x')
 
-    def __repr__(self):
+    def __unicode__(self):
         return '<GUID: {}:{}>'.format(self.int, self.guid)
 
 
@@ -627,6 +630,9 @@ class GallerySubscription(models.Model):
     gallery = models.ForeignKey(Gallery)
     user = models.ForeignKey(User)
     frequency = models.SmallIntegerField(default=WEEKLY)
+
+    def __unicode__(self):
+        return '<GallerySubscription: {}:{}:{}>'.format(self.user, self.gallery, self.frequency)
 
     def json(self):
         return {
