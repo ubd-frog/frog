@@ -22,7 +22,8 @@
 
 from django.contrib import admin
 
-from frog.models import Gallery, Image, Video, Tag, UserPref
+from frog.models import Gallery, Image, Video, Tag, UserPref, GallerySubscription, VideoQueue
+
 
 class GalleryAdmin(admin.ModelAdmin):
     list_display = ('title', 'parent', 'owner', 'security')
@@ -41,9 +42,20 @@ class TagAdmin(admin.ModelAdmin):
     list_filter = ('artist',)
 
 
+class GallerySubscriptionAdmin(admin.ModelAdmin):
+    list_display = ('user', 'gallery', 'frequency')
+    list_filter = ('frequency',)
+
+
+class VideoQueueAdmin(admin.ModelAdmin):
+    list_display = ('video', 'status')
+    list_filter = ('status',)
+
 
 admin.site.register(Gallery, GalleryAdmin)
 admin.site.register(Image, ImageAdmin)
 admin.site.register(Video, VideoAdmin)
 admin.site.register(Tag, TagAdmin)
 admin.site.register(UserPref)
+admin.site.register(GallerySubscription, GallerySubscriptionAdmin)
+admin.site.register(VideoQueue, VideoQueueAdmin)
