@@ -1,0 +1,83 @@
+<!doctype html>
+<html>
+    <head>
+        <link rel='stylesheet' href='css/bootstrap_darkly.min.css' />
+        <link rel="stylesheet" href="css/font-awesome.min.css">
+        <style>
+            body {
+                background: #202020;
+                color: #d2d2d2;
+                padding: 12px;
+            }
+            hr {
+                margin: 12px 0;
+                border-color: #333;
+            }
+            div img {
+                max-width: 256px;
+            }
+            .form-control {
+                background: #333;
+                color: #d2d2d2;
+            }
+        </style>
+    </head>
+    <body ng-app='FrogApp' ng-controller='MainController'>
+        <p>
+            <strong>Frog</strong>
+            <button class='btn btn-primary btn-xs pull-right' ng-click='toggle()'>
+                <i ng-if="state == 'settings'" class="fa fa-times" aria-hidden="true"></i>
+                <i ng-if="state == 'main'" class="fa fa-gear" aria-hidden="true"></i>
+            </button>
+        </p>
+        <div ng-if="state == 'settings'">
+            <form method='post' action='/frog/login' ng-submit="clickHandler()">
+                <div class="form-group">
+                    <label>URL</label>
+                    <input ng-model="settings.url" class="form-control input-sm" />
+                </div>
+                <div class='form-group'>
+                    <label>Email</label>
+                    <input type="text" name='email' ng-model="auth.email" class="form-control input-sm">
+                </div>
+                <div class='form-group'>
+                    <label>Password</label>
+                    <input type="password" name='password' ng-model="auth.password" class="form-control input-sm" >
+                </div>
+                <button type="button" class="btn btn-primary btn-sm" ng-click="clickHandler()">Login</button>
+                <div ng-if="message.length" class="card-panel red darken-4">
+                    <span class="white-text">{{message}}</span>
+                </div>
+            </form>
+        </div>
+        <div ng-if="state == 'main'">
+            <div class='container' ng-if='filename'>
+                <div class='row'>
+                    <img src='{{thumbnail}}' ng-if='thumbnail.length' />
+                    <p ng-if='filename && isunique'>
+                        This is a new image and has not been added to Frog yet.  Click Add to upload it
+                    </p>
+                </div>
+
+                <div class='row' ng-if='filename'>
+                    <hr />
+                    <button class='btn btn-primary btn-sm' ng-click='update(gallery)' ng-if='!isunique'>Update</button>
+                    <button class='btn btn-primary btn-sm' ng-click='view()' ng-if='!isunique'>View</button>
+                    <button class='btn btn-primary btn-sm' ng-click='update()' ng-if='isunique'>Add</button>
+                    <select class="form-control input-sm" ng-model="gallery" ng-options="item.title for item in galleries" ng-change="changeHandler(gallery)"></select>
+                </div>
+            </div>
+            <p ng-if='!filename'>
+                Please save the file before uploading to Frog
+            </p>
+
+            <div style="font-size: 10px; color: #6c6c6c; position: absolute; bottom: 0;">
+                {{ settings.url }} :: {{ settings.gallery.title }}
+            </div>
+        </div>
+
+        <script src="js/CSInterface.js"></script>
+        <script src="js/angular.min.js"></script>
+        <script src="js/main.js"></script>
+    </body>
+</html>

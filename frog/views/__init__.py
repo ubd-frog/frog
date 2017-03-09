@@ -245,6 +245,7 @@ def userList(request):
 @ensure_csrf_cookie
 def csrf(request):
     res = Result()
+    res.append(request.COOKIES['csrftoken'])
     return JsonResponse(res.asDict())
 
 
