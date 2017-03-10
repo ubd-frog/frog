@@ -76,7 +76,7 @@ FrogApp.controller('MainController', function($scope, $q, FrogService) {
                 message = result.data.message;
             }
             else {
-                $scope.state = 'main';
+                $scope.toggle();
             }
         });
     };
@@ -189,10 +189,13 @@ FrogApp.service('FrogService', function($http, $q) {
         };
 
         this.readSettings = function() {
-            var data = fs.readFileSync(settingsfile);
-            var settings = JSON.parse(data);
             self.settings.url = '';
             self.settings.gallery = {id: 1};
+            if (!fs.fileExistsSync(settingsfile)) {
+                return;
+            }
+            var data = fs.readFileSync(settingsfile);
+            var settings = JSON.parse(data);
             angular.forEach(settings, function(value, key) {
                 self.settings[key] = value;
             });
