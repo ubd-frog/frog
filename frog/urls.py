@@ -52,7 +52,7 @@ urlpatterns = [
     url(r'^download$', views.download),
     url(r'^switchartist$', views.switchArtist),
     url(r'^artistlookup$', views.artistLookup),
-    url(r'^isunique$', views.isUnique),
+    url(r'^isunique/$', views.isUnique),
     url(r'^getuser$', views.getUser),
     url(r'^userlist', views.userList),
     url(r'^csrf$', views.csrf),

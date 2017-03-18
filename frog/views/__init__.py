@@ -178,29 +178,29 @@ def artistLookup(request):
     return JsonResponse(res.values, safe=False)
 
 
+@require_http_methods(['POST'])
 def isUnique(request):
-    path = request.GET.get('path', None)
+    data = request.POST or json.loads(request.body)['body']
+    paths = data.get('paths', [])
     res = Result()
-    if path:
-        if request.user.is_anonymous():
-            username = request.GET.get('user', 'noauthor')
-            user = User.objects.get(username=username)
-        else:
-            user = request.user
-        
-        uniqueID = Piece.getUniqueID(path, user)
 
-        img = Image.objects.filter(unique_id=uniqueID)
-        vid = Video.objects.filter(unique_id=uniqueID)
+    if request.user.is_anonymous():
+        username = request.GET.get('user', 'noauthor')
+        user = User.objects.get(username=username)
+    else:
+        user = request.user
+
+    for path in paths:
+        uniqueid = Piece.getUniqueID(path, user)
+
+        img = Image.objects.filter(unique_id=uniqueid)
+        vid = Video.objects.filter(unique_id=uniqueid)
         if img:
             res.append(img[0].json())
         elif vid:
             res.append(vid[0].json())
         else:
             res.append(True)
-    else:
-        res.isError = True
-        res.message = "No path provided"
 
     return JsonResponse(res.asDict())
 
