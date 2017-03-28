@@ -68,6 +68,7 @@ DefaultPrefs = {
     'emailLikes': True,
     'thumbnailPadding': 0,
     'semiTransparent': False,
+    'showTags': False,
 }
 BRANDING = {
     'name': 'Frog',
