@@ -195,6 +195,7 @@ def filterObjects(request, obj_id):
     tags = json.loads(request.GET.get('filters', '[[]]'))
     more = json.loads(request.GET.get('more', 'false'))
     models = request.GET.get('models', 'image,video')
+    orderby = request.GET.get('orderby', 'created')
     if models == '':
         models = 'image,video'
 
@@ -202,10 +203,10 @@ def filterObjects(request, obj_id):
 
     models = [ContentType.objects.get(app_label='frog', model=x) for x in models.split(',')]
 
-    return _filter(request, obj, tags=tags, models=models, more=more)
+    return _filter(request, obj, tags=tags, models=models, more=more, orderby=orderby)
 
 
-def _filter(request, object_, tags=None, models=(Image, Video), more=False):
+def _filter(request, object_, tags=None, models=(Image, Video), more=False, orderby='created'):
     """Filters Piece objects from self based on filters, search, and range
 
     :param tags: List of tag IDs to filter
@@ -283,7 +284,6 @@ def _filter(request, object_, tags=None, models=(Image, Video), more=False):
                 if o:
                     # -- apply the filters
                     idDict[m.model] = idDict[m.model].annotate(num_tags=Count('tags')).filter(o)
-                    # idDict[m.model] = idDict[m.model].filter(o)
                 else:
                     idDict[m.model] = idDict[m.model].none()
 
@@ -294,13 +294,13 @@ def _filter(request, object_, tags=None, models=(Image, Video), more=False):
         LOGGER.debug(m.model + '_queried_ids: %f' % (time.clock() - NOW))
         
         # -- perform the main query to retrieve the objects we want
-        objDict[m.model] = m.model_class().objects.filter(id__in=idDict[m.model]).select_related('author').prefetch_related('tags')
+        objDict[m.model] = m.model_class().objects.filter(id__in=idDict[m.model]).select_related('author').prefetch_related('tags').order_by('-{}'.format(orderby))
         objDict[m.model] = objDict[m.model][start:end]
         objDict[m.model] = list(objDict[m.model])
         LOGGER.debug(m.model + '_queried_obj: %f' % (time.clock() - NOW))
     
     # -- combine and sort all objects by date
-    objects = _sortObjects(**objDict) if len(models) > 1 else objDict.values()[0]
+    objects = _sortObjects(orderby, **objDict) if len(models) > 1 else objDict.values()[0]
     objects = objects[:length]
     LOGGER.debug('sorted: %f' % (time.clock() - NOW))
 
@@ -321,35 +321,41 @@ def _filter(request, object_, tags=None, models=(Image, Video), more=False):
     return JsonResponse(res.asDict())
 
 
-def _sortObjects(**args):
+def _sortObjects(orderby='created', **kwargs):
     """Sorts lists of objects and combines them into a single list"""
     o = []
     
-    for m in args.values():
+    for m in kwargs.values():
         for l in iter(m):
             o.append(l)
     o = list(set(o))
+    sortfunc = _sortByCreated if orderby == 'created' else _sortByModified
     if six.PY2:
-        o.sort(_sortByCreated)
+        o.sort(sortfunc)
     else:
-        o.sort(key=functools.cmp_to_key(_sortByCreated))
+        o.sort(key=functools.cmp_to_key(sortfunc))
 
     return o
 
 
 def _sortByCreated(a, b):
-    """Sort function for object by created date then by ID"""
+    """Sort function for object by created date"""
     if a.created < b.created:
         return 1
     elif a.created > b.created:
         return -1
     else:
-        if a.id < b.id:
-            return 1
-        elif a.id > b.id:
-            return -1
-        else:
-            return 0
+        return 0
+
+
+def _sortByModified(a, b):
+    """Sort function for object by modified date"""
+    if a.modified < b.modified:
+        return 1
+    elif a.modified > b.modified:
+        return -1
+    else:
+        return 0
 
 
 def search(query, model):
