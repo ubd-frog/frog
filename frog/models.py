@@ -69,6 +69,7 @@ DefaultPrefs = {
     'thumbnailPadding': 0,
     'semiTransparent': False,
     'showTags': False,
+    'orderby': 'created',
 }
 BRANDING = {
     'name': 'Frog',
