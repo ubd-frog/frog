@@ -195,7 +195,7 @@ def filterObjects(request, obj_id):
     tags = json.loads(request.GET.get('filters', '[[]]'))
     more = json.loads(request.GET.get('more', 'false'))
     models = request.GET.get('models', 'image,video')
-    orderby = request.GET.get('orderby', 'created')
+    orderby = request.GET.get('orderby', request.user.frog_prefs.get().json()['orderby'])
     if models == '':
         models = 'image,video'
 
@@ -227,7 +227,7 @@ def _filter(request, object_, tags=None, models=(Image, Video), more=False, orde
     data = {}
 
     LOGGER.debug('init: %f' % (time.clock() - NOW))
-    length = 42
+    length = 300
 
     if more:
         # -- This is a request for more results
