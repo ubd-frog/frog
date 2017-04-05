@@ -223,29 +223,25 @@ def _filter(request, object_, tags=None, models=(Image, Video), more=False):
     
     idDict = {}
     objDict = {}
-    lastIDs = {}
     data = {}
 
     LOGGER.debug('init: %f' % (time.clock() - NOW))
-    gRange = 300
+    length = 42
+
+    if more:
+        # -- This is a request for more results
+        mult = request.session.get('mult', 0) + 1
+        request.session['mult'] = mult + 1
+    else:
+        mult = 0
+        request.session['mult'] = 0
+
+    start = length * mult
+    end = start + length
 
     # -- Gat all IDs for each model
     for m in models:
-        indexes = list(m.model_class().objects.all().values_list('id', flat=True))
-        if not indexes:
-            continue
-
-        lastIndex = indexes[0]
-        if more:
-            # -- This is a request for more results
-            LOGGER.debug(request.session.get('last_%s_id' % m.model))
-            idx = request.session.get('last_%s_id' % m.model, lastIndex + 1)
-            lastIDs.setdefault('last_%s_id' % m.model, idx)
-        else:
-            lastIDs['last_%s_id' % m.model] = lastIndex + 1
-        
-        # -- Start with objects within range
-        idDict[m.model] = m.model_class().objects.filter(gallery=object_, id__lt=lastIDs['last_%s_id' % m.model])
+        idDict[m.model] = m.model_class().objects.filter(gallery=object_)
         LOGGER.debug(m.model + '_initial_query: %f' % (time.clock() - NOW))
 
         if tags:
@@ -299,28 +295,21 @@ def _filter(request, object_, tags=None, models=(Image, Video), more=False):
         
         # -- perform the main query to retrieve the objects we want
         objDict[m.model] = m.model_class().objects.filter(id__in=idDict[m.model]).select_related('author').prefetch_related('tags')
-        objDict[m.model] = objDict[m.model][:gRange]
+        objDict[m.model] = objDict[m.model][start:end]
         objDict[m.model] = list(objDict[m.model])
         LOGGER.debug(m.model + '_queried_obj: %f' % (time.clock() - NOW))
     
     # -- combine and sort all objects by date
     objects = _sortObjects(**objDict) if len(models) > 1 else objDict.values()[0]
-    objects = objects[:gRange]
+    objects = objects[:length]
     LOGGER.debug('sorted: %f' % (time.clock() - NOW))
 
     # -- serialize objects
     for i in objects:
-        for m in models:
-            if isinstance(i, m.model_class()):
-                # -- set the last ID per model for future lookups
-                lastIDs['last_%s_id' % m.model] = i.id
-                data['last_%s_id' % m.model] = i.id
         res.append(i.json())
     LOGGER.debug('serialized: %f' % (time.clock() - NOW))
 
     LOGGER.debug('total: %f' % (time.clock() - NOW))
-    request.session['last_image_id'] = lastIDs.get('last_image_id', 0)
-    request.session['last_video_id'] = lastIDs.get('last_video_id', 0)
     LOGGER.debug(request.session.get('last_image_id'))
     
     data['count'] = len(objects)
