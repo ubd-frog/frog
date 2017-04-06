@@ -217,22 +217,17 @@ def _filter(request, object_, tags=None, models=(Image, Video), more=False, orde
 
     return list, Objects filtered
     """
-    
-    NOW = time.clock()
-
     res = Result()
     
     idDict = {}
     objDict = {}
     data = {}
-
-    LOGGER.debug('init: %f' % (time.clock() - NOW))
     length = 300
 
     if more:
         # -- This is a request for more results
         mult = request.session.get('mult', 0) + 1
-        request.session['mult'] = mult + 1
+        request.session['mult'] = mult
     else:
         mult = 0
         request.session['mult'] = 0
@@ -240,10 +235,11 @@ def _filter(request, object_, tags=None, models=(Image, Video), more=False, orde
     start = length * mult
     end = start + length
 
+    LOGGER.debug('{} : {}'.format(start, end))
+
     # -- Gat all IDs for each model
     for m in models:
         idDict[m.model] = m.model_class().objects.filter(gallery=object_)
-        LOGGER.debug(m.model + '_initial_query: %f' % (time.clock() - NOW))
 
         if tags:
             for bucket in tags:
@@ -269,7 +265,6 @@ def _filter(request, object_, tags=None, models=(Image, Video), more=False, orde
                             if not o:
                                 o = Q()
                             # -- use a basic search
-                            LOGGER.debug('search From LIKE')
                             o |= Q(title__icontains=item)
 
                 if HAYSTACK and searchQuery != "":
@@ -278,7 +273,6 @@ def _filter(request, object_, tags=None, models=(Image, Video), more=False, orde
                     if searchIDs:
                         if not o:
                             o = Q()
-                        LOGGER.debug('searchFrom haystack:' + str(searchIDs))
                         o |= Q(id__in=searchIDs)
 
                 if o:
@@ -286,31 +280,22 @@ def _filter(request, object_, tags=None, models=(Image, Video), more=False, orde
                     idDict[m.model] = idDict[m.model].annotate(num_tags=Count('tags')).filter(o)
                 else:
                     idDict[m.model] = idDict[m.model].none()
-
-            LOGGER.debug(m.model + '_added_buckets(%i): %f' % (len(tags), time.clock() - NOW))
         
         # -- Get all ids of filtered objects, this will be a very fast query
-        idDict[m.model] = list(idDict[m.model].values_list('id', flat=True))
-        LOGGER.debug(m.model + '_queried_ids: %f' % (time.clock() - NOW))
+        idDict[m.model] = list(idDict[m.model].order_by('-{}'.format(orderby))[:end].values_list('id', flat=True))
         
         # -- perform the main query to retrieve the objects we want
         objDict[m.model] = m.model_class().objects.filter(id__in=idDict[m.model]).select_related('author').prefetch_related('tags').order_by('-{}'.format(orderby))
         objDict[m.model] = objDict[m.model][start:end]
         objDict[m.model] = list(objDict[m.model])
-        LOGGER.debug(m.model + '_queried_obj: %f' % (time.clock() - NOW))
     
     # -- combine and sort all objects by date
     objects = _sortObjects(orderby, **objDict) if len(models) > 1 else objDict.values()[0]
     objects = objects[:length]
-    LOGGER.debug('sorted: %f' % (time.clock() - NOW))
 
     # -- serialize objects
     for i in objects:
         res.append(i.json())
-    LOGGER.debug('serialized: %f' % (time.clock() - NOW))
-
-    LOGGER.debug('total: %f' % (time.clock() - NOW))
-    LOGGER.debug(request.session.get('last_image_id'))
     
     data['count'] = len(objects)
     if settings.DEBUG:
