@@ -168,8 +168,9 @@ def post(request, obj):
         image = image.crop(box)
         image.load()
         # Resize
+        size = abs(box[2] - box[0])
         image.thumbnail((FROG_THUMB_SIZE, FROG_THUMB_SIZE), pilImage.ANTIALIAS)
-        image.save(dest)
+        image.resize((size, size)).save(dest)
 
         obj.save()
 
