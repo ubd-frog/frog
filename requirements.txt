@@ -6,3 +6,4 @@ Pillow==2.8.1
 pytz==2015.2
 six==1.9.0
 urllib3==1.10.2
+psd-tools==1.4

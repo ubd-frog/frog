@@ -31,11 +31,6 @@ from frog.common import Result, getHashForFile
 
 from path import path as Path
 
-EXT = {
-    'image': ['.jpg', '.png', '.gif', '.tif', '.tiff', 'psd'],
-    'video': ['.mp4', '.avi', '.wmv', '.mov']
-}
-
 
 class MediaTypeError(Exception):
     pass
@@ -70,15 +65,14 @@ def upload(request):
 
             if galleries and models.Gallery.objects.filter(pk__in=[int(g) for g in galleries], uploads=False):
                 raise PermissionDenied()
-            
-            if f.content_type.startswith('image'):
-                if Path(filename).ext.lower() not in EXT['image']:
-                    raise MediaTypeError
+
+            extension = Path(filename).ext.lower()
+            if extension in models.FILE_TYPES['image']:
                 model = models.Image
-            else:
-                if Path(filename).ext.lower() not in EXT['video']:
-                    raise MediaTypeError
+            elif extension in models.FILE_TYPES['video']:
                 model = models.Video
+            else:
+                raise MediaTypeError('{} is not a supported file type'.format(extension))
 
             obj, created = model.objects.get_or_create(unique_id=uniqueName, defaults={'author': user})
             guid = obj.getGuid()
@@ -116,9 +110,9 @@ def upload(request):
                     dest = objPath.parent / f.name
                     handle_uploaded_file(dest, f)
 
-        except MediaTypeError:
+        except MediaTypeError as err:
             res.isError = True
-            res.message = 'Filetype not supported'
+            res.message = str(err)
             
             return JsonResponse(res.asDict())
 
