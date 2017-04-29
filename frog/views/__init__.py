@@ -86,7 +86,6 @@ def login_(request):
         name=user.get_full_name(),
         defaults={'artist': True}
     )
-    GallerySubscription.objects.get_or_create(gallery=Gallery.objects.get(pk=1), user=user, frequency=GallerySubscription.WEEKLY)
 
     return JsonResponse(result.asDict())
 

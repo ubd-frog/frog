@@ -20,6 +20,7 @@
 ##################################################################################################
 
 
+import sys
 import subprocess
 import argparse
 import shutil
@@ -27,12 +28,13 @@ import logging.config
 from threading import Thread, Event
 
 from django.conf import settings
-from django.core.mail import send_mail, mail_admins
+from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.core.exceptions import ImproperlyConfigured
 
 from frog import getRoot
 from frog.models import VideoQueue, FROG_SITE_URL
+from frog.views import errorreporting
 
 try:
     FROG_FFMPEG = getattr(settings, 'FROG_FFMPEG')
@@ -110,15 +112,9 @@ class VideoThread(Thread):
                     cmd = [FROG_FFMPEG, '-i', str(sourcepath)]
                     cmd += args.format(QUALITY[self._quality]).split(' ')
                     cmd += [str(tempfile)]
-                    try:
-                        LOGGER.info(cmd)
-                        subprocess.call(cmd)
-                    except subprocess.CalledProcessError as err:
-                        LOGGER.error('Failed to convert video: %s' % video.guid)
-                        item.status = VideoQueue.ERROR
-                        item.message = str(err)
-                        item.save()
-                        continue
+
+                    LOGGER.info(cmd)
+                    subprocess.call(cmd)
 
                     video.video = outfile.replace('\\', '/').replace(ROOT, '')
                     shutil.move(tempfile, outfile)
@@ -135,9 +131,10 @@ class VideoThread(Thread):
                     # -- Email User
                     emailUser(video)
             except Exception as err:
+                errorreporting.report('Video Processing Failure')
                 LOGGER.error(str(err))
                 emailUser(item.video, err)
-                mail_admins('Video Processing Failure', err)
+
                 item.status = VideoQueue.ERROR
                 item.save()
 
