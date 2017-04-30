@@ -111,12 +111,7 @@ def post(request):
 
         return JsonResponse(res.asDict())
     
-    tag, created = Tag.objects.get_or_create(name=name.lower())
-
-    if created:
-        res.message = "Created"
-    else:
-        res.isError = True
+    tag = Tag.objects.get_or_create(name=name.lower())[0]
 
     res.append(tag.json())
 
@@ -186,11 +181,13 @@ def delete(request, obj_id=None):
 @login_required
 def resolve(request, name):
     res = Result()
-    tag = Tag.objects.filter(Q(name__iexact=name) | Q(id=name))
+
+    tag = Tag.objects.filter(name__iexact=name)
+    if not tag:
+        tag = Tag.objects.filter(id=name)
+
     if tag:
         res.append(tag[0].json())
-    else:
-        res.isError = True
 
     return JsonResponse(res.asDict())
 

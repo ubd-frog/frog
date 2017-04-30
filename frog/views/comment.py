@@ -92,9 +92,6 @@ def post(request):
         emailComment(comment, obj, request)
 
         res.append(commentToJson(comment))
-    else:
-        res.isError = True
-        res.message = "No guid provided"
 
     return JsonResponse(res.asDict())
 
@@ -115,9 +112,6 @@ def put(request, obj_id):
         c.save()
 
         res.append(commentToJson(c))
-    else:
-        res.isError = True
-        res.message = "No comment provided"
 
     return JsonResponse(res.asDict())
 

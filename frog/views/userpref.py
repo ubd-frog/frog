@@ -88,8 +88,5 @@ def post(request):
         obj.setKey(key, val)
         obj.save()
         res.append(obj.json())
-    else:
-        res.isError = True
-        res.message = 'No key and value provided'
 
     return JsonResponse(res.asDict())
