@@ -57,6 +57,7 @@ urlpatterns = [
     url(r'^userlist', views.userList),
     url(r'^csrf$', views.csrf),
     url(r'branding$', views.branding),
+    url(r'clienterror/$', views.clientError),
     # -- Authentication
     url(r'^login$', views.login_),
     url(r'^logout$', views.logout_),
