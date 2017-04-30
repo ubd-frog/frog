@@ -37,8 +37,9 @@ import json
 import time
 from collections import namedtuple
 
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseForbidden
 from django.http.request import RawPostDataException
+from django.http import HttpResponseBadRequest
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.core.mail import send_mail
@@ -118,7 +119,6 @@ def like(request, guid):
     if obj.like(request):
         emailLike(request, obj)
     else:
-        res.isError = True
         res.message = 'Cannot "like" things more than once'
 
     res.append(obj.json())
@@ -211,6 +211,7 @@ def put(request, obj):
 
     res = Result()
     res.append(obj.json())
+
     return JsonResponse(res.asDict())
 
 

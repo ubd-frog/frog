@@ -40,10 +40,10 @@ class MediaTypeError(Exception):
 @csrf_exempt
 def upload(request):
     res = Result()
-    f = request.FILES.get('file')
+    uploadfile = request.FILES.get('file')
 
-    if f:
-        filename = f.name
+    if uploadfile:
+        filename = uploadfile.name
 
         path = request.POST.get('path', None)
         if path:
@@ -52,7 +52,8 @@ def upload(request):
             foreignPath = filename
 
         galleries = request.POST.get('galleries', '1').split(',')
-        tags = [_.strip() for _ in request.POST.get('tags', '').split(',') if _]
+        tags = [_.strip() for _ in request.POST.get('tags', '').split(',')]
+        tags = [_ for _ in tags if _]
 
         try:
             username = request.POST.get('user', False)
@@ -76,7 +77,7 @@ def upload(request):
 
             obj, created = model.objects.get_or_create(unique_id=uniqueName, defaults={'author': user})
             guid = obj.getGuid()
-            hashVal = getHashForFile(f)
+            hashVal = getHashForFile(uploadfile)
 
             if hashVal == obj.hash:
                 for gal in galleries:
@@ -96,7 +97,7 @@ def upload(request):
             if not objPath.parent.exists():
                 objPath.parent.makedirs()
 
-            handle_uploaded_file(hashPath, f)
+            handle_uploaded_file(hashPath, uploadfile)
 
             obj.hash = hashVal
             obj.foreign_path = foreignPath
@@ -105,10 +106,10 @@ def upload(request):
 
             res.append(obj.json())
 
-            for key, f in request.FILES.items():
+            for key, uploadfile in request.FILES.items():
                 if key != 'file':
-                    dest = objPath.parent / f.name
-                    handle_uploaded_file(dest, f)
+                    dest = objPath.parent / uploadfile.name
+                    handle_uploaded_file(dest, uploadfile)
 
         except MediaTypeError as err:
             res.isError = True

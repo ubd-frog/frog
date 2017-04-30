@@ -26,6 +26,7 @@ from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
+from django.core.mail import mail_admins
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
@@ -86,7 +87,6 @@ def login_(request):
         name=user.get_full_name(),
         defaults={'artist': True}
     )
-    GallerySubscription.objects.get_or_create(gallery=Gallery.objects.get(pk=1), user=user, frequency=GallerySubscription.WEEKLY)
 
     return JsonResponse(result.asDict())
 
@@ -156,9 +156,6 @@ def switchArtist(request):
 
         res.append(userToJson(author))
         res.value['tag'] = tag.id
-    else:
-        res.isError = True
-        res.message = "No artist provided"
 
     return JsonResponse(res.asDict())
 
@@ -254,3 +251,10 @@ def branding(request):
     res.append(getBranding())
 
     return JsonResponse(res.asDict())
+
+
+def clientError(request):
+    data = json.loads(request.body)['body']
+    mail_admins('Client Error', str(data))
+
+    return JsonResponse({})
