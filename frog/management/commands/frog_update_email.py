@@ -20,6 +20,7 @@
 ##################################################################################################
 
 import datetime
+import base64
 from urlparse import urlparse
 
 from django.core.management.base import BaseCommand
@@ -33,6 +34,12 @@ from frog.common import getBranding
 
 
 class Command(BaseCommand):
+    def __init__(self, *args, **kwargs):
+        super(Command, self).__init__(*args, **kwargs)
+
+        self._cache = {}
+        self._objects = {}
+
     def add_arguments(self, parser):
         parser.add_argument(
             '--type', '-t',
@@ -53,8 +60,22 @@ class Command(BaseCommand):
             delta = 7
             subs = GallerySubscription.objects.filter(frequency=GallerySubscription.WEEKLY)
 
+        previous = today - datetime.timedelta(delta)
+
         for sub in subs:
-            html = renderEmail(sub.gallery, delta)
+            if sub.gallery.id in self._objects:
+                continue
+
+            images = sub.gallery.images.filter(created__range=(previous, today))
+            videos = sub.gallery.videos.filter(created__range=(previous, today))
+
+            self._objects[sub.gallery.id] = {
+                'images': [(_, base64.b64encode(_.thumbnail.read()).decode()) for _ in images],
+                'videos': [(_, base64.b64encode(_.thumbnail.read()).decode()) for _ in videos],
+            }
+
+        for sub in subs:
+            html = self.renderEmail(sub.gallery)
             if html is None:
                 continue
 
@@ -68,20 +89,14 @@ class Command(BaseCommand):
             text_content = ''
             send_mail(subject, text_content, sender, [sub.user.email], html_message=html)
 
+    def renderEmail(self, gallery):
+        data = self._objects[gallery.id]
+        if not data['images'] and not data['videos']:
+            return
 
-def renderEmail(gallery, delta):
-    today = timezone.now()
-    previous = today - datetime.timedelta(delta)
+        html = render_to_string(
+            'frog/cron_email.html',
+            {'images': data['images'], 'videos': data['videos'], 'SITE_URL': FROG_SITE_URL, 'gallery': gallery}
+        )
 
-    images = gallery.images.filter(created__range=(previous, today))
-    videos = gallery.videos.filter(created__range=(previous, today))
-
-    if not images and not videos:
-        return
-
-    html = render_to_string(
-        'frog/cron_email.html',
-        {'images': images, 'videos': videos, 'SITE_URL': FROG_SITE_URL, 'gallery': gallery}
-    )
-
-    return html
+        return html
