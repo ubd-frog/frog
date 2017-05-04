@@ -8,12 +8,12 @@
         {% for row in images|tablecols:4 %}
         <tr style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; margin: 0;">
             {% for obj in row %}
-            <td class="content-block" style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; vertical-align: top; margin: 0; padding: 0 0 20px;" valign="top">
-                <a href='{{SITE_URL}}/v/0/{{obj.guid}}'>
-                    <img src='{{SITE_URL}}{{obj.thumbnail.url}}' width="200" height="200" />
+            <td class="content-block" style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; vertical-align: top; margin: 0; padding: 0 4px 20px;" valign="top">
+                <a href='{{SITE_URL}}/v/0/{{obj.0.guid}}'>
+                    <img src='data:;base64,{{ obj.1 }}' width="180" height="180" />
                 </a><br />
-                <a href='{{SITE_URL}}/v/0/{{obj.guid}}' style="font-family: 'Helvetica Neue',Helvetica,Arial,sans-serif; box-sizing: border-box; font-size: 14px; color: #348eda; text-decoration: underline; margin: 0;">{{obj.title}}</a><br />
-                <span>{{obj.author.get_full_name}}</span>
+                <a href='{{SITE_URL}}/v/0/{{obj.0.guid}}' style="font-family: 'Helvetica Neue',Helvetica,Arial,sans-serif; box-sizing: border-box; font-size: 14px; color: #348eda; text-decoration: underline; margin: 0;">{{obj.0.title}}</a><br />
+                <span>{{obj.0.author.get_full_name}}</span>
             </td>
             {% endfor %}
         </tr>
@@ -25,11 +25,11 @@
         <tr style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; margin: 0;">
             {% for obj in row %}
             <td class="content-block" style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; vertical-align: top; margin: 0; padding: 0 0 20px;" valign="top">
-                <a href='{{SITE_URL}}/v/0/{{obj.guid}}'>
-                    <img src='{{SITE_URL}}{{obj.thumbnail.url}}' width="200" height="200" />
+                <a href='{{SITE_URL}}/v/0/{{obj.0.guid}}'>
+                    <img src='data:;base64,{{ obj.1 }}' width="200" height="200" />
                 </a><br />
-                <a href='{{SITE_URL}}/v/0/{{obj.guid}}' style="font-family: 'Helvetica Neue',Helvetica,Arial,sans-serif; box-sizing: border-box; font-size: 14px; color: #348eda; text-decoration: underline; margin: 0;">{{obj.title}}</a><br />
-                <span>{{obj.author.get_full_name}}</span>
+                <a href='{{SITE_URL}}/v/0/{{obj.0.guid}}' style="font-family: 'Helvetica Neue',Helvetica,Arial,sans-serif; box-sizing: border-box; font-size: 14px; color: #348eda; text-decoration: underline; margin: 0;">{{obj.0.title}}</a><br />
+                <span>{{obj.0.author.get_full_name}}</span>
             </td>
             {% endfor %}
         </tr>
