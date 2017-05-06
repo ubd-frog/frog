@@ -20,9 +20,14 @@
 ##################################################################################################
 
 
+from optparse import make_option
 from django.core.management.base import BaseCommand
 
-from frog.models import Image, Video
+import path
+
+from frog.models import Gallery, Image, Video, Piece
+from frog.uploader import User
+from frog.common import getRoot
 
 
 class Command(BaseCommand):
