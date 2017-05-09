@@ -184,7 +184,10 @@ def resolve(request, name):
 
     tag = Tag.objects.filter(name__iexact=name)
     if not tag:
-        tag = Tag.objects.filter(id=name)
+        try:
+            tag = Tag.objects.filter(Q(id=name))
+        except ValueError:
+            pass
 
     if tag:
         res.append(tag[0].json())

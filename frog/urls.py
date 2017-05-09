@@ -39,7 +39,7 @@ urlpatterns = [
     # -- Tag
     url(r'^tag/$', views.tag.index),
     url(r'^tag/(?P<obj_id>\d+)/$', views.tag.index),
-    url(r'^tag/resolve/(?P<name>[\w\s\.]+)$', views.tag.resolve),
+    url(r'^tag/resolve/(?P<name>[\w\s\.\-\`\']+)$', views.tag.resolve),
     url(r'^tag/search$', views.tag.search),
     url(r'^tag/manage$', views.tag.manage),
     url(r'^tag/merge/(?P<obj_id>\d+)/$', views.tag.merge),
