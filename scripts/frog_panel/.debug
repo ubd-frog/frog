@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?> 
 <ExtensionList>
-    <Extension Id="com.ubd.frog">
+    <Extension Id="FROG">
         <HostList>
            
             <!-- Comment Host tags according to the apps you want your panel to support -->

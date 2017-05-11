@@ -1,9 +1,14 @@
 "use strict";
 
 
-var gExtensionId = "com.ubd.frog";
+var gExtensionId = "FROG";
+
 
 var FrogApp = angular.module('FrogApp', []);
+FrogApp.config(['$httpProvider', function ($httpProvider) {
+    $httpProvider.defaults.xsrfCookieName = 'csrftoken';
+    $httpProvider.defaults.xsrfHeaderName = 'X-CSRFToken';
+}]);
 FrogApp.controller('MainController', function($scope, $q, FrogService) {
     var csInterface = new CSInterface();
     var fs = require('fs');
@@ -24,17 +29,19 @@ FrogApp.controller('MainController', function($scope, $q, FrogService) {
 
     $scope.query = function(filename) {
         $scope.filename = filename;
-        FrogService.isUnique(filename).then(function(res) {
-            if (res.data.value === true) {
-                // -- Is Unique
-                $scope.isunique = true;
-                $scope.thumbnail = '';
-            }
-            else {
-                $scope.item = res.data.value;
-                $scope.thumbnail = FrogService.settings.url + res.data.value.thumbnail;
-                $scope.isunique = false;
-            }
+        FrogService.csrfPromise.then(function() {
+            FrogService.isUnique(filename).then(function(res) {
+                if (res.data.value === true) {
+                    // -- Is Unique
+                    $scope.isunique = true;
+                    $scope.thumbnail = '';
+                }
+                else {
+                    $scope.item = res.data.value;
+                    $scope.thumbnail = FrogService.settings.url + res.data.value.thumbnail;
+                    $scope.isunique = false;
+                }
+            });
         });
     };
 
@@ -150,12 +157,20 @@ FrogApp.service('FrogService', function($http, $q) {
 
     function factory() {
         var self = this;
+        this.csrfPromise = null;
         this.settings = {
             'url': '',
             'gallery': null
         };
         this.isUnique = function(filename) {
-            return $http.get(this.settings.url + '/frog/isunique?user=' + process.env.USERNAME + '&path=' + filename)
+            return $http.post(
+                this.settings.url + '/frog/isunique/',
+                {body: {user: process.env.USERNAME, paths: [filename], csrfmiddlewaretoken: csrftoken}},
+                {
+                    withCredentials: true,
+                    headers: {'X-CSRFToken': csrftoken}
+                }
+            );
         };
 
         this.upload = function(filename, source) {
@@ -191,7 +206,7 @@ FrogApp.service('FrogService', function($http, $q) {
         this.readSettings = function() {
             self.settings.url = '';
             self.settings.gallery = {id: 1};
-            if (!fs.fileExistsSync(settingsfile)) {
+            if (!fs.existsSync(settingsfile)) {
                 return;
             }
             var data = fs.readFileSync(settingsfile);
@@ -206,22 +221,26 @@ FrogApp.service('FrogService', function($http, $q) {
         };
 
         this.csrf = function() {
-            return $http.get(this.settings.url + '/frog/csrf').then(function(res) {
+            var defer = $q.defer();
+            $http.get(this.settings.url + '/frog/csrf').then(function(res) {
                 console.log(res);
                 csrftoken = res.data.value;
-                $http.defaults.headers.common['X-CSRFToken'] = res.data.value;
+                // $http.defaults.headers.common['X-CSRFToken'] = res.data.value;
+            }).then(function() {
+                defer.resolve();
             });
+
+            self.csrfPromise = defer.promise;
         };
 
         this.login = function(email, password) {
             console.log(document.cookie);
             return $http.post(
                 this.settings.url + '/frog/login',
-                {'body': {'email': email, 'password': password}},
+                {'body': {'email': email, 'password': password, csrfmiddlewaretoken: csrftoken}},
                 {
                     // transformRequest: angular.identity,
                     withCredentials: true,
-                    headers: {'X-CSRFToken': csrftoken}
                 }
             );
         };

@@ -31,7 +31,7 @@
             </button>
         </p>
         <div ng-if="state == 'settings'">
-            <form method='post' action='/frog/login' ng-submit="clickHandler()">
+            <form method='post' ng-submit="clickHandler()">
                 <div class="form-group">
                     <label>URL</label>
                     <input ng-model="settings.url" class="form-control input-sm" />
@@ -44,7 +44,7 @@
                     <label>Password</label>
                     <input type="password" name='password' ng-model="auth.password" class="form-control input-sm" >
                 </div>
-                <button type="button" class="btn btn-primary btn-sm" ng-click="clickHandler()">Login</button>
+                <button type="submit" class="btn btn-primary btn-sm">Login</button>
                 <div ng-if="message.length" class="card-panel red darken-4">
                     <span class="white-text">{{message}}</span>
                 </div>

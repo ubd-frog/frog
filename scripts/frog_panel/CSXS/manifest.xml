@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <ExtensionManifest Version="5.0"
-                   ExtensionBundleId="com.ubd"
+                   ExtensionBundleId="FrogPanelExtension"
                    ExtensionBundleVersion="1.0.0"
-                   ExtensionBundleName="Frog">
+                   ExtensionBundleName="panel">
     <ExtensionList>
-        <Extension Id="com.ubd.frog" Version="1.0"/>
+        <Extension Id="FROG" Version="1.0"/>
     </ExtensionList>
     <ExecutionEnvironment>
         <HostList>
-            <Host Name="PHXS" Version="[16.0,99.9]"/>
+            <Host Name="PHXS" Version="[14.0,99.9]"/>
         </HostList>
         <LocaleList>
             <Locale Code="All"/>
@@ -19,7 +19,7 @@
         </RequiredRuntimeList>
     </ExecutionEnvironment>
     <DispatchInfoList>
-        <Extension Id="com.ubd.frog">
+        <Extension Id="FROG">
             <DispatchInfo>
                 <Resources>
                     <MainPath>./index.html</MainPath>
