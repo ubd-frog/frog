@@ -303,7 +303,7 @@ class Image(Piece):
 
         if imagefile.ext == '.psd':
             psd = psd_tools.PSDImage.load(imagefile)
-            workImage = psd.as_PIL_merged()
+            workImage = psd.as_PIL()
         else:
             workImage = pilImage.open(imagefile)
             self.source = source
