@@ -22,7 +22,7 @@
 import logging
 import json
 
-from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse, HttpResponseForbidden
 from django.shortcuts import render
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
@@ -31,7 +31,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 
-from frog.models import Gallery, Image, Video, Tag, Piece, DefaultPrefs, GallerySubscription
+from frog.models import Gallery, Image, Video, Tag, Piece, DefaultPrefs
 from frog.common import Result, getObjectsFromGuids, userToJson, getBranding
 from frog.uploader import upload
 from frog.send_file import send_zipfile
@@ -175,15 +175,17 @@ def artistLookup(request):
     return JsonResponse(res.values, safe=False)
 
 
+@login_required
 @require_http_methods(['POST'])
 def isUnique(request):
     data = request.POST or json.loads(request.body)['body']
     paths = data.get('paths', [])
     res = Result()
 
-    if request.user.is_anonymous():
-        username = request.GET.get('user', 'noauthor')
-        user = User.objects.get(username=username)
+    if data.get('user'):
+        user = User.objects.get(username=data['user'])
+    elif request.user.is_anonymous():
+        raise HttpResponseForbidden
     else:
         user = request.user
 
