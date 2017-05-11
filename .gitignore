@@ -24,3 +24,4 @@ pip-log.txt
 *~
 \#*#
 .cache/v/cache/lastfailed
+*.cert
