@@ -38,7 +38,7 @@ FrogApp.controller('MainController', function($scope, $q, FrogService) {
                 }
                 else {
                     $scope.item = res.data.value;
-                    $scope.thumbnail = FrogService.settings.url + res.data.value.thumbnail;
+                    $scope.thumbnail = FrogService.settings.url + res.data.value.image;
                     $scope.isunique = false;
                 }
             });
@@ -125,13 +125,14 @@ FrogApp.controller('MainController', function($scope, $q, FrogService) {
         else {
             result = xml.evaluate('//url', xml).iterateNext();
         }
+
+        $scope.filename = '';
+        $scope.thumbnail = '';
         
         if (result !== null) {
             var filename = result.textContent.split('///')[1];
-            $scope.filename = '';
-            $scope.thumbnail = '';
             if (angular.isDefined(filename)) {
-                $scope.query(filename)
+                $scope.query(filename);
             }
             $scope.$digest();
         }

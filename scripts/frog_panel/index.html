@@ -20,6 +20,10 @@
                 background: #333;
                 color: #d2d2d2;
             }
+            .fa-5 { 
+                font-size: 12em;
+                color: #333;
+            }
         </style>
     </head>
     <body ng-app='FrogApp' ng-controller='MainController'>
@@ -55,6 +59,7 @@
                 <div class='row'>
                     <img src='{{thumbnail}}' ng-if='thumbnail.length' />
                     <p ng-if='filename && isunique'>
+                        <i class="fa fa-picture-o fa-5" aria-hidden="true"></i><br />
                         This is a new image and has not been added to Frog yet.  Click Add to upload it
                     </p>
                 </div>
@@ -68,6 +73,7 @@
                 </div>
             </div>
             <p ng-if='!filename'>
+                <i class="fa fa-picture-o fa-5" aria-hidden="true"></i><br />
                 Please save the file before uploading to Frog
             </p>
 
