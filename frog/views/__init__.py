@@ -260,6 +260,10 @@ def branding(request):
 
 def clientError(request):
     data = json.loads(request.body)['body']
-    mail_admins('Client Error', data['error'].replace('\\n', '\n'))
+    message = str(data)
+    if 'error' in data:
+        message = data['error'].replace('\\n', '\n')
+    
+    mail_admins('Client Error', message)
 
     return JsonResponse({})
