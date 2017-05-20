@@ -94,9 +94,9 @@ def cropBox(item):
         width = size * ratio
         height = size
         box = (
-            int(width / 2 - (size / 2)),
+            int(width / 2.0 - (size / 2.0)),
             0,
-            int(width / 2 + (size / 2)),
+            int(width / 2.0 + (size / 2.0)),
             size
         )
     else:
@@ -104,9 +104,9 @@ def cropBox(item):
         height = size / ratio
         box = (
             0,
-            int(height / 2 - (size / 2)),
+            int(height / 2.0 - (size / 2.0)),
             size,
-            int(height / 2 + (size / 2)),
+            int(height / 2.0 + (size / 2.0)),
         )
 
     return box, width, height
