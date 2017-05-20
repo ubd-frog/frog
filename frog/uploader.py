@@ -36,7 +36,6 @@ class MediaTypeError(Exception):
     pass
 
 
-@login_required
 @csrf_exempt
 def upload(request):
     res = Result()
