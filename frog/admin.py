@@ -36,6 +36,13 @@ class ImageAdmin(admin.ModelAdmin):
 class VideoAdmin(admin.ModelAdmin):
     list_display = ('title', 'guid', 'author', 'thumbnail_tag')
 
+    actions = ['queue']
+
+    def queue(self, request, queryset):
+        for obj in queryset:
+            queuedvideo = VideoQueue.objects.get_or_create(video=obj)[0]
+            queuedvideo.save()
+
 
 class TagAdmin(admin.ModelAdmin):
     list_display = ('name', 'parent')
