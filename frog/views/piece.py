@@ -49,7 +49,7 @@ from django.contrib.auth.decorators import login_required
 from path import Path
 
 from frog.models import Image, Video, Tag, Piece, FROG_SITE_URL, cropBox, pilImage, FROG_THUMB_SIZE
-from frog.common import Result, getPutData, getObjectsFromGuids, getRoot, getBranding
+from frog.common import Result, getPutData, getObjectsFromGuids, getRoot, getSiteConfig
 from frog.uploader import handle_uploaded_file
 
 
@@ -240,7 +240,7 @@ def emailLike(request, obj):
         'image': isinstance(obj, Image),
         'SITE_URL': FROG_SITE_URL,
     })
-    subject = '{}: {} liked {}'.format(getBranding()['name'], request.user.username, obj.title)
+    subject = '{}: {} liked {}'.format(getSiteConfig()['name'], request.user.username, obj.title)
     fromemail = request.user.email
     to = obj.author.email
     text_content = 'This is an important message.'

@@ -42,7 +42,7 @@ from django.contrib.sites.shortcuts import get_current_site
 
 from django_comments.models import Comment
 
-from frog.common import Result, commentToJson, getObjectsFromGuids, getPutData, getBranding
+from frog.common import Result, commentToJson, getObjectsFromGuids, getPutData, getSiteConfig
 from frog.models import Image, FROG_SITE_URL
 
 
@@ -159,7 +159,7 @@ def emailComment(comment, obj, request):
         'SITE_URL': FROG_SITE_URL,
     })
 
-    subject = '{}: Comment from {}'.format(getBranding()['name'], comment.user_name)
+    subject = '{}: Comment from {}'.format(getSiteConfig()['name'], comment.user_name)
     fromemail = comment.user_email
     to = obj.author.email
     text_content = 'This is an important message.'

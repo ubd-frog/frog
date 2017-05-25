@@ -32,7 +32,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 
 from frog.models import Gallery, Image, Video, Tag, Piece, DefaultPrefs
-from frog.common import Result, getObjectsFromGuids, userToJson, getBranding
+from frog.common import Result, getObjectsFromGuids, userToJson, getSiteConfig
 from frog.uploader import upload
 from frog.send_file import send_zipfile
 from frog.views import comment, gallery, piece, tag, userpref
@@ -251,9 +251,9 @@ def csrf(request):
     return JsonResponse(res.asDict())
 
 
-def branding(request):
+def siteConfig(request):
     res = Result()
-    res.append(getBranding())
+    res.append(getSiteConfig())
 
     return JsonResponse(res.asDict())
 

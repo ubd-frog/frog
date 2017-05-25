@@ -72,7 +72,7 @@ DefaultPrefs = {
     'showTags': False,
     'orderby': 'created',
 }
-BRANDING = {
+SITE_CONFIG = {
     'name': 'Frog',
     'favicon': '/static/frog/i/favicon.ico',
     'icon': '/static/frog/i/frog.png',
