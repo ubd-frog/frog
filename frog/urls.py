@@ -56,7 +56,7 @@ urlpatterns = [
     url(r'^getuser$', views.getUser),
     url(r'^userlist', views.userList),
     url(r'^csrf$', views.csrf),
-    url(r'branding$', views.branding),
+    url(r'siteconfig', views.siteConfig),
     url(r'clienterror/$', views.clientError),
     # -- Authentication
     url(r'^login$', views.login_),

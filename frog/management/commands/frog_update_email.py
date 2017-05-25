@@ -29,7 +29,7 @@ from django.utils import timezone
 from django.conf import settings
 
 from frog.models import GallerySubscription, FROG_SITE_URL
-from frog.common import getBranding
+from frog.common import getSiteConfig
 
 
 class Command(BaseCommand):
@@ -42,7 +42,7 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **kwargs):
-        branding = getBranding()
+        siteconfig = getSiteConfig()
         today = timezone.now()
         interval = kwargs.get('intervalType', 'weekly')
         sender = 'notifications@{}'.format(urlparse(settings.FROG_SITE_URL).netloc)
@@ -62,7 +62,7 @@ class Command(BaseCommand):
                 interval=interval.capitalize(),
                 name=sub.gallery.title,
                 date=today.strftime('%m/%d/%Y'),
-                site=branding['name'],
+                site=siteconfig['name'],
             )
 
             text_content = ''
