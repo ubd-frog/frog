@@ -261,8 +261,10 @@ def branding(request):
 def clientError(request):
     data = json.loads(request.body)['body']
     message = str(data)
-    if 'error' in data:
+    try:
         message = data['error'].replace('\\n', '\n')
+    except:
+        pass
     
     mail_admins('Client Error', message)
 
