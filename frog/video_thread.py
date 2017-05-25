@@ -44,7 +44,6 @@ except AttributeError:
 
 FROG_SCRUB_DURATION = getattr(settings, 'FROG_SCRUB_DURATION', 60)
 FROG_FFMPEG_ARGS = getattr(settings, 'FROG_FFMPEG_ARGS', '-vcodec libx264 -b:v {0}k -acodec aac -b:a 56k -ac 2 -y')
-FROG_SCRUB_FFMPEG_ARGS = getattr(settings, 'FROG_SCRUB_FFMPEG_ARGS', '-vcodec libx264 -b:v {0}k -x264opts keyint=1:min-keyint=1 -acodec aac -b:a 56k -ac 2 -y')
 
 TIMEOUT = 1
 ROOT = getRoot()
@@ -52,7 +51,7 @@ LOGGER = logging.getLogger('frog.video')
 QUALITY = {
     'low': 1250,
     'medium': 2500,
-    'high': 4000,
+    'high': 10000,
 }
 
 
@@ -97,18 +96,17 @@ class VideoThread(Thread):
                 # -- Get the video information
                 videodata = video.info()
                 isH264 = 'h264' in videodata['codec'] and sourcepath.ext == '.mp4'
-                scrub = videodata['duration'] <= FROG_SCRUB_DURATION
 
                 tempfile = sourcepath.parent / 'temp.mp4'
                 outfile = sourcepath.parent / '{}.mp4'.format(video.hash)
 
                 # -- Further processing is needed if not h264 or needs to be scrubbable
-                if not isH264 or scrub or self._alwaysconvert:
+                if not isH264 or self._alwaysconvert:
                     LOGGER.info('Converting video: %s' % video.guid)
                     item.message = 'Converting to MP4...'
                     item.save()
 
-                    args = FROG_SCRUB_FFMPEG_ARGS if scrub else FROG_FFMPEG_ARGS
+                    args = FROG_FFMPEG_ARGS
                     cmd = [FROG_FFMPEG, '-i', str(sourcepath)]
                     cmd += args.format(QUALITY[self._quality]).split(' ')
                     cmd += [str(tempfile)]
