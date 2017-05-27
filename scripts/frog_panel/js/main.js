@@ -94,6 +94,7 @@ FrogApp.controller('MainController', function($scope, $q, FrogService) {
             $scope.state = 'settings';
         }
         FrogService.csrf();
+        
         FrogService.getGalleries().then(function(res) {
             $scope.galleries.length = 0;
             angular.forEach(res.data.values, function (gallery, index) {
@@ -154,22 +155,21 @@ FrogApp.service('FrogService', function($http, $q) {
     var process = require('process');
     var userdir = process.env[(process.platform == 'win32') ? 'USERPROFILE' : 'HOME'];
     var settingsfile = userdir + '/frog.json';
-    var csrftoken = '';
 
     function factory() {
         var self = this;
         this.csrfPromise = null;
         this.settings = {
             'url': '',
-            'gallery': null
+            'gallery': null,
+            'csrftoken': ''
         };
         this.isUnique = function(filename) {
             return $http.post(
                 this.settings.url + '/frog/isunique/',
-                {body: {user: process.env.USERNAME, paths: [filename], csrfmiddlewaretoken: csrftoken}},
+                {body: {user: process.env.USERNAME, paths: [filename]}},
                 {
-                    withCredentials: true,
-                    headers: {'X-CSRFToken': csrftoken}
+                    withCredentials: true
                 }
             );
         };
@@ -223,31 +223,41 @@ FrogApp.service('FrogService', function($http, $q) {
 
         this.csrf = function() {
             var defer = $q.defer();
-            $http.get(this.settings.url + '/frog/csrf').then(function(res) {
+            self.csrfPromise = defer.promise;
+
+            if (!self.settings.url) {
+                defer.reject();
+                return;
+            }
+            $http.get(self.settings.url + '/frog/csrf').then(function(res) {
                 console.log(res);
-                csrftoken = res.data.value;
-                // $http.defaults.headers.common['X-CSRFToken'] = res.data.value;
+                $http.defaults.headers.common['X-CSRFToken'] = res.data.value;
             }).then(function() {
                 defer.resolve();
-            });
-
-            self.csrfPromise = defer.promise;
+            });            
         };
 
         this.login = function(email, password) {
-            console.log(document.cookie);
-            return $http.post(
-                this.settings.url + '/frog/login',
-                {'body': {'email': email, 'password': password, csrfmiddlewaretoken: csrftoken}},
-                {
-                    // transformRequest: angular.identity,
-                    withCredentials: true,
-                }
-            );
+            var defer = $q.defer();
+            this.csrf();
+            self.csrfPromise.then(function() {
+                $http.post(
+                    self.settings.url + '/frog/login',
+                    {'body': {'email': email, 'password': password}},
+                    {
+                        withCredentials: true,
+                    }
+                ).then(function(result) {
+                    console.log(document.cookie);
+                    defer.resolve(result);
+                });
+            });
+
+            return defer.promise;
         };
 
         this.getGalleries = function() {
-            return $http.get(this.settings.url + '/frog/gallery');
+            return $http.get(self.settings.url + '/frog/gallery');
         }
     }
 

@@ -27,6 +27,7 @@
                     <CEFCommandLine>
                         <Parameter>--enable-nodejs</Parameter>
                         <Parameter>--enable-experimental-web-platform-features</Parameter>
+                        <Parameter>--enable-file-cookies</Parameter>
                         <Parameter>--allow-file-access-from-files</Parameter>
                     </CEFCommandLine>
                 </Resources>
