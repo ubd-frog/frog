@@ -43,7 +43,7 @@ except AttributeError:
     raise ImproperlyConfigured('FROG_FFMPEG and FROG_FFPROBE are required')
 
 FROG_SCRUB_DURATION = getattr(settings, 'FROG_SCRUB_DURATION', 60)
-FROG_FFMPEG_ARGS = getattr(settings, 'FROG_FFMPEG_ARGS', '-vcodec libx264 -b:v {0}k -acodec aac -b:a 56k -ac 2 -y')
+FROG_FFMPEG_ARGS = getattr(settings, 'FROG_FFMPEG_ARGS', '-vcodec libx264 -b:v {0}k -pix_fmt yuv420p -acodec aac -b:a 56k -ac 2 -y')
 
 TIMEOUT = 1
 ROOT = getRoot()
