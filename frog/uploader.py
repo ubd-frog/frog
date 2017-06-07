@@ -51,8 +51,8 @@ def upload(request):
             foreignPath = filename
 
         galleries = request.POST.get('galleries', '1').split(',')
-        tags = [_.strip() for _ in request.POST.get('tags', '').split(',')]
-        tags = [_ for _ in tags if _]
+        tags = [_.strip() for _ in request.POST.get('tags', '').split(',') if _]
+        title = request.POST.get('title')
 
         try:
             username = request.POST.get('user', False)
@@ -100,7 +100,7 @@ def upload(request):
 
             obj.hash = hashVal
             obj.foreign_path = foreignPath
-            obj.title = objPath.namebase
+            obj.title = title or objPath.namebase
             obj.export(hashVal, hashPath, tags=tags, galleries=galleries)
 
             res.append(obj.json())
