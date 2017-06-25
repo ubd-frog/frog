@@ -214,7 +214,7 @@ def getUser(request):
         return JsonResponse(res.asDict())
     else:
         data['user'] = userToJson(request.user)
-        data['user']['isManager'] = any(request.user.groups.filter(name='manager'))
+        data['user']['isManager'] = any(request.user.groups.filter(name='manager')) or request.user.is_staff
         data['gallery'] = None
         personal = Gallery.objects.filter(owner=request.user, security=Gallery.PERSONAL)
         if personal:
