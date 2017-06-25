@@ -27,3 +27,5 @@ pip-log.txt
 *.cert
 
 scripts/package\.bat
+
+\.idea/
