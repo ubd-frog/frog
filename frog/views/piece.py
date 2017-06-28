@@ -149,7 +149,7 @@ def post(request, obj):
     if obj.custom_thumbnail and (crop or request.FILES or resetthumbnail):
         try:
             os.unlink(getRoot() / obj.custom_thumbnail.name)
-        except (WindowsError, IOError):
+        except OSError:
             pass
 
     if crop:
