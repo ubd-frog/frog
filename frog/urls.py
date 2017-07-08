@@ -58,6 +58,7 @@ urlpatterns = [
     url(r'^csrf$', views.csrf),
     url(r'siteconfig', views.siteConfig),
     url(r'clienterror/$', views.clientError),
+    url(r'releasenotes$', views.releaseNotes),
     # -- Authentication
     url(r'^login$', views.login_),
     url(r'^logout$', views.logout_),

@@ -653,3 +653,18 @@ class GallerySubscription(models.Model):
             'user': self.user.id,
             'frequency': self.frequency,
         }
+
+
+class ReleaseNotes(models.Model):
+    date = models.DateTimeField(auto_now_add=True)
+    notes = models.TextField()
+
+    def __unicode__(self):
+        return '<ReleaseNotes: {}>'.format(self.id)
+
+    def json(self):
+        return {
+            'id': self.id,
+            'date': self.date.isoformat(),
+            'notes': self.notes,
+        }
