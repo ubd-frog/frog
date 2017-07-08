@@ -22,6 +22,7 @@
 import logging
 import json
 
+import datetime
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse, HttpResponseForbidden
 from django.shortcuts import render
 from django.views.decorators.http import require_http_methods
@@ -31,7 +32,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 
-from frog.models import Gallery, Image, Video, Tag, Piece, DefaultPrefs
+from frog.models import Gallery, Image, Video, Tag, Piece, DefaultPrefs, ReleaseNotes
 from frog.common import Result, getObjectsFromGuids, userToJson, getSiteConfig
 from frog.uploader import upload
 from frog.send_file import send_zipfile
@@ -269,3 +270,18 @@ def clientError(request):
     mail_admins('Client Error', message)
 
     return JsonResponse({})
+
+
+@require_http_methods(['GET'])
+def releaseNotes(request):
+    res = Result()
+    lastid = request.GET.get('lastid', 0)
+    today = datetime.datetime.today()
+    relevent = today - datetime.timedelta(days=30)
+
+    notes = ReleaseNotes.objects.filter(date__gte=relevent, pk__gt=lastid).order_by('-id')
+
+    for note in notes:
+        res.append(note.json())
+
+    return JsonResponse(res.asDict())

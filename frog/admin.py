@@ -22,7 +22,7 @@
 
 from django.contrib import admin
 
-from frog.models import Gallery, Image, Video, Tag, UserPref, GallerySubscription, VideoQueue
+from frog.models import Gallery, Image, Video, Tag, UserPref, GallerySubscription, VideoQueue, ReleaseNotes
 
 
 class GalleryAdmin(admin.ModelAdmin):
@@ -66,3 +66,4 @@ admin.site.register(Tag, TagAdmin)
 admin.site.register(UserPref)
 admin.site.register(GallerySubscription, GallerySubscriptionAdmin)
 admin.site.register(VideoQueue, VideoQueueAdmin)
+admin.site.register(ReleaseNotes)
