@@ -104,12 +104,14 @@ def logout_(request):
 def auth(request):
     response = HttpResponse()
     if request.user.is_anonymous():
+        LOGGER.warn('Unauthorized static lookup attempt', extra={'request': request})
         response.status_code = 401
 
     return response
 
 
 def accessDenied(request):
+    LOGGER.warn('Access Denied', extra={'request': request})
     return render(request, 'frog/access_denied.html')
 
 
@@ -118,6 +120,7 @@ def download(request):
     guids = request.GET.get('guids', '').split(',')
 
     if guids:
+        LOGGER.info('{} downloaded {}'.format(request.user.email, guids))
         objects = getObjectsFromGuids(guids)
         filelist = {}
         for n in objects:

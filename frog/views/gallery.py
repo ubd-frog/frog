@@ -57,7 +57,7 @@ except (ImportError, ImproperlyConfigured):
     HAYSTACK = False
 
 from frog.models import Gallery, Image, Video, GallerySubscription
-from frog.common import Result, getObjectsFromGuids, getPutData
+from frog.common import Result, getObjectsFromGuids, getPutData, getClientIP
 
 
 LOGGER = logging.getLogger('frog')
@@ -170,6 +170,8 @@ def delete(request, obj_id=None):
     objects = getObjectsFromGuids(guids)
     gallery = Gallery.objects.get(pk=obj_id)
 
+    LOGGER.info('{} removed {} from {}'.format(request.user.email, guids, gallery))
+
     for o in objects:
         if isinstance(o, Image):
             gallery.images.remove(o)
@@ -190,6 +192,7 @@ def filterObjects(request, obj_id):
     obj = Gallery.objects.get(pk=obj_id)
 
     if request.user.is_anonymous() and obj.security != Gallery.PUBLIC:
+        LOGGER.warn('There was an anonymous access attempt from {} to {}'.format(getClientIP(request), obj))
         raise PermissionDenied()
 
     tags = json.loads(request.GET.get('filters', '[[]]'))
