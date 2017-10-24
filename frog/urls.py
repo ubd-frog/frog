@@ -19,7 +19,7 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ##################################################################################################
 
-from django.conf.urls import patterns, url
+from django.conf.urls import url
 
 # import views
 from frog import views

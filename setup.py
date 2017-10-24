@@ -1,34 +1,81 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-try:
-    from setuptools import setup
-except ImportError:
-    from distutils.core import setup
-
+import io
 import os
-from pip.req import parse_requirements
+import sys
+from shutil import rmtree
 
-install_reqs = parse_requirements(os.path.abspath(os.path.dirname(__file__)) + '/requirements.txt', session=False)
-reqs = [str(ir.req) for ir in install_reqs]
+from setuptools import find_packages, setup, Command
+
+here = os.path.abspath(os.path.dirname(__file__))
+
+# Package meta-data.
+NAME = 'django-frog'
+DESCRIPTION = 'Media server built on django'
+URL = 'https://github.com/theiviaxx/frog'
+EMAIL = 'theiviaxx@gmail.com'
+AUTHOR = 'Brett Dixon'
+
+# What packages are required for this module to be executed?
+with io.open(os.path.join(here, 'requirements.txt')) as fh:
+    REQUIRED = [_.strip() for _ in fh.readlines()]
+
+# Import the README and use it as the long-description.
+# Note: this will only work if 'README.rst' is present in your MANIFEST.in file!
+with io.open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
+    long_description = '\n' + f.read()
+
+# Load the package's __version__.py module as a dictionary.
+about = {}
+with open(os.path.join(here, 'frog', '__version__.py')) as f:
+    exec(f.read(), about)
+
+
+class UploadCommand(Command):
+    """Support setup.py upload."""
+
+    description = 'Build and publish the package.'
+    user_options = []
+
+    @staticmethod
+    def status(s):
+        """Prints things in bold."""
+        print('\033[1m{0}\033[0m'.format(s))
+
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        try:
+            self.status('Removing previous builds…')
+            rmtree(os.path.join(here, 'dist'))
+        except OSError:
+            pass
+
+        self.status('Building Source and Wheel (universal) distribution…')
+        os.system('{0} setup.py sdist bdist_wheel --universal'.format(sys.executable))
+
+        self.status('Uploading the package to PyPi via Twine…')
+        os.system('twine upload dist/*')
+
+        sys.exit()
+
 
 setup(
-    name='django-frog',
-    description='Media server built on django',
-    long_description='A server solution to viewing and filtering large image and video collections',
-    version='2.0.0',
-    author='Brett Dixon',
-    author_email='theiviaxx@gmail.com',
+    name=NAME,
+    version=about['__version__'],
+    description=DESCRIPTION,
+    long_description=long_description,
+    author=AUTHOR,
+    author_email=EMAIL,
+    url=URL,
+    packages=find_packages(exclude=('tests',)),
+    install_requires=REQUIRED,
+    include_package_data=True,
     license='MIT',
-    url='https://github.com/theiviaxx/frog',
-    platforms='any',
-    install_requires=reqs,
-    packages=[
-        'frog',
-        'frog.views',
-        'frog.management',
-        'frog.management.commands',
-        'frog.templatetags',
-    ],
     classifiers=[
         'Environment :: Web Environment',
         'Framework :: Django',
@@ -37,6 +84,10 @@ setup(
         'Natural Language :: English',
         'Programming Language :: Python',
     ],
-    zip_safe=False,
-    include_package_data=True
+    entry_points={
+        'console_scripts': ['frog_init=frog.cli:quickstart']
+    },
+    cmdclass={
+        'upload': UploadCommand,
+    },
 )

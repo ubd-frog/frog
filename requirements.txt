@@ -1,8 +1,8 @@
-Django==1.9
-django-contrib-comments==1.6.2
-django-haystack==2.4.1
+Django==1.10
+django-contrib-comments==1.8.0
+django-haystack==2.5.1
 path.py==8.1.2
-Pillow==2.8.1
+Pillow==4.3.0
 pytz==2015.2
 six==1.9.0
 urllib3==1.10.2
