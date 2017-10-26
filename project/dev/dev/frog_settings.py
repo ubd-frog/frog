@@ -6,7 +6,7 @@ AUTHENTICATION_BACKENDS = ('frog.auth.SimpleAuthBackend',)
 
 # Where are we storing our asset files?
 MEDIA_ROOT = os.path.join(BASE_DIR, 'static/')
-MEDIA_URL = 'static/'
+MEDIA_URL = '/static/'
 
 # ffmpeg executable locations
 FROG_FFMPEG = 'ffmpeg'

@@ -12,5 +12,22 @@
         "fields": {
             "name": "managers"
         }
+    },
+    {
+        "model": "auth.user",
+        "pk": 1,
+        "fields": {
+            "username": "admin",
+            "first_name": "Admin",
+            "is_staff": true,
+            "is_superuser": true
+        }
+    },
+    {
+        "model": "sites.site",
+        "pk": 1,
+        "fields": {
+            "domain": "127.0.0.1"
+        }
     }
 ]
