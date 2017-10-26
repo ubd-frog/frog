@@ -70,7 +70,7 @@ def quickstart():
         sys.exit()
 
     if not args.force:
-        if not projectCheck():
+        if projectCheck():
             sys.exit()
 
     project = BASE / 'project' / 'dev'
@@ -103,7 +103,7 @@ def quickstart():
     conf = dest / 'frog.conf'
     conf.write_text((project.parent / 'frog.conf').text().format(
         static=(dest / 'static').replace('\\', '/'),
-        ng=(project.parent / 'dist').replace('\\', '/'),
+        ng=(project.parent / 'ng').replace('\\', '/'),
         env=dest.replace('\\', '/')
     ))
     (project.parent / 'mime.types').copy(dest)
