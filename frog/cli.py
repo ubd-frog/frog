@@ -96,8 +96,6 @@ def quickstart():
 
     LOGGER.info('Running migrations...')
     subprocess.check_call(['python', 'manage.py', 'migrate'])
-    # LOGGER.info('Creating super user...')
-    # subprocess.check_call(['python', 'manage.py', 'createsuperuser'])
     LOGGER.info('Loading default data...')
     subprocess.check_call(['python', 'manage.py', 'loaddata', '--app', 'frog', 'initial_data.json'])
 
