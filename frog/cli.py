@@ -43,7 +43,7 @@ import path
 
 logging.basicConfig()
 
-BASE = path.Path(os.path.abspath(__file__)).parent.parent
+BASE = path.Path(os.path.abspath(__file__)).parent
 ENV = path.Path(os.getenv('VIRTUAL_ENV', os.getcwd()))
 LOGGER = logging.getLogger('Frog Init')
 LOGGER.setLevel(logging.INFO)
@@ -57,6 +57,25 @@ def projectCheck():
     """checks to see if the project exists and propmts for overwrite"""
     project = ENV / 'dev'
     return project.exists()
+
+
+def writeSecretKey(path):
+    dest = os.path.join(path, 'secret_key.txt')
+
+    if not os.path.exists(dest):
+        LOGGER.info('Generating secret key at {}...'.format(dest))
+        with open(dest, 'w+') as fh:
+            key = ''.join([random.SystemRandom().choice('abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)') for i in range(50)])
+            fh.write(key)
+
+
+def secretKeyCommand():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('path', help='Path to write file to')
+
+    args, opts = parser.parse_known_args()
+
+    writeSecretKey(args.path)
 
 
 def quickstart():
@@ -88,11 +107,7 @@ def quickstart():
 
     os.chdir(dest)
 
-    if not os.path.exists('secret_key.txt'):
-        LOGGER.info('Generating secret key...')
-        with open('secret_key.txt', 'w+') as fh:
-            key = ''.join([random.SystemRandom().choice('abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)') for i in range(50)])
-            fh.write(key)
+    writeSecretKey(os.getcwd())
 
     LOGGER.info('Running migrations...')
     subprocess.check_call(['python', 'manage.py', 'migrate'])
@@ -103,7 +118,6 @@ def quickstart():
     conf = dest / 'frog.conf'
     conf.write_text((project.parent / 'frog.conf').text().format(
         static=(dest / 'static').replace('\\', '/'),
-        ng=(project.parent / 'ng').replace('\\', '/'),
         env=ENV.replace('\\', '/')
     ))
     (project.parent / 'mime.types').copy(dest)

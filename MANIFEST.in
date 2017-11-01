@@ -1,4 +1,6 @@
-include README.md LICENSE
+include README.md LICENSE requirements.txt
 recursive-include frog/static *
 recursive-include frog/templates/frog *
 recursive-include frog/fixtures *
+recursive-include frog/ng *
+recursive-include project *

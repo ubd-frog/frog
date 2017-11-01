@@ -85,7 +85,10 @@ setup(
         'Programming Language :: Python',
     ],
     entry_points={
-        'console_scripts': ['frog_init=frog.cli:quickstart']
+        'console_scripts': [
+            'frog_init=frog.cli:quickstart',
+            'frog_secret=frog.cli:secretKeyCommand',
+        ]
     },
     cmdclass={
         'upload': UploadCommand,

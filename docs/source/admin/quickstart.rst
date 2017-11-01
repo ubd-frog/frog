@@ -7,156 +7,92 @@ Quickstart
 
 This guide is written for windows to get up and running within a few minutes, but is not at all ready for a production server.  If you're on linux, you should be able to follow the instructions below with minimal changes to get up and running.
 
+The main point of this is to get a quick demo site up and running with minimal input.  Once this quickstart is finished there are a few more steps you may wish to take in order to get a fully functional application running.
+
 Requirements
 ------------
 
-* `Install Python 2.6 or later <http://python.org/download/>`_
-* `Install Pillow <https://pypi.python.org/pypi/Pillow/2.1.0#downloads>`_
-* :ref:`Install Frog <install>`
+* `Install Python 2.7 or later <http://python.org/download/>`_
+* `Install pip <https://pip.pypa.io/en/stable/installing/>`_
+* `Install nginx <https://nginx.org/download/nginx-1.12.2.zip>`_
 
 
-Start a project
----------------
+Setup an Environment
+--------------------
 
-First lets open a command line and:
+It is best practice to use a virtual environment and this quickstart requires that you do.  This is a very simple step and you'll be glad you did it.  First open a cmd prompt where you want to store all of this.  I'll use c:\envs for this example, but feel free to put it wherever you'd like.
 
-::
-
-    > cd c:\\users\\brett
-    > python c:\\python27\\Scripts\\django-admin.py startproject dev
-    > cd dev
-    > mkdir static
-    > mkdir static\\frog
-    > copy C:\\python27\\lib\\site-packages\\frog\\static\\* static\\frog
-
-
-Settings
---------
-
-Now we need to modify the default settings to include Frog and add some other stuff.  The easiest thing to do is just copy and paste the settings file below and make the path changes to fit your machine.  Edit the `c:\\Users\\brett\\dev\\dev\\settings.py` file:
+Open a cmd prompt at c:\envs and run the following
 
 ::
 
-    # Django settings for dev project.
-    import os
-    APPROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    > pip install virtualenv
+    > virtualenv test
 
-    DEBUG = True
-    TEMPLATE_DEBUG = DEBUG
-
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': os.path.join(APPROOT, 'frog.sqlite'),
-        }
-    }
-
-    SITE_ID = 1
-
-    MEDIA_URL = 'http://127.0.0.1:8000/static/'
-    MEDIA_ROOT = os.path.join(APPROOT, 'static') + '\\'
-
-    ADMIN_MEDIA_PREFIX = '/static/admin/'
-    SECRET_KEY = 'secret'
-
-    TEMPLATE_LOADERS = (
-        'django.template.loaders.filesystem.Loader',
-        'django.template.loaders.app_directories.Loader',
-    )
-
-    TEMPLATE_CONTEXT_PROCESSORS = (
-        "django.contrib.auth.context_processors.auth",
-        "django.core.context_processors.debug",
-        "django.core.context_processors.i18n",
-        "django.core.context_processors.media",
-        "django.core.context_processors.static",
-        "django.core.context_processors.tz",
-        "django.contrib.messages.context_processors.messages",
-        "frog.context_processors.media",
-    )
-
-    MIDDLEWARE_CLASSES = (
-        'django.middleware.common.CommonMiddleware',
-        'django.contrib.sessions.middleware.SessionMiddleware',
-        'django.middleware.csrf.CsrfViewMiddleware',
-        'django.contrib.auth.middleware.AuthenticationMiddleware',
-        'django.contrib.messages.middleware.MessageMiddleware',
-    )
-
-    ROOT_URLCONF = 'dev.urls'
-
-    INSTALLED_APPS = (
-        'django.contrib.auth',
-        'django.contrib.contenttypes',
-        'django.contrib.sessions',
-        'django.contrib.sites',
-        'django.contrib.messages',
-        'django.contrib.admin',
-        'django.contrib.comments',
-        'frog',
-    )
-
-    LOGGING = {
-        'version': 1,
-        'disable_existing_loggers': False,
-        'handlers': {
-            'console':{
-                'level':'DEBUG',
-                'class':'logging.StreamHandler',
-            }
-        },
-        'loggers': {
-            'django.request': {
-                'handlers': ['console'],
-                'level': 'ERROR',
-                'propagate': True,
-            },
-        }
-    }
-
-    AUTHENTICATION_BACKENDS = (
-        'frog.auth.SimpleAuthBackend',
-    )
-
-    FROG_FFMPEG = 'c:/ffmpeg/ffmpeg.exe'
-    FROG_SITE_URL = 'http://127.0.0.1:8000'
-
-URLs
-----
-
-Next we have to add the Frog URLs so edit the `c:\\Users\\brett\\dev\\dev\\urls.py` file:
+This will make a new virtual environment called test at c:\envs\test
 
 ::
 
-    from django.conf.urls import patterns, include, url
-    from django.conf import settings
+    > cd test
+    > scripts\activate
 
-    from django.contrib import admin
-    admin.autodiscover()
+We can now do whatever we want to this python installation without messing with the system one.
 
-    urlpatterns = patterns(
-        '',
-        url(r'^static/(?P<path>.*)$', 'django.views.static.serve', {
-            'document_root': settings.MEDIA_ROOT,
-            'show_indexes': True
-            }),
-        url(r'^media/(?P<path>.*)$', 'django.views.static.serve', {
-            'document_root': settings.MEDIA_ROOT,
-            'show_indexes': True
-            }),
-        url(r'^frog/', include('frog.urls')),
+::
 
-        url(r'^admin/', include(admin.site.urls)),
-    )
+    > pip install django-frog
+
+This will go through an install a bunch of things we need.  Once its done, you can finally run
+
+::
+
+    > frog_init
+
+What this does:
+
+* Sets up a basic project with frog ready to go
+* Creates a sqlite database with preloaded default data
+* Creates an "admin" user
+* Creates an nginx configuration file to use
 
 Start the Server
 ----------------
 
-At the command line type in
+For frog, we need to services running: one for serving the site and one for converting video files
+
+Web Server
 
 ::
 
-    > python manage.py syncdb
+    > cd dev
     > python manage.py runserver
 
-Now go to http://127.0.0.1:8000/frog
+Video worker
+We'll need a second cmd prompt for this and activate the virtualenv as before
+
+::
+
+    > cd c:\envs\test\dev
+    > ..\scripts\activate
+    > python manage.py video_worker
+
+Next we just need to run nginx with our conf file to tie it all together.  Open a new cmd prompt to wherever you extracted nginx to.  In this example, I'm using c:\bin\nginx
+
+::
+
+    > cd c:\bin\nginx
+    > nginx -c c:\envs\test\dev\frog.conf
+
+
+Now go to http://127.0.0.1 and you should have a completely operational instance.  Login with "admin" and no password.
+
+Next Steps
+----------
+
+As mentioned above, to get this in a more production ready state, you'll probably want to use a production database such as MySQL or Postgres.  You'll also want to use a wsgi server to serve the application.
+
+* gunicorn (linux)
+* uwsgi (linux)
+* waitress
+
+You can use the dev project generated as a good starting point as it has everything needed to make frog go.  Feel free to teak settings in the `frog_settings.py` file.
