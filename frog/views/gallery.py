@@ -225,7 +225,7 @@ def _filter(request, object_, tags=None, models=(Image, Video), more=False, orde
     idDict = {}
     objDict = {}
     data = {}
-    length = 300
+    length = 75
 
     if more:
         # -- This is a request for more results
