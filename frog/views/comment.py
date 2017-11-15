@@ -83,7 +83,8 @@ def post(request):
         comment.user_name = request.user.get_full_name()
         comment.user_email = request.user.email
         comment.content_object = obj
-        comment.site_id = get_current_site(request).id
+        # For our purposes, we never have more than one site
+        comment.site_id = 1
         comment.save()
 
         obj.comment_count += 1

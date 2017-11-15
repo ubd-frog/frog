@@ -270,7 +270,7 @@ class Piece(models.Model):
 
     def like(self, request):
         try:
-            Like.objects.create(user=request.user, content_object=self, site=get_current_site(request))
+            Like.objects.create(user=request.user, content_object=self)
             self.like_count += 1
             self.save()
 
@@ -623,7 +623,6 @@ class Like(models.Model):
                                      on_delete=models.CASCADE)
     object_pk = models.TextField()
     content_object = GenericForeignKey(ct_field='content_type', fk_field='object_pk')
-    site = models.ForeignKey(Site, on_delete=models.CASCADE)
 
     class Meta:
         # make sure we can't have a user liking an object more than once
