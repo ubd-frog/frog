@@ -189,9 +189,13 @@ def filterObjects(request, obj_id):
     Filters Gallery for the requested ImageVideo objects.  Returns a Result object with 
     serialized objects
     """
-    obj = Gallery.objects.get(pk=obj_id)
+    print(obj_id)
+    if int(obj_id) == 0:
+        obj = None
+    else:
+        obj = Gallery.objects.get(pk=obj_id)
 
-    if request.user.is_anonymous() and obj.security != Gallery.PUBLIC:
+    if request.user.is_anonymous() and (obj.security != Gallery.PUBLIC or obj is None):
         LOGGER.warn('There was an anonymous access attempt from {} to {}'.format(getClientIP(request), obj))
         raise PermissionDenied()
 
@@ -240,9 +244,12 @@ def _filter(request, object_, tags=None, models=(Image, Video), more=False, orde
 
     LOGGER.debug('{} : {}'.format(start, end))
 
-    # -- Gat all IDs for each model
+    # -- Get all IDs for each model
     for m in models:
-        idDict[m.model] = m.model_class().objects.filter(gallery=object_)
+        if object_:
+            idDict[m.model] = m.model_class().objects.filter(gallery=object_)
+        else:
+            idDict[m.model] = m.model_class().objects.all()
 
         if tags:
             for bucket in tags:
