@@ -59,7 +59,10 @@ except (ImportError, ImproperlyConfigured):
 from frog.models import Gallery, Image, Video, GallerySubscription
 from frog.common import Result, getObjectsFromGuids, getPutData, getClientIP
 
-
+try:
+    QUERY_MODELS = [ContentType.objects.get(app_label='frog', model=_) for _ in getattr(settings, 'FROG_QUERY_MODELS', ('image', 'video'))]
+except:
+    QUERY_MODELS = []
 LOGGER = logging.getLogger('frog')
 
 
@@ -186,70 +189,63 @@ def delete(request, obj_id=None):
 @login_required
 def filterObjects(request, obj_id):
     """
-    Filters Gallery for the requested ImageVideo objects.  Returns a Result object with 
+    Filters Gallery for the requested ImageVideo objects.  Returns a Result object with
     serialized objects
     """
-    print(obj_id)
     if int(obj_id) == 0:
         obj = None
     else:
         obj = Gallery.objects.get(pk=obj_id)
 
-    if request.user.is_anonymous() and (obj.security != Gallery.PUBLIC or obj is None):
+    isanonymous = request.user.is_anonymous()
+
+    if isanonymous and obj is None:
+        LOGGER.warn('There was an anonymous access attempt from {} to {}'.format(getClientIP(request), obj))
+        raise PermissionDenied()
+
+    if isanonymous and obj and obj.security != Gallery.PUBLIC:
         LOGGER.warn('There was an anonymous access attempt from {} to {}'.format(getClientIP(request), obj))
         raise PermissionDenied()
 
     tags = json.loads(request.GET.get('filters', '[[]]'))
     more = json.loads(request.GET.get('more', 'false'))
-    models = request.GET.get('models', 'image,video')
     orderby = request.GET.get('orderby', request.user.frog_prefs.get().json()['orderby'])
-    if models == '':
-        models = 'image,video'
 
     tags = [t for t in tags if t]
 
-    models = [ContentType.objects.get(app_label='frog', model=x) for x in models.split(',')]
-
-    return _filter(request, obj, tags=tags, models=models, more=more, orderby=orderby)
+    return _filter(request, obj, tags=tags, more=more, orderby=orderby)
 
 
-def _filter(request, object_, tags=None, models=(Image, Video), more=False, orderby='created'):
+def _filter(request, object_, tags=None, more=False, orderby='created'):
     """Filters Piece objects from self based on filters, search, and range
 
     :param tags: List of tag IDs to filter
     :type tags: list
-    :param models: List of model classes to filter on
-    :type models: list
     :param more -- bool, Returns more of the same filtered set of images based on session range
 
     return list, Objects filtered
     """
     res = Result()
-    
+
+    models = QUERY_MODELS
+
     idDict = {}
     objDict = {}
     data = {}
+    modelmap = {}
     length = 75
-
-    if more:
-        # -- This is a request for more results
-        mult = request.session.get('mult', 0) + 1
-        request.session['mult'] = mult
-    else:
-        mult = 0
-        request.session['mult'] = 0
-
-    start = length * mult
-    end = start + length
-
-    LOGGER.debug('{} : {}'.format(start, end))
 
     # -- Get all IDs for each model
     for m in models:
+        modelmap[m.model_class()] = m.model
+
         if object_:
             idDict[m.model] = m.model_class().objects.filter(gallery=object_)
         else:
             idDict[m.model] = m.model_class().objects.all()
+
+        if not idDict[m.model]:
+            continue
 
         if tags:
             for bucket in tags:
@@ -290,23 +286,42 @@ def _filter(request, object_, tags=None, models=(Image, Video), more=False, orde
                     idDict[m.model] = idDict[m.model].annotate(num_tags=Count('tags')).filter(o)
                 else:
                     idDict[m.model] = idDict[m.model].none()
-        
+
         # -- Get all ids of filtered objects, this will be a very fast query
-        idDict[m.model] = list(idDict[m.model].order_by('-{}'.format(orderby))[:end].values_list('id', flat=True))
-        
+        idDict[m.model] = list(idDict[m.model].order_by('-{}'.format(orderby)).values_list('id', flat=True))
+        lastid = request.session.get('last_{}'.format(m.model), 0)
+        if not idDict[m.model]:
+            continue
+
+        if not more:
+            lastid = idDict[m.model][0]
+
+        index = idDict[m.model].index(lastid)
+        if more and lastid != 0:
+            index += 1
+        idDict[m.model] = idDict[m.model][index:index + length]
+
         # -- perform the main query to retrieve the objects we want
-        objDict[m.model] = m.model_class().objects.filter(id__in=idDict[m.model]).select_related('author').prefetch_related('tags').order_by('-{}'.format(orderby))
-        objDict[m.model] = objDict[m.model][start:end]
+        objDict[m.model] = m.model_class().objects.filter(id__in=idDict[m.model])
+        objDict[m.model] = objDict[m.model].select_related('author').prefetch_related('tags').order_by('-{}'.format(orderby))
         objDict[m.model] = list(objDict[m.model])
-    
-    # -- combine and sort all objects by date
+
+        # -- combine and sort all objects by date
     objects = _sortObjects(orderby, **objDict) if len(models) > 1 else objDict.values()[0]
     objects = objects[:length]
+
+    # -- Find out last ids
+    lastids = {}
+    for obj in objects:
+        lastids['last_{}'.format(modelmap[obj.__class__])] = obj.id
+
+    for key, value in lastids.items():
+        request.session[key] = value
 
     # -- serialize objects
     for i in objects:
         res.append(i.json())
-    
+
     data['count'] = len(objects)
     if settings.DEBUG:
         data['queries'] = connection.queries
