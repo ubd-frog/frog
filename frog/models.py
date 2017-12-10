@@ -71,6 +71,9 @@ DefaultPrefs = {
     'semiTransparent': False,
     'showTags': False,
     'orderby': 'created',
+    'slideshowRandomize': True,
+    'slideshowPlayVideo': True,
+    'slideshowDuration': 5,
 }
 SITE_CONFIG = {
     'name': 'Frog',
@@ -387,6 +390,7 @@ class Video(Piece):
     video_thumbnail = models.FileField(upload_to='%Y/%m/%d', max_length=255, blank=True, null=True)
     poster = models.ImageField(upload_to='%Y/%m/%d', max_length=255, blank=True, null=True)
     framerate = models.IntegerField(default=24)
+    duration = models.FloatField(default=0.0)
 
     def export(self, hashVal, hashPath, tags=None, galleries=None):
         """
@@ -405,6 +409,7 @@ class Video(Piece):
         self.width = videodata['width']
         self.height = videodata['height']
         self.framerate = videodata['framerate']
+        self.duration = videodata['duration']
 
         self.generateThumbnail()
 
@@ -443,6 +448,7 @@ class Video(Piece):
         obj['video_thumbnail'] = self.video_thumbnail.url if self.video_thumbnail else ''
         obj['poster'] = self.poster.url if self.poster else ''
         obj['framerate'] = self.framerate
+        obj['duration'] = self.duration
 
         return obj
 
