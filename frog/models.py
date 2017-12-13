@@ -427,7 +427,6 @@ class Video(Piece):
             self.guid = self.getGuid().guid
 
         # -- Set the temp video while processing
-        self.video = 'frog/i/queued.mp4'
         queuedvideo = VideoQueue.objects.get_or_create(video=self)[0]
         queuedvideo.save()
 

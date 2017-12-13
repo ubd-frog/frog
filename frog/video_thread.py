@@ -88,7 +88,6 @@ class VideoThread(Thread):
                 LOGGER.info('Processing video: %s' % video.guid)
                 item.status = VideoQueue.PROCESSING
                 item.message = 'Processing video...'
-                video.video = 'frog/i/processing.mp4'
                 item.save()
 
                 sourcepath = ROOT / video.source.name
