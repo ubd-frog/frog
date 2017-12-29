@@ -37,9 +37,8 @@ import json
 import time
 from collections import namedtuple
 
-from django.http import JsonResponse, HttpResponseForbidden
+from django.http import JsonResponse
 from django.http.request import RawPostDataException
-from django.http import HttpResponseBadRequest
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.core.mail import send_mail
@@ -47,6 +46,7 @@ from django.template.loader import render_to_string
 from django.contrib.auth.decorators import login_required
 
 from path import Path
+import psd_tools
 
 from frog.models import Image, Video, Tag, Piece, FROG_SITE_URL, cropBox, pilImage, FROG_THUMB_SIZE
 from frog.common import Result, getPutData, getObjectsFromGuids, getRoot, getSiteConfig
@@ -182,7 +182,10 @@ def post(request, obj):
         handle_uploaded_file(dest, f)
         obj.custom_thumbnail = relativedest
 
-        image = pilImage.open(dest)
+        if dest.ext == '.psd':
+            image = psd_tools.PSDLoad(dest).as_PIL()
+        else:
+            image = pilImage.open(dest)
         sizeinterface = namedtuple('sizeinterface', 'width,height')
         size = sizeinterface(*image.size)
         box, width, height = cropBox(size)
