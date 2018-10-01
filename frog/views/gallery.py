@@ -244,7 +244,7 @@ def _filter(request, object_, tags=None, more=False, orderby='created'):
         else:
             idDict[m.model] = m.model_class().objects.all()
 
-        if not idDict[m.model]:
+        if idDict[m.model] is None:
             continue
 
         if tags:
