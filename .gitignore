@@ -29,3 +29,5 @@ pip-log.txt
 scripts/package\.bat
 
 \.idea/
+
+\.vscode/
