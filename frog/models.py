@@ -23,6 +23,7 @@
 import json
 import subprocess
 import re
+import math
 try:
     from Queue import Queue
 except ImportError:
@@ -88,31 +89,31 @@ FILE_TYPES = {
 }
 
 
-def cropBox(item):
+def cropBox(width, height):
     size = FROG_THUMB_SIZE
-    if item.width < size and item.height < size:
-        size = min(item.width, item.height)
-    ratio = float(item.width) / float(item.height)
+    if width < size and height < size:
+        size = min(width, height)
+    ratio = float(width) / float(height)
     if ratio >= 1.0:
-        width = size * ratio
-        height = size
+        w = size * ratio
+        h = size
         box = (
-            int(width / 2.0 - (size / 2.0)),
+            int(math.floor(width / 2.0 - (size / 2.0))),
             0,
-            int(width / 2.0 + (size / 2.0)),
+            int(math.floor(width / 2.0 + (size / 2.0))),
             size
         )
     else:
-        width = size
-        height = size / ratio
+        w = size
+        h = size / ratio
         box = (
             0,
-            int(height / 2.0 - (size / 2.0)),
+            int(math.floor(height / 2.0 - (size / 2.0))),
             size,
-            int(height / 2.0 + (size / 2.0)),
+            int(math.floor(height / 2.0 + (size / 2.0))),
         )
 
-    return box, width, height
+    return box, w, h
 
 
 class Tag(models.Model):
@@ -354,29 +355,15 @@ class Image(Piece):
 
         return obj
 
-    def generateThumbnail(self, image=None, box=None):
+    def generateThumbnail(self):
         """Generates a square thumbnail"""
-        if image is None:
-            image = pilImage.open(ROOT / self.source.name)
-
-        if box is None:
-            box, width, height = cropBox(self)
-        else:
-            ratio = float(self.width) / float(self.height)
-            if ratio >= 1.0:
-                width = FROG_THUMB_SIZE * ratio
-                height = FROG_THUMB_SIZE
-                tnratio = float(self.height) / float(FROG_THUMB_SIZE)
-            else:
-                width = FROG_THUMB_SIZE
-                height = FROG_THUMB_SIZE / ratio
-                tnratio = float(self.width) / float(FROG_THUMB_SIZE)
-
-            box = [int(_ / tnratio) for _ in box]
+        image = pilImage.open(ROOT / self.source.name)
+        box, width, height = cropBox(self.width, self.height)
 
         # Resize
         image.thumbnail((width, height), pilImage.ANTIALIAS)
         # Crop from center
+        box = cropBox(*image.size)[0]
         image = image.crop(box)
         # save
         self.thumbnail = self.source.name.replace(self.hash, '__{}'.format(self.hash))
@@ -451,7 +438,7 @@ class Video(Piece):
 
         return obj
 
-    def generateThumbnail(self, image=None, box=None):
+    def generateThumbnail(self):
         """Generates a square thumbnail"""
         source = ROOT / self.source.name
         thumbnail = source.parent / '_{}.jpg'.format(source.namebase)
@@ -465,24 +452,12 @@ class Video(Piece):
         image.save(poster)
         self.poster = poster.replace(ROOT, '')
 
-        if box is None:
-            box, width, height = cropBox(self)
-        else:
-            ratio = float(self.width) / float(self.height)
-            if ratio >= 1.0:
-                width = FROG_THUMB_SIZE * ratio
-                height = FROG_THUMB_SIZE
-                tnratio = float(self.height) / float(FROG_THUMB_SIZE)
-            else:
-                width = FROG_THUMB_SIZE
-                height = FROG_THUMB_SIZE / ratio
-                tnratio = float(self.width) / float(FROG_THUMB_SIZE)
-
-            box = [int(_ / tnratio) for _ in box]
+        box, width, height = cropBox(self.width, self.height)
 
         # Resize
         image.thumbnail((width, height), pilImage.ANTIALIAS)
         # Crop from center
+        box = cropBox(*image.size)[0]
         image = image.crop(box)
         # save
         self.thumbnail = thumbnail.replace(ROOT, '')

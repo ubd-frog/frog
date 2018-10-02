@@ -186,12 +186,12 @@ def post(request, obj):
             image = psd_tools.PSDLoad(dest).as_PIL()
         else:
             image = pilImage.open(dest)
-        sizeinterface = namedtuple('sizeinterface', 'width,height')
-        size = sizeinterface(*image.size)
-        box, width, height = cropBox(size)
+
+        box, width, height = cropBox(*image.size)
         # Resize
         image.thumbnail((width, height), pilImage.ANTIALIAS)
         # Crop from center
+        box = cropBox(*image.size)[0]
         image.crop(box).save(dest)
 
         obj.save()
