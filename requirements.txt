@@ -1,10 +1,10 @@
-Django==1.10
+Django==1.11.20
 django-contrib-comments==1.8.0
-django-haystack==2.5.1
+django-haystack==2.7.0
 path.py==8.1.2
 Pillow==4.3.0
 pytz==2015.2
 six==1.9.0
-urllib3==1.10.2
+urllib3==1.24.2
 psd-tools==1.4
-requests==2.13.0
+requests==2.20.0
