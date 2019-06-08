@@ -56,7 +56,7 @@ class Command(BaseCommand):
         
         if options.get('image', False) or processall:
             for image in Image.objects.all():
-                self.stdout.write('Generating thumbnail for {}'.format(image))
+                self.stdout.write('Generating thumbnail for {}'.format("".join(i for i in image.title if ord(i)<128)))
                 try:
                     image.generateThumbnail()
                     image.save()
@@ -65,7 +65,7 @@ class Command(BaseCommand):
 
         if options.get('video', False) or processall:
             for image in Video.objects.all():
-                self.stdout.write('Generating thumbnail for {}'.format(image))
+                self.stdout.write('Generating thumbnail for {}'.format(("".join(i for i in image.title if ord(i)<128))))
                 try:
                     image.generateThumbnail()
                     image.save()

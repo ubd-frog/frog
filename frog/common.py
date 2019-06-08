@@ -2,27 +2,32 @@
 # Copyright (c) 2012 Brett Dixon
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
-# this software and associated documentation files (the "Software"), to deal in 
+# this software and associated documentation files (the "Software"), to deal in
 # the Software without restriction, including without limitation the rights to use,
-# copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the 
-# Software, and to permit persons to whom the Software is furnished to do so, 
+# copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the
+# Software, and to permit persons to whom the Software is furnished to do so,
 # subject to the following conditions:
 #
-# The above copyright notice and this permission notice shall be included in all 
+# The above copyright notice and this permission notice shall be included in all
 # copies or substantial portions of the Software.
 #
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS 
-# FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR 
-# COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER 
-# IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+# FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+# COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+# IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ##################################################################################################
 
+from __future__ import division
+
+import os
 import random
 import string
 import hashlib
 import imp
+
+from django.contrib.auth.models import User
 
 try:
     import urlparse
@@ -37,15 +42,17 @@ except ImportError:
 from django.conf import settings
 
 import path
+import PIL.Image
+import psd_tools
 
-from frog.models import Image, Video, SITE_CONFIG
-from frog.plugin import FrogPluginRegistry
+from frog.models import Image, Video, SITE_CONFIG, Group, Marmoset
 
 
 class Result(object):
     """Standardized result for ajax requests"""
+
     def __init__(self):
-        self.message = ''
+        self.message = ""
         self.value = None
         self.values = []
         self.isError = False
@@ -67,16 +74,16 @@ class Result(object):
     def asDict(self):
         """Returns a serializable object"""
         return {
-            'isError': self.isError,
-            'message': self.message,
-            'values': self.values,
-            'value': self.value,
+            "isError": self.isError,
+            "message": self.message,
+            "values": self.values,
+            "value": self.value,
         }
 
 
 def getSiteConfig():
     defaults = SITE_CONFIG.copy()
-    defaults.update(getattr(settings, 'SITE_CONFIG', {}))
+    defaults.update(getattr(settings, "SITE_CONFIG", {}))
 
     return defaults
 
@@ -89,10 +96,10 @@ def userToJson(user):
     :returns: dict
     """
     obj = {
-        'id': user.id,
-        'username': user.username,
-        'name': user.get_full_name(),
-        'email': user.email,
+        "id": user.id,
+        "username": user.username,
+        "name": user.get_full_name(),
+        "email": user.email,
     }
 
     return obj
@@ -106,10 +113,10 @@ def commentToJson(comment):
     :returns: dict
     """
     obj = {
-        'id': comment.id,
-        'comment': comment.comment,
-        'user': userToJson(comment.user),
-        'date': comment.submit_date.isoformat(),
+        "id": comment.id,
+        "comment": comment.comment,
+        "user": userToJson(comment.user),
+        "date": comment.submit_date.isoformat(),
     }
 
     return obj
@@ -127,8 +134,8 @@ def getPutData(request):
     for n in urlparse.parse_qsl(data):
         dataDict[n[0]] = n[1]
 
-    setattr(request, 'PUT', dataDict)
-    setattr(request, 'DELETE', dataDict)
+    setattr(request, "PUT", dataDict)
+    setattr(request, "DELETE", dataDict)
 
 
 def getHashForFile(f):
@@ -151,12 +158,12 @@ def getHashForFile(f):
 
 def getRoot():
     """Convenience to return the media root with forward slashes"""
-    return path.Path(settings.MEDIA_ROOT.replace('\\', '/'))
+    return path.Path(settings.MEDIA_ROOT.replace("\\", "/"))
 
 
 def uniqueID(size=6, chars=string.ascii_uppercase + string.digits):
     """A quick and dirty way to get a unique string"""
-    return ''.join(random.choice(chars) for x in xrange(size))
+    return "".join(random.choice(chars) for x in range(size))
 
 
 def getObjectsFromGuids(guids):
@@ -169,7 +176,9 @@ def getObjectsFromGuids(guids):
     guids = guids[:]
     img = list(Image.objects.filter(guid__in=guids))
     vid = list(Video.objects.filter(guid__in=guids))
-    objects = img + vid
+    grp = list(Group.objects.filter(guid__in=guids))
+    marmosets = list(Marmoset.objects.filter(guid__in=guids))
+    objects = img + vid + grp + marmosets
     sortedobjects = []
 
     if objects:
@@ -185,70 +194,81 @@ def getObjectsFromGuids(guids):
 
 def getClientIP(request):
     """Returns the best IP address found from the request"""
-    forwardedfor = request.META.get('HTTP_X_FORWARDED_FOR')
+    forwardedfor = request.META.get("HTTP_X_FORWARDED_FOR")
     if forwardedfor:
-        ip = forwardedfor.split(',')[0]
+        ip = forwardedfor.split(",")[0]
     else:
-        ip = request.META.get('REMOTE_ADDR')
+        ip = request.META.get("REMOTE_ADDR")
 
     return ip
 
 
-def getPluginContext():
-    plugins = __discoverPlugins()
-    js = []
-    css = []
-    buttons = []
-    altclick = None
-    defaultdata = {
-        'label': '',
-        'icon': '/frog/i/photos.png',
-        'callback': '',
-        'js': [],
-        'css': [],
-        'altclick': None,
-    }
+def cropCenter(image, width, height):
+    """Resizes and crops the center of an image to fit width and height"""
+    image = image.copy()
+    size = max(width, height)
+    sourceratio = image.size[0] / image.size[1]
+    targetratio = width / height
 
-    for plugin in plugins.values():
-        plugin = plugin()
-        plugindata = plugin.data()
+    # Scale
+    scaledratio = width / image.size[0]
+    if (sourceratio >= 1.0 and targetratio >= 1.0) or (
+        sourceratio < 1.0 and targetratio >= 1.0
+    ):
+        h = image.size[1] * scaledratio
+        w = width
+    else:
+        scaledratio = height / image.size[1]
+        w = image.size[0] * scaledratio
+        h = height
 
-        if plugindata:
-            defdict = defaultdata.copy()
-            defdict.update(plugindata)
+    image = image.resize((int(w), int(h)), PIL.Image.BILINEAR)
 
-            if defdict['callback']:
-                buttons.append([defdict['label'], defdict['icon'], defdict['callback']])
-            if defdict['altclick'] and altclick is None:
-                altclick = defdict['altclick']
+    # Crop
+    ratio = float(width) / float(height)
+    if ratio >= 1.0:
+        pad = image.size[1] - height
+        clip = int(pad / 2)
+        box = (0, clip if pad % 2 == 0 else clip + 1, size, image.size[1] - clip)
+    else:
+        pad = image.size[0] - width
+        clip = int(pad / 2)
+        box = (clip if pad % 2 == 0 else clip + 1, 0, image.size[0] - clip, size)
 
-            js += defdict['js']
-            css += defdict['css']
+    cropped = image.crop(box)
+    cropped.load()
 
-    data = {
-        'buttons': buttons,
-        'altclick': altclick,
-        'js': list(set(js)),
-        'css': list(set(css)),
-    }
-
-    return data
+    return cropped
 
 
-def __discoverPlugins():
-    """ Discover the plugin classes contained in Python files, given a
-        list of directory names to scan. Return a list of plugin classes.
-    """
-    for app in settings.INSTALLED_APPS:
-        if not app.startswith('django'):
-            module = __import__(app)
-            moduledir = path.Path(module.__file__).parent
-            plugin = moduledir / 'frog_plugin.py'
-            if plugin.exists():
-                file_, fpath, desc = imp.find_module('frog_plugin', [moduledir])
-                if file_:
-                    imp.load_module('frog_plugin', file_, fpath, desc)
+def getUser(request):
+    data = json.loads(request.body)["body"]
+    username = data.get("user")
+    if username:
+        user = User.objects.get_or_create(username=username)[0]
+    else:
+        user = request.user
 
-    return FrogPluginRegistry.plugins
+    if user.is_anonymous():
+        user = None
 
-PluginContext = getPluginContext()
+    return user
+
+
+def saveAsPng(filepath, move=True):
+    filepath = path.Path(filepath)
+    if filepath.ext == ".png":
+        return filepath
+
+    dest = filepath.parent / "{}.png".format(filepath.namebase)
+    if filepath.ext == ".psd":
+        image = psd_tools.PSDImage.load(filepath).as_PIL()
+    else:
+        image = PIL.Image.open(filepath)
+
+    image.save(dest)
+
+    if move:
+        os.remove(filepath)
+
+    return dest

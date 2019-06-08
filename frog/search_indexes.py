@@ -21,7 +21,7 @@
 
 
 from haystack import indexes
-from frog.models import Image, Video
+from frog.models import Image, Video, Marmoset
 
 
 class ImageIndex(indexes.SearchIndex, indexes.Indexable):
@@ -43,6 +43,18 @@ class VideoIndex(indexes.SearchIndex, indexes.Indexable):
 
     def get_model(self):
         return Video
+
+    def get_updated_field(self):
+        return 'modified'
+
+
+class MarmosetIndex(indexes.SearchIndex, indexes.Indexable):
+    text = indexes.CharField(document=True, use_template=True)
+    author = indexes.CharField(model_attr='author')
+    pub_date = indexes.DateTimeField(model_attr='created')
+
+    def get_model(self):
+        return Marmoset
 
     def get_updated_field(self):
         return 'modified'

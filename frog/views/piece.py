@@ -37,7 +37,8 @@ import json
 import time
 from collections import namedtuple
 
-from django.http import JsonResponse
+from django.core.exceptions import ObjectDoesNotExist
+from django.http import JsonResponse, HttpResponseForbidden
 from django.http.request import RawPostDataException
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
@@ -48,8 +49,9 @@ from django.contrib.auth.decorators import login_required
 from path import Path
 import psd_tools
 
-from frog.models import Image, Video, Tag, Piece, FROG_SITE_URL, cropBox, pilImage, FROG_THUMB_SIZE
-from frog.common import Result, getPutData, getObjectsFromGuids, getRoot, getSiteConfig
+from frog.models import Image, Video, Tag, Piece, FROG_SITE_URL, cropBox, pilImage, FROG_THUMB_SIZE, Group, Gallery
+from frog.models import ViewRecord
+from frog.common import Result, getPutData, getObjectsFromGuids, getRoot, getSiteConfig, getUser
 from frog.uploader import handle_uploaded_file
 
 
@@ -156,9 +158,11 @@ def post(request, obj):
         box = [int(_) for _ in crop]
         # -- Handle thumbnail upload
         source = Path(obj.source.name)
-        relativedest = source.parent / '{:.0f}{}'.format(time.time(), source.ext)
+        relativedest = obj.getPath(True) / '{:.0f}{}'.format(time.time(), source.ext)
         dest = getRoot() / relativedest
         source = getRoot() / source
+        if not dest.parent.exists():
+            dest.parent.makedirs()
         source.copy(dest)
         obj.custom_thumbnail = relativedest
 
@@ -177,15 +181,21 @@ def post(request, obj):
     if request.FILES:
         # -- Handle thumbnail upload
         f = request.FILES.get('file')
-        relativedest = Path(obj.source.name).parent / f.name
+        relativedest = obj.getPath(True) / f.name
         dest = getRoot() / relativedest
         handle_uploaded_file(dest, f)
         obj.custom_thumbnail = relativedest
 
-        if dest.ext == '.psd':
-            image = psd_tools.PSDLoad(dest).as_PIL()
-        else:
-            image = pilImage.open(dest)
+        box, width, height = cropBox(*image.size)
+        try:
+            if dest.ext == '.psd':
+                image = psd_tools.PSDLoad(dest).as_PIL()
+            else:
+                image = pilImage.open(dest)
+        except IOError as err:
+            res.isError = True
+            res.message = '{} is not a supported thumbnail image type'.format(f.name)
+            return JsonResponse(res.asDict())
 
         box, width, height = cropBox(*image.size)
         # Resize
@@ -207,9 +217,10 @@ def post(request, obj):
 
 @login_required
 def put(request, obj):
-    data = request.POST or json.loads(request.body)['body']
-    obj.title = data.get('title', obj.title)
-    obj.description = data.get('description', obj.description)
+    for key, value in json.loads(request.body)['body'].iteritems():
+        if hasattr(obj, key):
+            setattr(obj, key, value)
+
     obj.save()
 
     res = Result()
@@ -228,8 +239,85 @@ def delete(request, obj):
     return JsonResponse(res.asDict())
 
 
+def group(request, obj_id=None):
+    res = Result()
+
+    if request.method == 'GET':
+        try:
+            group = Group.objects.get(pk=obj_id)
+            res.append(group.json())
+        except ObjectDoesNotExist as err:
+            res.isError = True
+            res.message = str(err)
+    elif request.method == 'POST':
+        data = json.loads(request.body)['body']
+        user = getUser(request)
+        if user:
+            items = getObjectsFromGuids(data['guids'])
+            gallery = data.get('gallery')
+            g = Group()
+            g.author = user
+            g.title = data.get('title', items[0].title)
+            g.thumbnail = items[0].thumbnail
+            g.description = data.get('description', items[0].description)
+            g.save()
+            g.guid = g.getGuid().guid
+            g.save()
+
+            if gallery:
+                Gallery.objects.get(pk=gallery).groups.add(g)
+
+            for item in items:
+                g.appendChild(item)
+            res.append(g.json())
+        else:
+            res.isError = True
+            res.message = 'No user found to create group'
+    elif request.method == 'PUT':
+        data = json.loads(request.body)['body']
+        g = Group.objects.get(pk=obj_id)
+        action = data['action']
+        index = data.get('index')
+        item = Piece.fromGuid(data['guid'])
+        if action == 'append':
+            g.appendChild(item)
+        elif action == 'insert':
+            g.insertChild(index, item)
+        else:
+            g.removeChild(item)
+        res.append(g.json())
+    else:
+        g = Group.objects.get(pk=obj_id)
+        g.delete()
+
+    return JsonResponse(res.asDict())
+
+
+@require_http_methods(["POST"])
+@login_required
+def recordView(request):
+    res = Result()
+    data = json.loads(request.body)['body']
+    
+    item = getObjectsFromGuids([data['guid']])
+    if item:
+        item = item[0]
+        
+        created = ViewRecord.objects.get_or_create(user=request.user, guid=data['guid'])[1]
+        if created:
+            item.view_count += 1
+            item.save()
+        
+        res.append(item.view_count)
+    else:
+        res.isError = True;
+        res.message = 'No object foudn for guid {}'.format(data['guid'])
+
+    return JsonResponse(res.asDict())
+
+
 def emailLike(request, obj):
-    if not obj.author.frog_prefs.get().json()['emailLikes']:
+    if not obj.author.frog_prefs.get_or_create()[0].json()['emailLikes']:
         return
 
     if obj.author == request.user:
