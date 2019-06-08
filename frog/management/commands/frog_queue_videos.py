@@ -26,8 +26,6 @@ from django.core.management.base import BaseCommand
 import path
 
 from frog.models import Gallery, Image, Video, Piece, VideoQueue
-from frog.uploader import EXT, User
-from frog.common import getRoot
 
 
 class Command(BaseCommand):

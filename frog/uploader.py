@@ -19,15 +19,16 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ##################################################################################################
 
+import datetime
 
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.models import User
-from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseForbidden
+from django.utils import timezone
 
 from frog import models
-from frog.common import Result, getHashForFile
+from frog.common import Result, getHashForFile, cropCenter, saveAsPng
 
 from path import path as Path
 
@@ -39,6 +40,7 @@ class MediaTypeError(Exception):
 @csrf_exempt
 def upload(request):
     res = Result()
+
     uploadfile = request.FILES.get('file')
 
     if uploadfile:
@@ -53,6 +55,8 @@ def upload(request):
         galleries = request.POST.get('galleries', '1').split(',')
         tags = [_.strip() for _ in request.POST.get('tags', '').split(',') if _]
         title = request.POST.get('title')
+        description = request.POST.get('description', '')
+        force = request.POST.get('force')
 
         try:
             username = request.POST.get('user', False)
@@ -71,19 +75,22 @@ def upload(request):
                 model = models.Image
             elif extension in models.FILE_TYPES['video']:
                 model = models.Video
+            elif extension in models.FILE_TYPES['marmoset']:
+                model = models.Marmoset
             else:
                 raise MediaTypeError('{} is not a supported file type'.format(extension))
 
-            obj, created = model.objects.get_or_create(unique_id=uniqueName, defaults={'author': user})
+            obj, created = model.objects.get_or_create(unique_id=uniqueName, defaults={'author': user, 'hidden': False})
             guid = obj.getGuid()
             hashVal = getHashForFile(uploadfile)
 
-            if hashVal == obj.hash:
+            if hashVal == obj.hash and not force:
                 for gal in galleries:
                     g = models.Gallery.objects.get(pk=int(gal))
                     obj.gallery_set.add(g)
                 res.append(obj.json())
                 res.message = "Files were the same"
+                res.append(obj.json())
 
                 return JsonResponse(res.asDict())
 
@@ -97,19 +104,28 @@ def upload(request):
             if not objPath.parent.exists():
                 objPath.parent.makedirs()
 
-            handle_uploaded_file(hashPath, uploadfile)
+            # Save uploaded files to asset folder
+            for key, uploadfile in request.FILES.items():
+                if key == 'file':
+                    handle_uploaded_file(hashPath, uploadfile)
+                else:
+                    dest = objPath.parent / uploadfile.name
+                    handle_uploaded_file(dest, uploadfile)
+
+                    if key == 'thumbnail':
+                        thumbnail = saveAsPng(dest)
+                        cropped = cropCenter(models.pilImage.open(thumbnail), models.FROG_THUMB_SIZE, models.FROG_THUMB_SIZE)
+                        cropped.save(thumbnail)
+                        obj.custom_thumbnail = obj.getPath(True) / thumbnail.name
+                        obj.save()
 
             obj.hash = hashVal
             obj.foreign_path = foreignPath
             obj.title = title or objPath.namebase
+            obj.description = description
             obj.export(hashVal, hashPath, tags=tags, galleries=galleries)
 
             res.append(obj.json())
-
-            for key, uploadfile in request.FILES.items():
-                if key != 'file':
-                    dest = objPath.parent / uploadfile.name
-                    handle_uploaded_file(dest, uploadfile)
 
         except MediaTypeError as err:
             res.isError = True
@@ -125,6 +141,9 @@ def upload(request):
 
 
 def handle_uploaded_file(dest, f):
+    if not dest.parent.exists():
+        dest.parent.makedirs()
+
     destination = open(dest, 'wb+')
     for chunk in f.chunks():
         destination.write(chunk)

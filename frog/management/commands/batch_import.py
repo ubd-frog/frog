@@ -27,8 +27,8 @@ from django.contrib.auth import get_user
 
 import path
 
-from frog.models import Gallery, Image, Video, Piece
-from frog.uploader import EXT, User
+from frog.models import Gallery, Image, Video, Piece, FILE_TYPES
+from frog.uploader import User
 from frog.common import getRoot
 
 
@@ -75,7 +75,7 @@ class Command(BaseCommand):
             options['topdir'] = options['path']
 
         files = path.Path(options['path']).walk()
-        extensions = EXT['image'] + EXT['video']
+        extensions = FILE_TYPES['image'] + FILE_TYPES['video']
         baseuser = User.objects.get_or_create(
             username=options['user'],
             defaults={'first_name': 'No', 'last_name': 'Author', 'email': 'none@gmail.com'}
@@ -96,7 +96,7 @@ class Command(BaseCommand):
                     user = baseuser
 
                 uniqueName = Piece.getUniqueID(file_, user)
-                if file_.ext.lower() in EXT['image']:
+                if file_.ext.lower() in FILE_TYPES['image']:
                     model = Image
                 else:
                     model = Video

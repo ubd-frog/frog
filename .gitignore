@@ -23,7 +23,18 @@ pip-log.txt
 # Emacs backup files
 *~
 \#*#
+# PyCharm
+.idea/*
+=======
 .cache/v/cache/lastfailed
+
+# IDEs and editors
+/.idea
+.project
+.classpath
+*.launch
+.settings/
+
 *.cert
 
 scripts/package\.bat
@@ -31,3 +42,5 @@ scripts/package\.bat
 \.idea/
 
 \.vscode/
+
+\.DS_Store

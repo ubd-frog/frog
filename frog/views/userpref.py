@@ -46,16 +46,18 @@ def index(request):
     return HttpResponse('')
 
 
+@login_required
 def get(request):
     """Gets the currently logged in users preferences
 
     :returns: json
     """
     res = Result()
-    obj, created = UserPref.objects.get_or_create(user=request.user, defaults={'data': json.dumps(DefaultPrefs.copy())})
+    obj, created = UserPref.objects.get_or_create(user=request.user)
 
     data = obj.json()
     data['subscriptions'] = [_.json() for _ in GallerySubscription.objects.filter(user=request.user)]
+    data['clearance'] = obj.clearance
 
     res.append(data)
 

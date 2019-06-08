@@ -18,30 +18,33 @@
 # IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ##################################################################################################
+import argparse
+import datetime
+import json
 
+from optparse import make_option
 from django.core.management.base import BaseCommand
+from django.utils import timezone
 
-from frog import video_thread
-
+from frog.models import ReleaseNotes
 
 
 class Command(BaseCommand):
-    help = 'Run a worker process to convert video files as they are uploaded'
+    help = 'Add a new ReleaseNote'
 
     def add_arguments(self, parser):
-        parser.add_argument('-q', '--quality', default='medium', help='Video output quality')
-        parser.add_argument('-a', '--always-convert', default=False, dest='alwaysconvert', action='store_true', help='Always convert video')
-        parser.add_argument('-e', '--email-user', default=False, dest='emailuser', action='store_true', help='Email user when processing their video has completed')
+        parser.add_argument('content')
+        parser.add_argument('-d', '--date', default=None, help='In the format %d/%m/%Y or 31/01/2017 for January 31, 2017')
 
     def handle(self, *args, **options):
-        video_thread.LOGGER.info('Starting Worker')
-        try:
-            thread = video_thread.VideoThread(
-                quality=options['quality'],
-                alwaysconvert=options['alwaysconvert'],
-                emailuser=options['emailuser']
-            )
-            thread.start()
-            thread.join()
-        except Exception as err:
-            video_thread.LOGGER.error(err)
+        date = timezone.now()
+        datestr = options.get('date')
+        if datestr:
+            date = datetime.datetime.strptime(datestr, '%d/%m/%Y')
+
+        note = ReleaseNotes(notes=options['content'].replace('\\\\n', '\\').replace('\\n', '\n'))
+        note.save()
+        note.date = date
+        note.save()
+
+        self.stdout.write('Added {}'.format(note))

@@ -24,9 +24,8 @@ from django.conf.urls import url
 # import views
 from frog import views
 
+
 urlpatterns = [
-    # -- SSO
-    url(r'^auth$', views.auth),
     # -- Gallery
     url(r'^gallery$', views.gallery.index),
     url(r'^gallery/(?P<obj_id>\d+)$', views.gallery.index),
@@ -34,6 +33,8 @@ urlpatterns = [
     url(r'^gallery/(?P<obj_id>\d+)/subscribe$', views.gallery.subscribe),
     # -- Piece
     url(r'^like/(?P<guid>\w+)$', views.piece.like),
+    url(r'^piece/group/$', views.piece.group),
+    url(r'^piece/group/(?P<obj_id>\d+)/$', views.piece.group),
     url(r'^piece/(?P<guid>\w+)/$', views.piece.data),
     url(r'^p$', views.piece.getGuids),
     # -- Tag
@@ -56,9 +57,10 @@ urlpatterns = [
     url(r'^getuser$', views.getUser),
     url(r'^userlist', views.userList),
     url(r'^csrf$', views.csrf),
-    url(r'siteconfig', views.siteConfig),
-    url(r'clienterror/$', views.clientError),
-    url(r'releasenotes$', views.releaseNotes),
+    url(r'^siteconfig', views.siteConfig),
+    url(r'^clienterror/$', views.clientError),
+    url(r'^releasenotes$', views.releaseNotes),
+    url(r'^view/$', views.piece.recordView),
     # -- Authentication
     url(r'^login$', views.login_),
     url(r'^logout$', views.logout_),

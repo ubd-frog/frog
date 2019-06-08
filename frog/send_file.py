@@ -53,11 +53,17 @@ def send_zipfile(request, fileList):
     archive = zipfile.ZipFile(temp, 'w', zipfile.ZIP_DEFLATED)
     for artist,files in fileList.iteritems():
         for f in files:
-            archive.write(f[0], '%s/%s' % (artist, f[1]))
+            try:
+                archive.write(f[0], '%s/%s' % (artist, f[1]))
+            except IOError:
+                pass
     archive.close()
+    length = temp.tell()
+    temp.seek(0)
+
     wrapper = FixedFileWrapper(temp)
     response = HttpResponse(wrapper, content_type='application/zip')
     response['Content-Disposition'] = 'attachment; filename=FrogSources.zip'
-    response['Content-Length'] = temp.tell()
-    temp.seek(0)
+    response['Content-Length'] = length
+    
     return response
