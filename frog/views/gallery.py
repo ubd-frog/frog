@@ -355,7 +355,7 @@ def _filter(request, object_, tags=None, more=False, orderby="created"):
         try:
             index = idDict[m.model].index(lastid)
         except ValueError:
-            index = idDict[m.model][-1]
+            index = 0
 
         if more and lastid != 0:
             index += 1
