@@ -45,7 +45,7 @@ import path
 import PIL.Image
 import psd_tools
 
-from frog.models import Image, Video, SITE_CONFIG, Group, Marmoset
+from frog.models import Image, Video, Group, Marmoset, SiteConfig
 
 
 class Result(object):
@@ -79,13 +79,6 @@ class Result(object):
             "values": self.values,
             "value": self.value,
         }
-
-
-def getSiteConfig():
-    defaults = SITE_CONFIG.copy()
-    defaults.update(getattr(settings, "SITE_CONFIG", {}))
-
-    return defaults
 
 
 def userToJson(user):
@@ -229,11 +222,21 @@ def cropCenter(image, width, height):
     if ratio >= 1.0:
         pad = image.size[1] - height
         clip = int(pad / 2)
-        box = (0, clip if pad % 2 == 0 else clip + 1, size, image.size[1] - clip)
+        box = (
+            0,
+            clip if pad % 2 == 0 else clip + 1,
+            size,
+            image.size[1] - clip,
+        )
     else:
         pad = image.size[0] - width
         clip = int(pad / 2)
-        box = (clip if pad % 2 == 0 else clip + 1, 0, image.size[0] - clip, size)
+        box = (
+            clip if pad % 2 == 0 else clip + 1,
+            0,
+            image.size[0] - clip,
+            size,
+        )
 
     cropped = image.crop(box)
     cropped.load()

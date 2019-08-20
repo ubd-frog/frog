@@ -35,6 +35,7 @@ from frog.models import (
     ReleaseNotes,
     Marmoset,
     Group,
+    SiteConfig,
 )
 
 
@@ -96,3 +97,4 @@ admin.site.register(VideoQueue, VideoQueueAdmin)
 admin.site.register(ReleaseNotes)
 admin.site.register(Group, GroupAdmin)
 admin.site.register(Marmoset)
+admin.site.register(SiteConfig)

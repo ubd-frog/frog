@@ -18,27 +18,20 @@
 # IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION 
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ##################################################################################################
-import hashlib
+
 import json
-import random
 import subprocess
 import re
 import math
-import sys
-import time
 import datetime
 import logging
 import copy
-
-try:
-    from Queue import Queue
-except ImportError:
-    from queue import Queue
 
 from django.db import models, IntegrityError
 from django.core.exceptions import ImproperlyConfigured, ObjectDoesNotExist
 from django.conf import settings
 from django.utils import timezone
+from django.utils.encoding import python_2_unicode_compatible
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
@@ -64,10 +57,6 @@ try:
     FROG_FFPROBE = getattr(settings, 'FROG_FFPROBE')
 except AttributeError:
     raise ImproperlyConfigured('FROG_FFMPEG and FROG_FFPROBE are required')
-try:
-    FROG_SITE_URL = getattr(settings, 'FROG_SITE_URL')
-except AttributeError:
-    raise ImproperlyConfigured('FROG_SITE_URL is required')
 
 DefaultPrefs = {
     'backgroundColor': '#000000',
@@ -82,15 +71,6 @@ DefaultPrefs = {
     'slideshowRandomize': True,
     'slideshowPlayVideo': True,
     'slideshowDuration': 5,
-}
-SITE_CONFIG = {
-    'name': 'Frog',
-    'favicon': '/static/frog/i/favicon.ico',
-    'icon': '/static/frog/i/frog.png',
-    'link': 'https://github.com/theiviaxx/Frog',
-    'overlay_text': '',
-    'enable_likes': True,
-    'default_gallery': 1,
 }
 ROOT = getRoot()
 FILE_TYPES = {
@@ -133,7 +113,7 @@ class Tag(models.Model):
     parent = models.ForeignKey('self', blank=True, null=True)
     artist = models.BooleanField(default=False)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
     def json(self):
@@ -147,6 +127,7 @@ class Tag(models.Model):
         return obj
 
 
+@python_2_unicode_compatible
 class Piece(models.Model):
     AssetType = 0
     title = models.CharField(max_length=255, blank=True)
@@ -173,7 +154,7 @@ class Piece(models.Model):
         abstract = True
         ordering = ["-created", "-id"]
 
-    def __unicode__(self):
+    def __str__(self):
         return self.title
 
     def thumbnail_tag(self):
@@ -181,9 +162,9 @@ class Piece(models.Model):
 
         if thumbnail:
             if max(self.width, 1) / max(self.height, 1) > 1:
-                return u'<img src="%s" style="max-width: 256px;" />' % thumbnail.url
+                return '<img src="%s" style="max-width: 256px;" />' % thumbnail.url
             else:
-                return u'<img src="%s" style="max-height: 256px;" />' % thumbnail.url
+                return '<img src="%s" style="max-height: 256px;" />' % thumbnail.url
 
         return ''
 
@@ -320,7 +301,6 @@ class Image(Piece):
     source = models.ImageField(upload_to='%Y/%m/%d', width_field='width', height_field='height', max_length=255,
                                blank=True, null=True)
     image = models.ImageField(upload_to='%Y/%m/%d', max_length=255, blank=True, null=True)
-    small = models.ImageField(upload_to='%Y/%m/%d', max_length=255, blank=True, null=True)
     group = GenericRelation('GroupChild')
     panoramic = models.BooleanField(default=False)
 
@@ -362,17 +342,14 @@ class Image(Piece):
             except AttributeError:
                 pass
 
-        formats = [
-            ('image', PANORAMIC_MAX if self.panoramic else FROG_IMAGE_SIZE_CAP),
-            ('small', FROG_IMAGE_SMALL_SIZE),
-        ]
-        for i, n in enumerate(formats):
-            if workImage.size[0] > n[1] or workImage.size[1] > n[1]:
-                workImage.thumbnail((n[1], n[1]), pilImage.ANTIALIAS)
-                setattr(self, n[0], self.source.name.replace(hashVal, '_' * (i + 1) + hashVal))
-                workImage.save(ROOT + getattr(self, n[0]).name)
-            else:
-                setattr(self, n[0], self.source)
+        config = SiteConfig.objects.first()
+        maxsize = PANORAMIC_MAX if self.panoramic else FROG_IMAGE_SIZE_CAP
+        if workImage.size[0] > maxsize or workImage.size[1] > maxsize:
+            workImage.thumbnail((maxsize, maxsize), pilImage.ANTIALIAS)
+            self.image = self.source.name.replace(hashVal, '_' * (i + 1) + hashVal)
+            workImage.save(ROOT + self.image.name)
+        else:
+            self.image = self.source
 
         self.generateThumbnail()
 
@@ -403,7 +380,6 @@ class Image(Piece):
         obj = super(Image, self).json()
         obj['source'] = self.source.url if self.source else ''
         obj['image'] = self.image.url if self.image else ''
-        obj['small'] = self.small.url if self.small else ''
         obj['panoramic'] = self.panoramic
 
         return obj
@@ -709,8 +685,8 @@ class VideoQueue(models.Model):
     status = models.SmallIntegerField(default=QUEUED, choices=STATUS)
     message = models.TextField(blank=True, null=True)
 
-    def __unicode__(self):
-        return u'<VideoQueue: {}:{}>'.format(self.video, self.status)
+    def __str__(self):
+        return '<VideoQueue: {}:{}>'.format(self.video, self.status)
 
 
 class Gallery(models.Model):
@@ -738,7 +714,7 @@ class Gallery(models.Model):
         verbose_name_plural = "Galleries"
         permissions = (("view_gallery", "Can view gallery"),)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.title
 
     def json(self):
@@ -790,8 +766,8 @@ class UserPref(models.Model):
     data = models.TextField(default=json.dumps(DefaultPrefs))
     clearance = models.SmallIntegerField(default=Gallery.PUBLIC, choices=Gallery.SECURITY_LEVEL)
 
-    def __unicode__(self):
-        return u'<UserPref: {}>'.format(self.user.username)
+    def __str__(self):
+        return '<UserPref: {}>'.format(self.user.username)
 
     def json(self):
         temp = DefaultPrefs.copy()
@@ -826,8 +802,8 @@ class Guid(object):
             self.int = self.BASE * type_id + obj_id
         self.guid = format(self.int, 'x')
 
-    def __unicode__(self):
-        return u'<GUID: {}:{}>'.format(self.int, self.guid)
+    def __str__(self):
+        return '<GUID: {}:{}>'.format(self.int, self.guid)
 
 
 class Like(models.Model):
@@ -858,8 +834,8 @@ class GallerySubscription(models.Model):
     user = models.ForeignKey(User)
     frequency = models.SmallIntegerField(default=WEEKLY)
 
-    def __unicode__(self):
-        return u'<GallerySubscription: {}:{}:{}>'.format(self.user, self.gallery, self.frequency)
+    def __str__(self):
+        return '<GallerySubscription: {}:{}:{}>'.format(self.user, self.gallery, self.frequency)
 
     def json(self):
         return {
@@ -874,8 +850,8 @@ class ReleaseNotes(models.Model):
     date = models.DateTimeField(auto_now_add=True)
     notes = models.TextField()
 
-    def __unicode__(self):
-        return '<ReleaseNotes: {}>'.format(self.id)
+    def __str__(self):
+        return '<{}: {}>'.format(self.__class__.__name__, self.id)
 
     def json(self):
         return {
@@ -897,11 +873,39 @@ class GroupChild(models.Model):
         unique_together = (('group', 'content_type', 'object_id'),)
         ordering = ('index',)
 
-    def __unicode__(self):
-        return u'<GroupChild: {}[{}] {}'.format(self.group, self.index, self.content_object.guid)
+    def __str__(self):
+        return '<GroupChild: {}[{}] {}>'.format(self.group, self.index, self.content_object.guid)
 
 
 class ViewRecord(models.Model):
     user = models.ForeignKey(User)
     guid = models.CharField(max_length=16)
     date = models.DateTimeField(auto_now_add=True)
+
+
+class SiteConfig(models.Model):
+    name = models.CharField(max_length=128, default="Frog")
+    favicon = models.FileField()
+    icon = models.ImageField()
+    link = models.URLField(blank=True, null=True)
+    enable_likes = models.BooleanField(default=True)
+    default_gallery = models.ForeignKey(Gallery, blank=True, null=True)
+    site_url = models.CharField(max_length=200, blank=True)
+
+    def __str__(self):
+        return '<{}: {}>'.format(self.__class__.__name__, self.id)
+    
+    def json(self):
+        return {
+            'name': self.name,
+            'favicon': self.favicon.url,
+            'icon': self.icon.url,
+            'link': self.link,
+            'enable_likes': self.enable_likes,
+            'default_gallery': self.default_gallery.id if self.default_gallery else 1,
+            'site_url': self.site_url,
+        }
+    
+    @staticmethod
+    def getSiteConfig():
+        return SiteConfig.objects.get_or_create(pk=1)[0]
