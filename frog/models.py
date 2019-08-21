@@ -23,20 +23,15 @@ import json
 import subprocess
 import re
 import math
-import datetime
 import logging
-import copy
 
 from django.db import models, IntegrityError
 from django.core.exceptions import ImproperlyConfigured, ObjectDoesNotExist
 from django.conf import settings
-from django.utils import timezone
 from django.utils.encoding import python_2_unicode_compatible
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
-from django.contrib.sites.models import Site
-from django.contrib.sites.shortcuts import get_current_site
 
 from path import path as Path
 from PIL import Image as pilImage
@@ -342,7 +337,6 @@ class Image(Piece):
             except AttributeError:
                 pass
 
-        config = SiteConfig.objects.first()
         maxsize = PANORAMIC_MAX if self.panoramic else FROG_IMAGE_SIZE_CAP
         if workImage.size[0] > maxsize or workImage.size[1] > maxsize:
             workImage.thumbnail((maxsize, maxsize), pilImage.ANTIALIAS)

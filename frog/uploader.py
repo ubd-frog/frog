@@ -19,13 +19,10 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ##################################################################################################
 
-import datetime
-
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
-from django.http import JsonResponse, HttpResponseForbidden
-from django.utils import timezone
+from django.http import JsonResponse
 
 from frog import models
 from frog.common import Result, getHashForFile, cropCenter, saveAsPng
