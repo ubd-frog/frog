@@ -57,7 +57,7 @@ urlpatterns = [
     url(r'^getuser$', views.getUser),
     url(r'^userlist', views.userList),
     url(r'^csrf$', views.csrf),
-    url(r'^siteconfig', views.siteConfig),
+    url(r'^siteconfig/$', views.siteconfig.index),
     url(r'^clienterror/$', views.clientError),
     url(r'^releasenotes$', views.releaseNotes),
     url(r'^view/$', views.piece.recordView),
