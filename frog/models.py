@@ -52,6 +52,10 @@ try:
     FROG_FFPROBE = getattr(settings, 'FROG_FFPROBE')
 except AttributeError:
     raise ImproperlyConfigured('FROG_FFMPEG and FROG_FFPROBE are required')
+try:
+    FROG_SITE_URL = getattr(settings, 'FROG_SITE_URL')
+except AttributeError:
+    raise ImproperlyConfigured('FROG_SITE_URL is required')
 
 DefaultPrefs = {
     'backgroundColor': '#000000',
@@ -884,7 +888,6 @@ class SiteConfig(models.Model):
     link = models.URLField(blank=True, null=True)
     enable_likes = models.BooleanField(default=True)
     default_gallery = models.ForeignKey(Gallery, blank=True, null=True)
-    site_url = models.CharField(max_length=200, blank=True)
 
     def __str__(self):
         return '<{}: {}>'.format(self.__class__.__name__, self.id)
@@ -897,7 +900,6 @@ class SiteConfig(models.Model):
             'link': self.link,
             'enable_likes': self.enable_likes,
             'default_gallery': self.default_gallery.id if self.default_gallery else 1,
-            'site_url': self.site_url,
         }
     
     @staticmethod
