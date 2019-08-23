@@ -22,7 +22,7 @@
 
 import json
 
-from django.http import JsonResponse
+from django.http import JsonResponse, RawPostDataException
 from django.views.decorators.http import require_http_methods
 from django.contrib.auth.decorators import login_required, permission_required
 
@@ -50,26 +50,27 @@ def get(request):
 
 def post(request):
     res = Result()
-    data = json.loads(request.body)["body"]
-
     config = SiteConfig.getSiteConfig()
-    config.name = data.get("name", config.name)
-    if request.FILES.get("favicon"):
-        dest = ROOT / "favicon.ico"
-        handle_uploaded_file(dest, request.FILES["favicon"])
-        config.favicon = "favicon.ico"
-    if request.FILES.get("icon"):
-        dest = ROOT / request.FILES["icon"].name
-        handle_uploaded_file(dest, request.FILES["icon"])
-        config.favicon = request.FILES["icon"].name
 
-    config.link = data.get("link", config.link)
-    config.enable_likes = data.get("enable_likes", config.enable_likes)
-    config.site_url = data.get("site_url", config.site_url)
+    try:
+        data = json.loads(request.body)["body"]
 
-    if data.get("default_gallery"):
-        gallery = Gallery.objects.get(pk=data["default_gallery"])
-        config.default_gallery = gallery
+        config.name = data.get("name", config.name)
+        config.link = data.get("link", config.link)
+        config.enable_likes = data.get("enable_likes", config.enable_likes)
+
+        if data.get("default_gallery"):
+            gallery = Gallery.objects.get(pk=data["default_gallery"])
+            config.default_gallery = gallery
+    except RawPostDataException:
+        if request.FILES.get("favicon"):
+            dest = ROOT / "favicon.ico"
+            handle_uploaded_file(dest, request.FILES["favicon"])
+            config.favicon = "favicon.ico"
+        if request.FILES.get("icon"):
+            dest = ROOT / request.FILES["icon"].name
+            handle_uploaded_file(dest, request.FILES["icon"])
+            config.favicon = request.FILES["icon"].name
 
     config.save()
 
