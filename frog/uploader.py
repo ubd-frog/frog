@@ -54,7 +54,6 @@ def upload(request):
         title = request.POST.get("title")
         description = request.POST.get("description", "")
         force = request.POST.get("force")
-        meta = json.loads(request.POST.get("meta", "{}"))
 
         try:
             username = request.POST.get("user", False)
