@@ -38,12 +38,11 @@ from django.views.decorators.csrf import csrf_exempt
 from django.template.loader import render_to_string
 from django.contrib.auth.decorators import login_required
 from django.contrib.contenttypes.models import ContentType
-from django.contrib.sites.shortcuts import get_current_site
 
 from django_comments.models import Comment
 
 from frog.common import Result, commentToJson, getObjectsFromGuids, getPutData
-from frog.models import Image, Video, Group, Marmoset, SiteConfig
+from frog.models import Image, Video, Group, Marmoset, SiteConfig, FROG_SITE_URL
 
 
 def index(request, obj_id):
@@ -181,7 +180,7 @@ def emailComment(comment, obj, request):
             "object": obj,
             "action_type": "commented on",
             "image": isinstance(obj, Image),
-            "SITE_URL": config.site_url,
+            "SITE_URL": FROG_SITE_URL,
         },
     )
 

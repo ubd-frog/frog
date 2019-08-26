@@ -35,10 +35,9 @@ Piece API
 import os
 import json
 import time
-from collections import namedtuple
 
 from django.core.exceptions import ObjectDoesNotExist
-from django.http import JsonResponse, HttpResponseForbidden
+from django.http import JsonResponse
 from django.http.request import RawPostDataException
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
@@ -59,6 +58,7 @@ from frog.models import (
     Group,
     Gallery,
     SiteConfig,
+    FROG_SITE_URL
 )
 from frog.models import ViewRecord
 from frog.common import (
@@ -357,7 +357,7 @@ def emailLike(request, obj):
             "comment": "",
             "action_type": "liked",
             "image": isinstance(obj, Image),
-            "SITE_URL": config.site_url,
+            "SITE_URL": FROG_SITE_URL,
         },
     )
     subject = "{}: {} liked {}".format(
