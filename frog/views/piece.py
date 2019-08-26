@@ -2,20 +2,20 @@
 # Copyright (c) 2012 Brett Dixon
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
-# this software and associated documentation files (the "Software"), to deal in 
+# this software and associated documentation files (the "Software"), to deal in
 # the Software without restriction, including without limitation the rights to use,
-# copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the 
-# Software, and to permit persons to whom the Software is furnished to do so, 
+# copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the
+# Software, and to permit persons to whom the Software is furnished to do so,
 # subject to the following conditions:
 #
-# The above copyright notice and this permission notice shall be included in all 
+# The above copyright notice and this permission notice shall be included in all
 # copies or substantial portions of the Software.
 #
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS 
-# FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR 
-# COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER 
-# IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+# FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+# COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+# IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ##################################################################################################
 
@@ -49,36 +49,52 @@ from django.contrib.auth.decorators import login_required
 from path import Path
 import psd_tools
 
-from frog.models import Image, Video, Tag, Piece, FROG_SITE_URL, cropBox, pilImage, FROG_THUMB_SIZE, Group, Gallery
+from frog.models import (
+    Image,
+    Video,
+    Tag,
+    Piece,
+    cropBox,
+    pilImage,
+    Group,
+    Gallery,
+    SiteConfig,
+)
 from frog.models import ViewRecord
-from frog.common import Result, getPutData, getObjectsFromGuids, getRoot, getSiteConfig, getUser
+from frog.common import (
+    Result,
+    getPutData,
+    getObjectsFromGuids,
+    getRoot,
+    getUser,
+)
 from frog.uploader import handle_uploaded_file
 
 
-@require_http_methods(['POST', 'PUT', 'DELETE'])
+@require_http_methods(["POST", "PUT", "DELETE"])
 def image(request, obj_id):
     """Handles a request based on method and calls the appropriate function"""
     obj = Image.objects.get(pk=obj_id)
-    if request.method == 'POST':
+    if request.method == "POST":
         return post(request, obj)
-    elif request.method == 'PUT':
+    elif request.method == "PUT":
         getPutData(request)
         return put(request, obj)
-    elif request.method == 'DELETE':
+    elif request.method == "DELETE":
         getPutData(request)
         return delete(request, obj)
 
 
-@require_http_methods(['POST', 'PUT', 'DELETE'])
+@require_http_methods(["POST", "PUT", "DELETE"])
 def video(request, obj_id):
     """Handles a request based on method and calls the appropriate function"""
     obj = Video.objects.get(pk=obj_id)
-    if request.method == 'POST':
+    if request.method == "POST":
         return post(request, obj)
-    elif request.method == 'PUT':
+    elif request.method == "PUT":
         getPutData(request)
         return put(request, obj)
-    elif request.method == 'DELETE':
+    elif request.method == "DELETE":
         getPutData(request)
         return delete(request, obj)
 
@@ -87,17 +103,17 @@ def video(request, obj_id):
 @csrf_exempt
 def data(request, guid):
     obj = Piece.fromGuid(guid)
-    if request.method == 'GET':
+    if request.method == "GET":
         res = Result()
         res.append(obj.json())
 
         return JsonResponse(res.asDict())
-    elif request.method == 'POST':
+    elif request.method == "POST":
         return post(request, obj)
-    elif request.method == 'PUT':
+    elif request.method == "PUT":
         getPutData(request)
         return put(request, obj)
-    elif request.method == 'DELETE':
+    elif request.method == "DELETE":
         getPutData(request)
         return delete(request, obj)
 
@@ -105,8 +121,8 @@ def data(request, guid):
 @login_required
 def getGuids(request):
     res = Result()
-    
-    guids = request.GET.get('guids', '').split(',')
+
+    guids = request.GET.get("guids", "").split(",")
     for _ in getObjectsFromGuids(guids):
         res.append(_.json())
 
@@ -131,12 +147,12 @@ def like(request, guid):
 @login_required
 def post(request, obj):
     try:
-        data = request.POST or json.loads(request.body)['body']
+        data = request.POST or json.loads(request.body)["body"]
     except RawPostDataException:
         data = request.POST
-    tags = data.get('tags', '').split(',')
-    resetthumbnail = data.get('reset-thumbnail', False)
-    crop = data.get('crop')
+    tags = data.get("tags", "").split(",")
+    resetthumbnail = data.get("reset-thumbnail", False)
+    crop = data.get("crop")
     res = Result()
 
     for tag in tags:
@@ -158,7 +174,9 @@ def post(request, obj):
         box = [int(_) for _ in crop]
         # -- Handle thumbnail upload
         source = Path(obj.source.name)
-        relativedest = obj.getPath(True) / '{:.0f}{}'.format(time.time(), source.ext)
+        relativedest = obj.getPath(True) / "{:.0f}{}".format(
+            time.time(), source.ext
+        )
         dest = getRoot() / relativedest
         source = getRoot() / source
         if not dest.parent.exists():
@@ -172,15 +190,18 @@ def post(request, obj):
         image = image.crop(box)
         image.load()
         # Resize
+        config = SiteConfig.getSiteConfig()
         size = abs(box[2] - box[0])
-        image.thumbnail((FROG_THUMB_SIZE, FROG_THUMB_SIZE), pilImage.ANTIALIAS)
+        image.thumbnail(
+            (config.image_size_cap, config.image_size_cap), pilImage.ANTIALIAS
+        )
         image.resize((size, size)).save(dest)
 
         obj.save()
 
     if request.FILES:
         # -- Handle thumbnail upload
-        f = request.FILES.get('file')
+        f = request.FILES.get("file")
         relativedest = obj.getPath(True) / f.name
         dest = getRoot() / relativedest
         handle_uploaded_file(dest, f)
@@ -188,13 +209,15 @@ def post(request, obj):
 
         box, width, height = cropBox(*image.size)
         try:
-            if dest.ext == '.psd':
+            if dest.ext == ".psd":
                 image = psd_tools.PSDLoad(dest).as_PIL()
             else:
                 image = pilImage.open(dest)
         except IOError as err:
             res.isError = True
-            res.message = '{} is not a supported thumbnail image type'.format(f.name)
+            res.message = "{} is not a supported thumbnail image type".format(
+                f.name
+            )
             return JsonResponse(res.asDict())
 
         box, width, height = cropBox(*image.size)
@@ -205,11 +228,11 @@ def post(request, obj):
         image.crop(box).save(dest)
 
         obj.save()
-    
+
     if resetthumbnail:
         obj.custom_thumbnail = None
         obj.save()
-    
+
     res.value = obj.json()
 
     return JsonResponse(res.asDict())
@@ -217,7 +240,7 @@ def post(request, obj):
 
 @login_required
 def put(request, obj):
-    for key, value in json.loads(request.body)['body'].iteritems():
+    for key, value in json.loads(request.body)["body"].iteritems():
         if hasattr(obj, key):
             setattr(obj, key, value)
 
@@ -242,24 +265,24 @@ def delete(request, obj):
 def group(request, obj_id=None):
     res = Result()
 
-    if request.method == 'GET':
+    if request.method == "GET":
         try:
             group = Group.objects.get(pk=obj_id)
             res.append(group.json())
         except ObjectDoesNotExist as err:
             res.isError = True
             res.message = str(err)
-    elif request.method == 'POST':
-        data = json.loads(request.body)['body']
+    elif request.method == "POST":
+        data = json.loads(request.body)["body"]
         user = getUser(request)
         if user:
-            items = getObjectsFromGuids(data['guids'])
-            gallery = data.get('gallery')
+            items = getObjectsFromGuids(data["guids"])
+            gallery = data.get("gallery")
             g = Group()
             g.author = user
-            g.title = data.get('title', items[0].title)
+            g.title = data.get("title", items[0].title)
             g.thumbnail = items[0].thumbnail
-            g.description = data.get('description', items[0].description)
+            g.description = data.get("description", items[0].description)
             g.save()
             g.guid = g.getGuid().guid
             g.save()
@@ -272,16 +295,16 @@ def group(request, obj_id=None):
             res.append(g.json())
         else:
             res.isError = True
-            res.message = 'No user found to create group'
-    elif request.method == 'PUT':
-        data = json.loads(request.body)['body']
+            res.message = "No user found to create group"
+    elif request.method == "PUT":
+        data = json.loads(request.body)["body"]
         g = Group.objects.get(pk=obj_id)
-        action = data['action']
-        index = data.get('index')
-        item = Piece.fromGuid(data['guid'])
-        if action == 'append':
+        action = data["action"]
+        index = data.get("index")
+        item = Piece.fromGuid(data["guid"])
+        if action == "append":
             g.appendChild(item)
-        elif action == 'insert':
+        elif action == "insert":
             g.insertChild(index, item)
         else:
             g.removeChild(item)
@@ -297,44 +320,52 @@ def group(request, obj_id=None):
 @login_required
 def recordView(request):
     res = Result()
-    data = json.loads(request.body)['body']
-    
-    item = getObjectsFromGuids([data['guid']])
+    data = json.loads(request.body)["body"]
+
+    item = getObjectsFromGuids([data["guid"]])
     if item:
         item = item[0]
-        
-        created = ViewRecord.objects.get_or_create(user=request.user, guid=data['guid'])[1]
+
+        created = ViewRecord.objects.get_or_create(
+            user=request.user, guid=data["guid"]
+        )[1]
         if created:
             item.view_count += 1
             item.save()
-        
+
         res.append(item.view_count)
     else:
-        res.isError = True;
-        res.message = 'No object foudn for guid {}'.format(data['guid'])
+        res.isError = True
+        res.message = "No object foudn for guid {}".format(data["guid"])
 
     return JsonResponse(res.asDict())
 
 
 def emailLike(request, obj):
-    if not obj.author.frog_prefs.get_or_create()[0].json()['emailLikes']:
+    if not obj.author.frog_prefs.get_or_create()[0].json()["emailLikes"]:
         return
 
     if obj.author == request.user:
         return
 
-    html = render_to_string('frog/comment_email.html', {
-        'user': request.user,
-        'object': obj,
-        'comment': '',
-        'action_type': 'liked',
-        'image': isinstance(obj, Image),
-        'SITE_URL': FROG_SITE_URL,
-    })
-    subject = '{}: {} liked {}'.format(getSiteConfig()['name'], request.user.username, obj.title)
+    config = SiteConfig.getSiteConfig()
+    html = render_to_string(
+        "frog/comment_email.html",
+        {
+            "user": request.user,
+            "object": obj,
+            "comment": "",
+            "action_type": "liked",
+            "image": isinstance(obj, Image),
+            "SITE_URL": config.site_url,
+        },
+    )
+    subject = "{}: {} liked {}".format(
+        config.name, request.user.username, obj.title
+    )
     fromemail = request.user.email
     to = obj.author.email
-    text_content = 'This is an important message.'
+    text_content = "This is an important message."
     html_content = html
 
     send_mail(subject, text_content, fromemail, [to], html_message=html_content)

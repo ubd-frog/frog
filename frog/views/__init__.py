@@ -49,17 +49,12 @@ from frog.models import (
     Piece,
     DefaultPrefs,
     ReleaseNotes,
+    SiteConfig,
 )
-from frog.common import Result, getObjectsFromGuids, userToJson, getSiteConfig
+from frog.common import Result, getObjectsFromGuids, userToJson
 from frog.uploader import upload
 from frog.send_file import send_zipfile
-from frog.views import (
-    comment,
-    gallery,
-    piece,
-    tag,
-    userpref,
-)
+from frog.views import comment, gallery, piece, tag, userpref, siteconfig
 
 
 LOGGER = logging.getLogger("frog")
@@ -287,13 +282,6 @@ def csrf(request):
         res.append(request.COOKIES["csrftoken"])
     except KeyError:
         pass
-    return JsonResponse(res.asDict())
-
-
-def siteConfig(request):
-    res = Result()
-    res.append(getSiteConfig())
-
     return JsonResponse(res.asDict())
 
 

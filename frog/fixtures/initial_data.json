@@ -7,6 +7,13 @@
         }
     },
     {
+        "model": "frog.siteconfig",
+        "pk": 1,
+        "fields": {
+            "name": "Frog"
+        }
+    },
+    {
         "model": "auth.group",
         "pk": 1,
         "fields": {

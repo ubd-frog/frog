@@ -37,7 +37,7 @@ from django.db import connection, OperationalError
 import path
 
 from frog import getRoot
-from frog.models import VideoQueue, FROG_SITE_URL
+from frog.models import VideoQueue, SiteConfig
 
 try:
     FROG_FFMPEG = getattr(settings, "FROG_FFMPEG")
@@ -185,13 +185,14 @@ class VideoThread(Thread):
 
 def emailUser(video, error=None):
     """Emails the author of the video that it has finished processing"""
+    config = SiteConfig.getSiteConfig()
     html = render_to_string(
         "frog/video_email.html",
         {
             "user": video.author,
             "error": error,
             "video": video,
-            "SITE_URL": FROG_SITE_URL,
+            "SITE_URL": config.site_url,
         },
     )
     subject, from_email, to = (

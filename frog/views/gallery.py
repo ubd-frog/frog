@@ -49,11 +49,8 @@ from django.contrib.auth.decorators import login_required
 from django.conf import settings
 
 import six
+import json
 
-try:
-    import ujson as json
-except ImportError:
-    import json
 try:
     from haystack.query import SearchQuerySet
 
@@ -67,24 +64,18 @@ from frog.models import (
     Video,
     Group,
     GallerySubscription,
-    FROG_SITE_URL,
+    SiteConfig,
+    Piece,
 )
-from frog.common import (
-    Result,
-    getObjectsFromGuids,
-    getPutData,
-    getClientIP,
-    getSiteConfig,
-)
+from frog.common import Result, getObjectsFromGuids, getPutData, getClientIP
 
 LOGGER = logging.getLogger("frog")
-try:
-    QUERY_MODELS = [
-        ContentType.objects.get(app_label="frog", model=_)
-        for _ in getattr(settings, "FROG_QUERY_MODELS", ("image", "video"))
-    ]
-except:
-    QUERY_MODELS = []
+QUERY_MODELS = [
+    _
+    for _ in ContentType.objects.filter(app_label="frog")
+    if issubclass(_.model_class(), Piece)
+]
+BATCH_LENGTH = 75
 
 
 def index(request, obj_id=None):
@@ -272,16 +263,13 @@ def _filter(request, object_, tags=None, more=False, orderby="created"):
     """
     res = Result()
 
-    models = QUERY_MODELS
-
     idDict = {}
     objDict = {}
     data = {}
     modelmap = {}
-    length = 75
 
     # -- Get all IDs for each model
-    for m in models:
+    for m in QUERY_MODELS:
         modelmap[m.model_class()] = m.model
 
         if object_:
@@ -355,11 +343,11 @@ def _filter(request, object_, tags=None, more=False, orderby="created"):
         try:
             index = idDict[m.model].index(lastid)
         except ValueError:
-            index = idDict[m.model][-1]
+            index = 0
 
         if more and lastid != 0:
             index += 1
-        idDict[m.model] = idDict[m.model][index : index + length]
+        idDict[m.model] = idDict[m.model][index : index + BATCH_LENGTH]
 
         # -- perform the main query to retrieve the objects we want
         objDict[m.model] = m.model_class().objects.filter(
@@ -371,16 +359,11 @@ def _filter(request, object_, tags=None, more=False, orderby="created"):
             .prefetch_related("tags")
             .order_by("-{}".format(orderby))
         )
-        # objDict[m.model] = objDict[m.model][start:end]
         objDict[m.model] = list(objDict[m.model])
 
-        # -- combine and sort all objects by date
-    objects = (
-        _sortObjects(orderby, **objDict)
-        if len(models) > 1
-        else objDict.values()[0]
-    )
-    objects = objects[:length]
+    # -- combine and sort all objects by date
+    objects = _sortObjects(orderby, **objDict)
+    objects = objects[:BATCH_LENGTH]
 
     # -- Find out last ids
     lastids = {}

@@ -42,14 +42,8 @@ from django.contrib.sites.shortcuts import get_current_site
 
 from django_comments.models import Comment
 
-from frog.common import (
-    Result,
-    commentToJson,
-    getObjectsFromGuids,
-    getPutData,
-    getSiteConfig,
-)
-from frog.models import Image, Video, Group, Marmoset, FROG_SITE_URL
+from frog.common import Result, commentToJson, getObjectsFromGuids, getPutData
+from frog.models import Image, Video, Group, Marmoset, SiteConfig
 
 
 def index(request, obj_id):
@@ -177,6 +171,8 @@ def emailComment(comment, obj, request):
     if obj.author == request.user:
         return
 
+    config = SiteConfig.getSiteConfig()
+
     html = render_to_string(
         "frog/comment_email.html",
         {
@@ -185,13 +181,11 @@ def emailComment(comment, obj, request):
             "object": obj,
             "action_type": "commented on",
             "image": isinstance(obj, Image),
-            "SITE_URL": FROG_SITE_URL,
+            "SITE_URL": config.site_url,
         },
     )
 
-    subject = "{}: Comment from {}".format(
-        getSiteConfig()["name"], comment.user_name
-    )
+    subject = "{}: Comment from {}".format(config.name, comment.user_name)
     fromemail = comment.user_email
     to = obj.author.email
     text_content = "This is an important message."
