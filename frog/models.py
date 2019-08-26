@@ -337,7 +337,7 @@ class Image(Piece):
         self.panoramic = 'GPano' in workImage.info.get('XML:com.adobe.xmp', '')
         if not self.panoramic:
             try:
-                self.panoramic = any('gpano' in _[1].lower() for _ in workImage.applist)
+                self.panoramic = any('gpano' in str(_[1]).lower() for _ in workImage.applist)
             except AttributeError:
                 pass
 
@@ -369,7 +369,6 @@ class Image(Piece):
         # -- Posix paths only
         self.source = self.source.name.replace('\\', '/')
         self.image = self.image.name.replace('\\', '/')
-        self.small = self.small.name.replace('\\', '/')
         self.thumbnail = self.thumbnail.name.replace('\\', '/')
 
         self.save()
