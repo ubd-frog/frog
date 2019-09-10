@@ -252,7 +252,7 @@ def getUser(request):
     else:
         user = request.user
 
-    if user.is_anonymous():
+    if user.is_anonymous:
         user = None
 
     return user
