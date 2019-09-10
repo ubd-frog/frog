@@ -32,6 +32,7 @@ from django.utils.encoding import python_2_unicode_compatible
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
+from django.core.files.storage import get_storage_class
 
 from path import path as Path
 from PIL import Image as pilImage
@@ -71,7 +72,6 @@ DefaultPrefs = {
     'slideshowPlayVideo': True,
     'slideshowDuration': 5,
 }
-ROOT = getRoot()
 FILE_TYPES = {
     'image': ['.jpg', '.png', '.gif', '.tif', '.tiff', '.psd'],
     'video': ['.mp4', '.avi', '.wmv', '.mov'],
@@ -204,7 +204,7 @@ class Piece(models.Model):
 
         if relative:
             return Path(guid.guid[-2:]) / guid.guid
-        return ROOT / guid.guid[-2:] / guid.guid
+        return getRoot() / guid.guid[-2:] / guid.guid
 
     def getFiles(self):
         path = self.getPath()
@@ -213,8 +213,8 @@ class Piece(models.Model):
         thumb = Path(self.thumbnail.name).name.replace(self.hash, self.title).replace('\\', '/')
         source = Path(self.source.name).name.replace(self.hash, self.title).replace('\\', '/')
         files = {}
-        files[thumb] = ROOT + self.thumbnail.name
-        files[source] = ROOT + self.source.name
+        files[thumb] = getRoot() + self.thumbnail.name
+        files[source] = getRoot() + self.source.name
 
         if not files[thumb].exists():
             del files[thumb]
@@ -313,11 +313,11 @@ class Image(Piece):
         hashVal = hashVal or self.hash
         hashPath = hashPath or self.parent / hashVal + self.ext
         
-        source = hashPath.replace('\\', '/').replace(ROOT, '')
+        source = hashPath.replace('\\', '/').replace(getRoot(), '')
         galleries = galleries or []
         tags = tags or []
 
-        imagefile = ROOT / source
+        imagefile = getRoot() / source
 
         if imagefile.ext == '.psd':
             psd = psd_tools.PSDImage.load(imagefile)
@@ -331,7 +331,7 @@ class Image(Piece):
             workImage.save(png)
             workImage = pilImage.open(png)
             imagefile.move(imagefile.replace(self.hash, self.title))
-            self.source = png.replace(ROOT, '')
+            self.source = png.replace(getRoot(), '')
 
         # -- Panoramic Check
         self.panoramic = 'GPano' in workImage.info.get('XML:com.adobe.xmp', '')
@@ -345,7 +345,7 @@ class Image(Piece):
         if workImage.size[0] > maxsize or workImage.size[1] > maxsize:
             workImage.thumbnail((maxsize, maxsize), pilImage.ANTIALIAS)
             self.image = self.source.name.replace(hashVal, '_' * (i + 1) + hashVal)
-            workImage.save(ROOT + self.image.name)
+            workImage.save(getRoot() + self.image.name)
         else:
             self.image = self.source
 
@@ -383,7 +383,7 @@ class Image(Piece):
 
     def generateThumbnail(self):
         """Generates a square thumbnail"""
-        image = pilImage.open(ROOT / self.source.name)
+        image = pilImage.open(getRoot() / self.source.name)
         box, width, height = cropBox(self.width, self.height)
 
         # Resize
@@ -393,7 +393,7 @@ class Image(Piece):
         image = image.crop(box)
         # save
         self.thumbnail = self.source.name.replace(self.hash, '{0}{1}'.format('_' * 3, self.hash))
-        image.save(ROOT / self.thumbnail.name)
+        image.save(getRoot() / self.thumbnail.name)
 
 
 class Video(Piece):
@@ -413,7 +413,7 @@ class Video(Piece):
         - Save thumbnail, video_thumbnail, and MP4 versions.  If the source is already h264, then only transcode the thumbnails
         """
 
-        self.source = hashPath.replace('\\', '/').replace(ROOT, '')
+        self.source = hashPath.replace('\\', '/').replace(getRoot(), '')
         galleries = galleries or []
         tags = tags or []
 
@@ -473,7 +473,7 @@ class Video(Piece):
 
     def generateThumbnail(self):
         """Generates a square thumbnail"""
-        source = ROOT / self.source.name
+        source = getRoot() / self.source.name
         thumbnail = source.parent / '_{}.jpg'.format(source.namebase)
 
         # -- Save thumbnail and put into queue
@@ -483,7 +483,7 @@ class Video(Piece):
         proc.communicate()
         image = pilImage.open(thumbnail)
         image.save(poster)
-        self.poster = poster.replace(ROOT, '')
+        self.poster = poster.replace(getRoot(), '')
 
         box, width, height = cropBox(self.width, self.height)
 
@@ -493,7 +493,7 @@ class Video(Piece):
         box = cropBox(*image.size)[0]
         image = image.crop(box)
         # save
-        self.thumbnail = thumbnail.replace(ROOT, '')
+        self.thumbnail = thumbnail.replace(getRoot(), '')
         image.save(thumbnail)
 
     def info(self):
@@ -632,7 +632,7 @@ class Marmoset(Piece):
     def export(self, hashVal, hashPath, tags=None, galleries=None):
         """"""
 
-        self.source = hashPath.replace('\\', '/').replace(ROOT, '')
+        self.source = hashPath.replace('\\', '/').replace(getRoot(), '')
         galleries = galleries or []
         tags = tags or []
 
