@@ -27,7 +27,8 @@ from django.views.decorators.http import require_http_methods
 from django.contrib.auth.decorators import login_required, permission_required
 
 from frog.common import Result
-from frog.models import SiteConfig, ROOT, Gallery
+from frog.models import SiteConfig, Gallery
+from frog import getRoot
 from frog.uploader import handle_uploaded_file
 
 
@@ -64,11 +65,11 @@ def post(request):
             config.default_gallery = gallery
     except RawPostDataException:
         if request.FILES.get("favicon"):
-            dest = ROOT / "favicon.ico"
+            dest = getRoot() / "favicon.ico"
             handle_uploaded_file(dest, request.FILES["favicon"])
             config.favicon = "favicon.ico"
         if request.FILES.get("icon"):
-            dest = ROOT / request.FILES["icon"].name
+            dest = getRoot() / request.FILES["icon"].name
             handle_uploaded_file(dest, request.FILES["icon"])
             config.favicon = request.FILES["icon"].name
 

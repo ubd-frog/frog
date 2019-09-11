@@ -26,6 +26,7 @@ from django.http import JsonResponse
 
 from frog import models
 from frog.common import Result, getHashForFile, cropCenter, saveAsPng
+from frog import getRoot
 
 from path import path as Path
 
@@ -99,8 +100,7 @@ def upload(request):
 
                 return JsonResponse(res.asDict())
 
-            objPath = models.ROOT / guid.guid[-2:] / guid.guid / filename
-
+            objPath = getRoot() / guid.guid[-2:] / guid.guid / filename
             hashPath = objPath.parent / hashVal + objPath.ext
 
             if not objPath.parent.exists():
