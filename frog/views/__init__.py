@@ -211,7 +211,7 @@ def isUnique(request):
 
     if data.get("user"):
         user = User.objects.get(username=data["user"])
-    elif request.user.is_anonymous():
+    elif request.user.is_anonymous:
         raise HttpResponseForbidden
     else:
         user = request.user
@@ -234,7 +234,7 @@ def isUnique(request):
 def getUser(request):
     res = Result()
     data = {}
-    if request.user.is_anonymous():
+    if request.user.is_anonymous:
         res.isError = True
         data["prefs"] = DefaultPrefs
     elif request.GET.get("q"):

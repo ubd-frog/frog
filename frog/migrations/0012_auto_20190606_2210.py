@@ -97,10 +97,6 @@ class Migration(migrations.Migration):
                 ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],
         ),
-        migrations.AlterModelOptions(
-            name='gallery',
-            options={'permissions': (('view_gallery', 'Can view gallery'),), 'verbose_name_plural': 'Galleries'},
-        ),
         migrations.AddField(
             model_name='gallery',
             name='tags',

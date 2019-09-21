@@ -109,7 +109,7 @@ def cropBox(width, height):
 
 class Tag(models.Model):
     name = models.CharField(max_length=255, unique=True)
-    parent = models.ForeignKey('self', blank=True, null=True)
+    parent = models.ForeignKey('self', blank=True, null=True, on_delete=models.CASCADE)
     artist = models.BooleanField(default=False)
 
     def __str__(self):
@@ -130,7 +130,7 @@ class Tag(models.Model):
 class Piece(models.Model):
     AssetType = 0
     title = models.CharField(max_length=255, blank=True)
-    author = models.ForeignKey(User)
+    author = models.ForeignKey(User, on_delete=models.CASCADE)
     created = models.DateTimeField(auto_now_add=True)
     modified = models.DateTimeField(auto_now=True)
     thumbnail = models.ImageField(upload_to='%Y/%m/%d', max_length=255, blank=True, null=True)
@@ -180,7 +180,7 @@ class Piece(models.Model):
             uid = getattr(imported, func)(path, user)
         else:
             path = Path(path)
-            username = 'Anonymous' if user.is_anonymous() else user.username
+            username = 'Anonymous' if user.is_anonymous else user.username
             uid = '%s_%s' % (username, path.name)
 
         return uid
@@ -678,7 +678,7 @@ class VideoQueue(models.Model):
         (ERROR, 'Error'),
     )
 
-    video = models.OneToOneField(Video, related_name='queue')
+    video = models.OneToOneField(Video, related_name='queue', on_delete=models.CASCADE)
     status = models.SmallIntegerField(default=QUEUED, choices=STATUS)
     message = models.TextField(blank=True, null=True)
 
@@ -701,15 +701,14 @@ class Gallery(models.Model):
     marmosets = models.ManyToManyField(Marmoset, blank=True)
 
     security = models.SmallIntegerField(default=PUBLIC, choices=SECURITY_LEVEL)
-    owner = models.ForeignKey(User, default=1)
+    owner = models.ForeignKey(User, default=1, on_delete=models.CASCADE)
     description = models.TextField(default="", blank=True)
     uploads = models.BooleanField(default=True)
-    parent = models.ForeignKey('self', null=True, blank=True)
+    parent = models.ForeignKey('self', null=True, blank=True, on_delete=models.CASCADE)
     tags = models.ManyToManyField(Tag, blank=True)
 
     class Meta:
         verbose_name_plural = "Galleries"
-        permissions = (("view_gallery", "Can view gallery"),)
 
     def __str__(self):
         return self.title
@@ -759,7 +758,7 @@ class Gallery(models.Model):
 
 
 class UserPref(models.Model):
-    user = models.ForeignKey(User, related_name='frog_prefs')
+    user = models.ForeignKey(User, related_name='frog_prefs', on_delete=models.CASCADE)
     data = models.TextField(default=json.dumps(DefaultPrefs))
     clearance = models.SmallIntegerField(default=Gallery.PUBLIC, choices=Gallery.SECURITY_LEVEL)
 
@@ -804,7 +803,7 @@ class Guid(object):
 
 
 class Like(models.Model):
-    user = models.ForeignKey(User, related_name='like_user')
+    user = models.ForeignKey(User, related_name='like_user', on_delete=models.CASCADE)
     date = models.DateTimeField(auto_now_add=True)
     content_type = models.ForeignKey(ContentType,
                                      verbose_name='content_type',
@@ -827,8 +826,8 @@ class Like(models.Model):
 
 class GallerySubscription(models.Model):
     WEEKLY, DAILY = range(2)
-    gallery = models.ForeignKey(Gallery)
-    user = models.ForeignKey(User)
+    gallery = models.ForeignKey(Gallery, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     frequency = models.SmallIntegerField(default=WEEKLY)
 
     def __str__(self):
@@ -859,7 +858,7 @@ class ReleaseNotes(models.Model):
 
 
 class GroupChild(models.Model):
-    group = models.ForeignKey(Group)
+    group = models.ForeignKey(Group, on_delete=models.CASCADE)
     index = models.SmallIntegerField(default=0)
 
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
@@ -875,7 +874,7 @@ class GroupChild(models.Model):
 
 
 class ViewRecord(models.Model):
-    user = models.ForeignKey(User)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     guid = models.CharField(max_length=16)
     date = models.DateTimeField(auto_now_add=True)
 
@@ -886,7 +885,7 @@ class SiteConfig(models.Model):
     icon = models.ImageField()
     link = models.URLField(blank=True, null=True)
     enable_likes = models.BooleanField(default=True)
-    default_gallery = models.ForeignKey(Gallery, blank=True, null=True)
+    default_gallery = models.ForeignKey(Gallery, blank=True, null=True, on_delete=models.CASCADE)
 
     def __str__(self):
         return '<{}: {}>'.format(self.__class__.__name__, self.id)

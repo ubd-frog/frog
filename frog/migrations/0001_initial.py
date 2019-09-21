@@ -45,7 +45,7 @@ class Migration(migrations.Migration):
                 ('source', models.ImageField(upload_to=b'%Y/%m/%d', width_field=b'width', height_field=b'height', max_length=255, blank=True, null=True)),
                 ('image', models.ImageField(max_length=255, null=True, upload_to=b'%Y/%m/%d', blank=True)),
                 ('small', models.ImageField(max_length=255, null=True, upload_to=b'%Y/%m/%d', blank=True)),
-                ('author', models.ForeignKey(to=settings.AUTH_USER_MODEL)),
+                ('author', models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE)),
             ],
             options={
                 'ordering': ['-created', '-id'],
@@ -59,7 +59,7 @@ class Migration(migrations.Migration):
                 ('date', models.DateTimeField(auto_now_add=True)),
                 ('interval', models.CharField(max_length=6)),
                 ('data', models.TextField()),
-                ('gallery', models.ForeignKey(related_name='rss_storage', to='frog.Gallery')),
+                ('gallery', models.ForeignKey(related_name='rss_storage', to='frog.Gallery', on_delete=models.CASCADE)),
             ],
         ),
         migrations.CreateModel(
@@ -68,7 +68,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('name', models.CharField(unique=True, max_length=255)),
                 ('artist', models.BooleanField(default=False)),
-                ('parent', models.ForeignKey(blank=True, to='frog.Tag', null=True)),
+                ('parent', models.ForeignKey(blank=True, to='frog.Tag', null=True, on_delete=models.CASCADE)),
             ],
         ),
         migrations.CreateModel(
@@ -76,7 +76,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('data', models.TextField(default=b'{}')),
-                ('user', models.ForeignKey(related_name='frog_prefs', to=settings.AUTH_USER_MODEL)),
+                ('user', models.ForeignKey(related_name='frog_prefs', to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE)),
             ],
         ),
         migrations.CreateModel(
@@ -99,7 +99,7 @@ class Migration(migrations.Migration):
                 ('source', models.FileField(max_length=255, null=True, upload_to=b'%Y/%m/%d', blank=True)),
                 ('video', models.FileField(max_length=255, null=True, upload_to=b'%Y/%m/%d', blank=True)),
                 ('video_thumbnail', models.FileField(max_length=255, null=True, upload_to=b'%Y/%m/%d', blank=True)),
-                ('author', models.ForeignKey(to=settings.AUTH_USER_MODEL)),
+                ('author', models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE)),
                 ('tags', models.ManyToManyField(to='frog.Tag', blank=True)),
             ],
             options={
@@ -113,7 +113,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('status', models.SmallIntegerField(default=0, choices=[(0, b'Queued'), (1, b'Processing'), (2, b'Completed'), (3, b'Error')])),
                 ('message', models.TextField(null=True, blank=True)),
-                ('video', models.OneToOneField(related_name='queue', to='frog.Video')),
+                ('video', models.OneToOneField(related_name='queue', to='frog.Video', on_delete=models.CASCADE)),
             ],
         ),
         migrations.AddField(
@@ -129,12 +129,12 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='gallery',
             name='owner',
-            field=models.ForeignKey(default=1, to=settings.AUTH_USER_MODEL),
+            field=models.ForeignKey(default=1, to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE),
         ),
         migrations.AddField(
             model_name='gallery',
             name='parent',
-            field=models.ForeignKey(blank=True, to='frog.Gallery', null=True),
+            field=models.ForeignKey(blank=True, to='frog.Gallery', null=True, on_delete=models.CASCADE),
         ),
         migrations.AddField(
             model_name='gallery',

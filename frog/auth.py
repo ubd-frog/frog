@@ -34,7 +34,7 @@ class SimpleAuthBackend(object):
 
     supports_inactive_user = False
 
-    def authenticate(self, username=None, password=None, **kwargs):
+    def authenticate(self, request, username=None, password=None, **kwargs):
         try:
             user = User.objects.get(username=username)
         except User.DoesNotExist:
