@@ -95,7 +95,7 @@ def index(request, obj_id=None):
 def get(request, obj_id=None):
     if obj_id:
         obj = Gallery.objects.get(pk=obj_id)
-        if obj.security != Gallery.PUBLIC and request.user.is_anonymous():
+        if obj.security != Gallery.PUBLIC and request.user.is_anonymous:
             raise PermissionDenied
     else:
         res = Result()
@@ -103,7 +103,7 @@ def get(request, obj_id=None):
         personal = []
         clearance = Gallery.PUBLIC
 
-        if request.user.is_authenticated():
+        if request.user.is_authenticated:
             personal = Gallery.objects.filter(
                 security=Gallery.PERSONAL, owner=request.user
             )
@@ -219,10 +219,10 @@ def filterObjects(request, obj_id):
     else:
         obj = Gallery.objects.get(pk=obj_id)
 
-    isanonymous = request.user.is_anonymous()
+    isanonymous = request.user.is_anonymous
 
     if isanonymous and obj is None:
-        LOGGER.warn(
+        LOGGER.warning(
             "There was an anonymous access attempt from {} to {}".format(
                 getClientIP(request), obj
             )
@@ -230,7 +230,7 @@ def filterObjects(request, obj_id):
         raise PermissionDenied()
 
     if isanonymous and obj and obj.security != Gallery.PUBLIC:
-        LOGGER.warn(
+        LOGGER.warning(
             "There was an anonymous access attempt from {} to {}".format(
                 getClientIP(request), obj
             )
