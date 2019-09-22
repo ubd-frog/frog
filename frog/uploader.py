@@ -28,7 +28,7 @@ from frog import models
 from frog.common import Result, getHashForFile, cropCenter, saveAsPng
 from frog import getRoot
 
-from path import path as Path
+from path import Path
 
 
 class MediaTypeError(Exception):

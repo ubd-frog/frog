@@ -34,7 +34,7 @@ from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelatio
 from django.contrib.contenttypes.models import ContentType
 from django.core.files.storage import get_storage_class
 
-from path import path as Path
+from path import Path
 from PIL import Image as pilImage
 import six
 import psd_tools
@@ -881,8 +881,8 @@ class ViewRecord(models.Model):
 
 class SiteConfig(models.Model):
     name = models.CharField(max_length=128, default="Frog")
-    favicon = models.FileField()
-    icon = models.ImageField()
+    favicon = models.FileField(blank=True, null=True)
+    icon = models.ImageField(blank=True, null=True)
     link = models.URLField(blank=True, null=True)
     enable_likes = models.BooleanField(default=True)
     default_gallery = models.ForeignKey(Gallery, blank=True, null=True, on_delete=models.CASCADE)
@@ -893,8 +893,8 @@ class SiteConfig(models.Model):
     def json(self):
         return {
             'name': self.name,
-            'favicon': self.favicon.url,
-            'icon': self.icon.url,
+            'favicon': self.favicon.url if self.favicon else None,
+            'icon': self.icon.url if self.icon else None,
             'link': self.link,
             'enable_likes': self.enable_likes,
             'default_gallery': self.default_gallery.id if self.default_gallery else 1,
