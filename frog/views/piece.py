@@ -228,7 +228,7 @@ def post(request, obj):
 
 @login_required
 def put(request, obj):
-    for key, value in json.loads(request.body)["body"].iteritems():
+    for key, value in json.loads(request.body)["body"].items():
         if hasattr(obj, key):
             setattr(obj, key, value)
 

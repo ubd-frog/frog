@@ -2,20 +2,20 @@
 # Copyright (c) 2012 Brett Dixon
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
-# this software and associated documentation files (the "Software"), to deal in 
+# this software and associated documentation files (the "Software"), to deal in
 # the Software without restriction, including without limitation the rights to use,
-# copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the 
-# Software, and to permit persons to whom the Software is furnished to do so, 
+# copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the
+# Software, and to permit persons to whom the Software is furnished to do so,
 # subject to the following conditions:
 
-# The above copyright notice and this permission notice shall be included in all 
+# The above copyright notice and this permission notice shall be included in all
 # copies or substantial portions of the Software.
 
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS 
-# FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR 
-# COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER 
-# IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+# FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+# COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+# IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ##################################################################################################
 
@@ -26,20 +26,20 @@ from wsgiref.util import FileWrapper
 
 
 class FixedFileWrapper(FileWrapper):
-    def __iter__(self):        
+    def __iter__(self):
         self.filelike.seek(0)
         return self
 
 
-def send_file(request, filename, content_type='image/jpeg'):
+def send_file(request, filename, content_type="image/jpeg"):
     """                                                                         
     Send a file through Django without loading the whole file into              
     memory at once. The FileWrapper will turn the file object into an           
     iterator for chunks of 8KB.                                                 
     """
-    wrapper = FixedFileWrapper(file(filename, 'rb'))
+    wrapper = FixedFileWrapper(file(filename, "rb"))
     response = HttpResponse(wrapper, content_type=content_type)
-    response['Content-Length'] = os.path.getsize(filename)
+    response["Content-Length"] = os.path.getsize(filename)
     return response
 
 
@@ -50,11 +50,11 @@ def send_zipfile(request, fileList):
     be used for large dynamic PDF files.                                        
     """
     temp = tempfile.TemporaryFile()
-    archive = zipfile.ZipFile(temp, 'w', zipfile.ZIP_DEFLATED)
-    for artist,files in fileList.iteritems():
+    archive = zipfile.ZipFile(temp, "w", zipfile.ZIP_DEFLATED)
+    for artist, files in fileList.items():
         for f in files:
             try:
-                archive.write(f[0], '%s/%s' % (artist, f[1]))
+                archive.write(f[0], "%s/%s" % (artist, f[1]))
             except IOError:
                 pass
     archive.close()
@@ -62,8 +62,8 @@ def send_zipfile(request, fileList):
     temp.seek(0)
 
     wrapper = FixedFileWrapper(temp)
-    response = HttpResponse(wrapper, content_type='application/zip')
-    response['Content-Disposition'] = 'attachment; filename=FrogSources.zip'
-    response['Content-Length'] = length
-    
+    response = HttpResponse(wrapper, content_type="application/zip")
+    response["Content-Disposition"] = "attachment; filename=FrogSources.zip"
+    response["Content-Length"] = length
+
     return response

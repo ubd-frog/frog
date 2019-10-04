@@ -143,7 +143,7 @@ def download(request):
         for n in downloadable:
             files = n.getFiles()
             filelist.setdefault(n.author.username, [])
-            for name, file_ in files.iteritems():
+            for name, file_ in files.items():
                 filelist[n.author.username].append([file_, name])
 
         response = send_zipfile(request, filelist)

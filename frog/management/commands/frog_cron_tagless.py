@@ -37,30 +37,45 @@ class Command(BaseCommand):
         main = Gallery.objects.get(pk=1)
         mapping = {}
 
-        images = main.images.annotate(num_tags=Count('tags')).filter(num_tags__lte=1)
+        images = main.images.annotate(num_tags=Count("tags")).filter(
+            num_tags__lte=1
+        )
         videos = main.images.filter(tags__isnull=True)
 
         items = list(images) + list(videos)
         for item in items:
             mapping.setdefault(item.author, [])
-            linktype = 'image' if isinstance(item, Image) else 'video'
-            item.link = '{}/frog/{}/{}'.format(FROG_SITE_URL, linktype, item.id)
+            linktype = "image" if isinstance(item, Image) else "video"
+            item.link = "{}/frog/{}/{}".format(FROG_SITE_URL, linktype, item.id)
             mapping[item.author].append(item)
 
-        for author, items in mapping.iteritems():
+        for author, items in mapping.items():
             items = list(set(items))
-            authortag = Tag.objects.filter(artist=True, name=author.get_full_name())
-            if not authortag:
-                self.stderr.write('No tag forund for {}'.format(author))
-                continue
-            link = '{}/frog/gallery/1#{{%22filters%22:[[{}],[0],[]]}}'.format(FROG_SITE_URL, authortag[0].id)
-            html = render_to_string(
-                'frog/cron_email_tagless.html',
-                {'items': items, 'SITE_URL': FROG_SITE_URL, 'gallery': main, 'link': link}
+            authortag = Tag.objects.filter(
+                artist=True, name=author.get_full_name()
             )
-            subject = 'Tagless Items'
+            if not authortag:
+                self.stderr.write("No tag forund for {}".format(author))
+                continue
+            link = "{}/frog/gallery/1#{{%22filters%22:[[{}],[0],[]]}}".format(
+                FROG_SITE_URL, authortag[0].id
+            )
+            html = render_to_string(
+                "frog/cron_email_tagless.html",
+                {
+                    "items": items,
+                    "SITE_URL": FROG_SITE_URL,
+                    "gallery": main,
+                    "link": link,
+                },
+            )
+            subject = "Tagless Items"
             from_email = settings.DEFAULT_FROM_EMAIL
             to = author.email
-            text_content = 'Only html supported'
-            send_mail(subject, text_content, from_email, [to], html_message=html)
-            self.stdout.write('Emailed {} for {} items'.format(author.email, len(items)))
+            text_content = "Only html supported"
+            send_mail(
+                subject, text_content, from_email, [to], html_message=html
+            )
+            self.stdout.write(
+                "Emailed {} for {} items".format(author.email, len(items))
+            )
