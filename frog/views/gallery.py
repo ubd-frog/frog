@@ -67,7 +67,7 @@ from frog.models import (
     SiteConfig,
     Piece,
 )
-from frog.common import Result, getObjectsFromGuids, getPutData, getClientIP
+from frog.common import Result, getObjectsFromGuids, getClientIP
 
 LOGGER = logging.getLogger("frog")
 QUERY_MODELS = [
@@ -85,10 +85,8 @@ def index(request, obj_id=None):
     elif request.method == "POST":
         return post(request)
     elif request.method == "PUT":
-        getPutData(request)
         return put(request, obj_id)
     elif request.method == "DELETE":
-        getPutData(request)
         return delete(request, obj_id)
 
 
@@ -138,7 +136,7 @@ def get(request, obj_id=None):
 def post(request):
     """ Create a Gallery """
     defaultname = "New Gallery %i" % Gallery.objects.all().count()
-    data = request.POST or json.loads(request.body)["body"]
+    data = json.loads(request.body)["body"]
     title = data.get("title", defaultname)
     description = data.get("description", "")
     security = int(
@@ -161,10 +159,10 @@ def post(request):
 @login_required
 def put(request, obj_id=None):
     """ Adds Image and Video objects to Gallery based on GUIDs """
-    data = request.PUT or json.loads(request.body)["body"]
+    data = json.loads(request.body)["body"]
     guids = data.get("guids", "").split(",")
     move = data.get("from")
-    security = request.PUT.get("security")
+    security = data.get("security")
     gallery = Gallery.objects.get(pk=obj_id)
 
     # -- Set the security first so subsequent securityChecks will get the correct security level
@@ -192,7 +190,7 @@ def put(request, obj_id=None):
 @login_required
 def delete(request, obj_id=None):
     """ Removes ImageVideo objects from Gallery """
-    data = request.DELETE or json.loads(request.body)
+    data = json.loads(request.body)
     guids = data.get("guids").split(",")
     items = getObjectsFromGuids(guids)
     gallery = Gallery.objects.get(pk=obj_id)
@@ -441,7 +439,7 @@ def search(query, model):
 @login_required
 def subscribe(request, obj_id):
     gallery = Gallery.objects.get(pk=obj_id)
-    data = request.POST or json.loads(request.body)["body"]
+    data = json.loads(request.body)["body"]
     frequency = data.get("frequency", GallerySubscription.WEEKLY)
 
     sub, created = GallerySubscription.objects.get_or_create(

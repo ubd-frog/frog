@@ -58,16 +58,10 @@ from frog.models import (
     Group,
     Gallery,
     SiteConfig,
-    FROG_SITE_URL
+    FROG_SITE_URL,
 )
 from frog.models import ViewRecord
-from frog.common import (
-    Result,
-    getPutData,
-    getObjectsFromGuids,
-    getRoot,
-    getUser,
-)
+from frog.common import Result, getObjectsFromGuids, getRoot, getUser
 from frog.uploader import handle_uploaded_file
 
 
@@ -78,10 +72,8 @@ def image(request, obj_id):
     if request.method == "POST":
         return post(request, obj)
     elif request.method == "PUT":
-        getPutData(request)
         return put(request, obj)
     elif request.method == "DELETE":
-        getPutData(request)
         return delete(request, obj)
 
 
@@ -92,10 +84,8 @@ def video(request, obj_id):
     if request.method == "POST":
         return post(request, obj)
     elif request.method == "PUT":
-        getPutData(request)
         return put(request, obj)
     elif request.method == "DELETE":
-        getPutData(request)
         return delete(request, obj)
 
 
@@ -111,10 +101,8 @@ def data(request, guid):
     elif request.method == "POST":
         return post(request, obj)
     elif request.method == "PUT":
-        getPutData(request)
         return put(request, obj)
     elif request.method == "DELETE":
-        getPutData(request)
         return delete(request, obj)
 
 
