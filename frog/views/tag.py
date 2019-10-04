@@ -2,20 +2,20 @@
 # Copyright (c) 2012 Brett Dixon
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
-# this software and associated documentation files (the "Software"), to deal in 
+# this software and associated documentation files (the "Software"), to deal in
 # the Software without restriction, including without limitation the rights to use,
-# copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the 
-# Software, and to permit persons to whom the Software is furnished to do so, 
+# copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the
+# Software, and to permit persons to whom the Software is furnished to do so,
 # subject to the following conditions:
 #
-# The above copyright notice and this permission notice shall be included in all 
+# The above copyright notice and this permission notice shall be included in all
 # copies or substantial portions of the Software.
 #
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS 
-# FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR 
-# COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER 
-# IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+# FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+# COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+# IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ##################################################################################################
 
@@ -43,20 +43,18 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
 
 from frog.models import Tag, Image, Video
-from frog.common import Result, getObjectsFromGuids, getPutData
+from frog.common import Result, getObjectsFromGuids
 
 
 def index(request, obj_id=None):
     """Handles a request based on method and calls the appropriate function"""
-    if request.method == 'GET':
+    if request.method == "GET":
         return get(request, obj_id)
-    elif request.method == 'POST':
+    elif request.method == "POST":
         return post(request)
-    elif request.method == 'PUT':
-        getPutData(request)
+    elif request.method == "PUT":
         return put(request, obj_id)
-    elif request.method == 'DELETE':
-        getPutData(request)
+    elif request.method == "DELETE":
         return delete(request, obj_id)
 
 
@@ -67,21 +65,17 @@ def get(request, obj_id=None):
     """
     res = Result()
     if obj_id:
-        if obj_id == '0':
-            obj = {
-                'id': 0,
-                'name': 'TAGLESS',
-                'artist': False,
-            }
+        if obj_id == "0":
+            obj = {"id": 0, "name": "TAGLESS", "artist": False}
         else:
             obj = get_object_or_404(Tag, pk=obj_id).json()
 
         res.append(obj)
         return JsonResponse(res.asDict())
     else:
-        if request.GET.get('count'):
-            itags = Tag.objects.all().annotate(icount=Count('image'))
-            vtags = Tag.objects.all().annotate(vcount=Count('video'))
+        if request.GET.get("count"):
+            itags = Tag.objects.all().annotate(icount=Count("image"))
+            vtags = Tag.objects.all().annotate(vcount=Count("video"))
 
             for i, tag in enumerate(itags):
                 tag.count = itags[i].icount + vtags[i].vcount
@@ -102,15 +96,15 @@ def post(request):
     :returns: json
     """
     res = Result()
-    data = request.POST or json.loads(request.body)['body']
-    name = data.get('name', None)
+    data = json.loads(request.body)["body"]
+    name = data.get("name", None)
 
     if not name:
         res.isError = True
         res.message = "No name given"
 
         return JsonResponse(res.asDict())
-    
+
     tag = Tag.objects.get_or_create(name=name.lower())[0]
 
     res.append(tag.json())
@@ -129,16 +123,16 @@ def put(request, obj_id=None):
     :returns: json
     """
     res = Result()
-    data = request.PUT or json.loads(request.body)['body']
+    data = json.loads(request.body)["body"]
     if obj_id:
         # -- Edit the tag
         tag = Tag.objects.get(pk=obj_id)
-        tag.name = data.get('name', tag.name)
-        tag.artist = data.get('artist', tag.artist)
+        tag.name = data.get("name", tag.name)
+        tag.artist = data.get("artist", tag.artist)
         tag.save()
     else:
-        tags = [_ for _ in data.get('tags', '').split(',') if _]
-        guids = [_ for _ in data.get('guids', '').split(',') if _]
+        tags = [_ for _ in data.get("tags", "").split(",") if _]
+        guids = [_ for _ in data.get("guids", "").split(",") if _]
 
         _manageTags(tags, guids)
 
@@ -170,8 +164,8 @@ def delete(request, obj_id=None):
         # -- Delete old tags
         tag.delete()
     else:
-        tags = [_ for _ in request.DELETE.get('tags', '').split(',') if _]
-        guids = [_ for _ in request.DELETE.get('guids', '').split(',') if _]
+        tags = [_ for _ in request.DELETE.get("tags", "").split(",") if _]
+        guids = [_ for _ in request.DELETE.get("guids", "").split(",") if _]
 
         _manageTags(tags, guids, add=False)
 
@@ -208,13 +202,13 @@ def search(request):
     :type artist: bool
     :returns: json
     """
-    q = request.GET.get('q', '')
-    includeSearch = request.GET.get('search', False)
-    nonZero = request.GET.get('zero', False)
-    excludeArtist = request.GET.get('artist', False)
+    q = request.GET.get("q", "")
+    includeSearch = request.GET.get("search", False)
+    nonZero = request.GET.get("zero", False)
+    excludeArtist = request.GET.get("artist", False)
 
     if includeSearch:
-        l = [{'id': 0, 'name': 'Search for: %s' % q}]
+        l = [{"id": 0, "name": "Search for: %s" % q}]
     else:
         l = []
 
@@ -233,34 +227,36 @@ def search(request):
 
 @login_required
 def manage(request):
-    if request.method == 'GET':
-        guids = request.GET.get('guids', '').split(',')
+    if request.method == "GET":
+        guids = request.GET.get("guids", "").split(",")
         guids = [guid for guid in guids if guid]
 
         objects = getObjectsFromGuids(guids)
         ids = [o.id for o in objects]
 
-        imgtags = list(Tag.objects.filter(image__id__in=ids).exclude(artist=True))
-        vidtags = list(Tag.objects.filter(video__id__in=ids).exclude(artist=True))
+        imgtags = list(
+            Tag.objects.filter(image__id__in=ids).exclude(artist=True)
+        )
+        vidtags = list(
+            Tag.objects.filter(video__id__in=ids).exclude(artist=True)
+        )
         tags = list(set(imgtags + vidtags))
 
-        if request.GET.get('json', False):
+        if request.GET.get("json", False):
             res = Result()
-            data = {
-                'queries': connection.queries,
-            }
+            data = {"queries": connection.queries}
 
             res.append(data)
 
             return JsonResponse(res.asDict())
 
-        return render(request, 'frog/tag_manage.html', {'tags': tags})
+        return render(request, "frog/tag_manage.html", {"tags": tags})
     else:
         res = Result()
-        data = request.POST or json.loads(request.body)['body']
-        add = data.get('add', '').split(',')
-        rem = data.get('rem', '').split(',')
-        guids = data.get('guids', '').split(',')
+        data = request.POST or json.loads(request.body)["body"]
+        add = data.get("add", "").split(",")
+        rem = data.get("rem", "").split(",")
+        guids = data.get("guids", "").split(",")
 
         add = [a for a in add if a]
         rem = [r for r in rem if r]
@@ -290,14 +286,14 @@ def manage(request):
 
 
 @login_required()
-@require_http_methods(['POST'])
+@require_http_methods(["POST"])
 def merge(request, obj_id):
     """Merges multiple tags into a single tag and all related objects are reassigned"""
     res = Result()
     if request.POST:
-        tags = json.loads(request.POST['tags'])
+        tags = json.loads(request.POST["tags"])
     else:
-        tags = json.loads(request.body)['body']['tags']
+        tags = json.loads(request.body)["body"]["tags"]
 
     guids = []
     images = Image.objects.filter(tags__id__in=tags)

@@ -41,7 +41,7 @@ from django.contrib.contenttypes.models import ContentType
 
 from django_comments.models import Comment
 
-from frog.common import Result, commentToJson, getObjectsFromGuids, getPutData
+from frog.common import Result, commentToJson, getObjectsFromGuids
 from frog.models import Image, Video, Group, Marmoset, SiteConfig, FROG_SITE_URL
 
 
@@ -50,7 +50,6 @@ def index(request, obj_id):
     if request.method == "GET":
         return get(request, obj_id)
     elif request.method == "PUT":
-        getPutData(request)
         return put(request, obj_id)
 
 
@@ -70,7 +69,7 @@ def get(request, obj_id):
 @login_required
 def post(request):
     """Returns a serialized object"""
-    data = request.POST or json.loads(request.body)["body"]
+    data = json.loads(request.body)["body"]
     guid = data.get("guid", None)
     res = Result()
 
@@ -105,7 +104,7 @@ def put(request, obj_id):
     """
     res = Result()
     c = Comment.objects.get(pk=obj_id)
-    data = request.PUT or json.loads(request.body)["body"]
+    data = json.loads(request.body)["body"]
     content = data.get("comment", None)
     if content:
         c.comment = content
