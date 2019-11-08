@@ -42,6 +42,7 @@ from django.http import JsonResponse
 from django.core.exceptions import ImproperlyConfigured, PermissionDenied
 from django.db.models import Q, Count
 from django.db import connection
+from django.db.utils import ProgrammingError
 from django.template.loader import render_to_string
 from django.views.decorators.http import require_POST
 from django.contrib.contenttypes.models import ContentType
@@ -70,11 +71,14 @@ from frog.models import (
 from frog.common import Result, getObjectsFromGuids, getClientIP
 
 LOGGER = logging.getLogger("frog")
-QUERY_MODELS = [
-    _
-    for _ in ContentType.objects.filter(app_label="frog")
-    if issubclass(_.model_class(), Piece)
-]
+try:
+    QUERY_MODELS = [
+        _
+        for _ in ContentType.objects.filter(app_label="frog")
+        if issubclass(_.model_class(), Piece)
+    ]
+except ProgrammingError:
+    pass
 BATCH_LENGTH = 75
 
 
