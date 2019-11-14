@@ -73,7 +73,7 @@ DefaultPrefs = {
     'slideshowDuration': 5,
 }
 FILE_TYPES = {
-    'image': ['.jpg', '.png', '.gif', '.tif', '.tiff', '.psd'],
+    'image': ['.jpg', '.png', '.gif', '.tif', '.tiff', '.psd', '.tga'],
     'video': ['.mp4', '.avi', '.wmv', '.mov'],
     'marmoset': ['.mview'],
 }
@@ -326,7 +326,7 @@ class Image(Piece):
             workImage = pilImage.open(imagefile)
             self.source = source
 
-        if imagefile.ext in ('.tif', '.tiff', '.psd'):
+        if imagefile.ext in ('.tif', '.tiff', '.psd', '.tga'):
             png = imagefile.parent / '{}.png'.format(imagefile.namebase)
             workImage.save(png)
             workImage = pilImage.open(png)
