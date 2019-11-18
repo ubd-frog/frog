@@ -94,9 +94,9 @@ def upload(request):
                 for gal in galleries:
                     g = models.Gallery.objects.get(pk=int(gal))
                     obj.gallery_set.add(g)
+
                 res.append(obj.json())
                 res.message = "Files were the same"
-                res.append(obj.json())
 
                 return JsonResponse(res.asDict())
 
