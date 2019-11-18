@@ -344,7 +344,7 @@ class Image(Piece):
         maxsize = PANORAMIC_MAX if self.panoramic else FROG_IMAGE_SIZE_CAP
         if workImage.size[0] > maxsize or workImage.size[1] > maxsize:
             workImage.thumbnail((maxsize, maxsize), pilImage.ANTIALIAS)
-            self.image = self.source.name.replace(hashVal, '_' * (i + 1) + hashVal)
+            self.image = self.source.name.replace(hashVal, '_{}'.format(hashVal))
             workImage.save(getRoot() + self.image.name)
         else:
             self.image = self.source
