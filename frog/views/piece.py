@@ -59,6 +59,7 @@ from frog.models import (
     Gallery,
     SiteConfig,
     FROG_SITE_URL,
+    FROG_THUMB_SIZE
 )
 from frog.models import ViewRecord
 from frog.common import Result, getObjectsFromGuids, getRoot, getUser
@@ -178,12 +179,10 @@ def post(request, obj):
         image = image.crop(box)
         image.load()
         # Resize
-        config = SiteConfig.getSiteConfig()
-        size = abs(box[2] - box[0])
         image.thumbnail(
-            (config.image_size_cap, config.image_size_cap), pilImage.ANTIALIAS
+            (FROG_THUMB_SIZE, FROG_THUMB_SIZE), pilImage.ANTIALIAS
         )
-        image.resize((size, size)).save(dest)
+        image.save(dest)
 
         obj.save()
 
