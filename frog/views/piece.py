@@ -194,7 +194,6 @@ def post(request, obj):
         handle_uploaded_file(dest, f)
         obj.custom_thumbnail = relativedest
 
-        box, width, height = cropBox(*image.size)
         try:
             if dest.ext == ".psd":
                 image = psd_tools.PSDLoad(dest).as_PIL()
