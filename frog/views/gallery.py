@@ -114,7 +114,7 @@ def get(request, obj_id=None):
             except AttributeError:
                 clearance = Gallery.PUBLIC
 
-        # -- Staff members should see everything
+        # Staff members should see everything
         if request.user.is_staff:
             clearance = Gallery.GUARDED
 
@@ -169,7 +169,7 @@ def put(request, obj_id=None):
     security = data.get("security")
     gallery = Gallery.objects.get(pk=obj_id)
 
-    # -- Set the security first so subsequent securityChecks will get the correct security level
+    # Set the security first so subsequent securityChecks will get the correct security level
     if security is not None:
         gallery.security = json.loads(security)
         gallery.save()
@@ -270,7 +270,7 @@ def _filter(request, object_, tags=None, more=False, orderby="created"):
     data = {}
     modelmap = {}
 
-    # -- Get all IDs for each model
+    # Get all IDs for each model
     for m in QUERY_MODELS:
         modelmap[m.model_class()] = m.model
 
@@ -288,28 +288,28 @@ def _filter(request, object_, tags=None, more=False, orderby="created"):
                 o = None
                 for item in bucket:
                     if item == 0:
-                        # -- filter by tagless
+                        # filter by tagless
                         idDict[m.model].annotate(num_tags=Count("tags"))
                         if not o:
                             o = Q()
                         o |= Q(num_tags__lte=1)
                         break
                     elif isinstance(item, six.integer_types):
-                        # -- filter by tag
+                        # filter by tag
                         if not o:
                             o = Q()
                         o |= Q(tags__id=item)
                     else:
-                        # -- add to search string
+                        # add to search string
                         searchQuery += item + " "
                         if not HAYSTACK:
                             if not o:
                                 o = Q()
-                            # -- use a basic search
+                            # use a basic search
                             o |= Q(title__icontains=item)
 
                 if HAYSTACK and searchQuery != "":
-                    # -- once all tags have been filtered, filter by search
+                    # once all tags have been filtered, filter by search
                     searchIDs = search(searchQuery, m.model_class())
                     if searchIDs:
                         if not o:
@@ -317,7 +317,7 @@ def _filter(request, object_, tags=None, more=False, orderby="created"):
                         o |= Q(id__in=searchIDs)
 
                 if o:
-                    # -- apply the filters
+                    # apply the filters
                     idDict[m.model] = (
                         idDict[m.model]
                         .annotate(num_tags=Count("tags"))
@@ -328,8 +328,11 @@ def _filter(request, object_, tags=None, more=False, orderby="created"):
 
         # Remove hidden items before slicing so we get an accurate count
         idDict[m.model] = idDict[m.model].exclude(hidden=True)
+        
+        # Remove deleted items before slicing so we get an accurate count
+        idDict[m.model] = idDict[m.model].exclude(deleted=True)
 
-        # -- Get all ids of filtered objects, this will be a very fast query
+        # Get all ids of filtered objects, this will be a very fast query
         idDict[m.model] = list(
             idDict[m.model]
             .order_by("-{}".format(orderby))
@@ -351,7 +354,7 @@ def _filter(request, object_, tags=None, more=False, orderby="created"):
             index += 1
         idDict[m.model] = idDict[m.model][index : index + BATCH_LENGTH]
 
-        # -- perform the main query to retrieve the objects we want
+        # perform the main query to retrieve the objects we want
         objDict[m.model] = m.model_class().objects.filter(
             id__in=idDict[m.model]
         )
@@ -363,11 +366,11 @@ def _filter(request, object_, tags=None, more=False, orderby="created"):
         )
         objDict[m.model] = list(objDict[m.model])
 
-    # -- combine and sort all objects by date
+    # combine and sort all objects by date
     objects = _sortObjects(orderby, **objDict)
     objects = objects[:BATCH_LENGTH]
 
-    # -- Find out last ids
+    # Find out last ids
     lastids = {}
     for obj in objects:
         lastids["last_{}".format(modelmap[obj.__class__])] = obj.id
@@ -375,7 +378,7 @@ def _filter(request, object_, tags=None, more=False, orderby="created"):
     for key, value in lastids.items():
         request.session[key] = value
 
-    # -- serialize objects
+    # serialize objects
     for i in objects:
         res.append(i.json())
 
@@ -451,7 +454,7 @@ def subscribe(request, obj_id):
     )
 
     if not created:
-        # -- it already existed so delete it
+        # it already existed so delete it
         sub.delete()
 
     return JsonResponse(Result().asDict())
