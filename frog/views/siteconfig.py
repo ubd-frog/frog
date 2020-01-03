@@ -33,7 +33,7 @@ from frog.uploader import handle_uploaded_file
 
 
 @login_required
-@permission_required('siteconfig.can_change')
+@permission_required('frog.change_siteconfig')
 @require_http_methods(["GET", "POST"])
 def index(request):
     if request.method == "GET":
