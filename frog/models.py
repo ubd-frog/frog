@@ -501,7 +501,7 @@ class Video(Piece):
             FROG_FFPROBE,
             '-select_streams', 'v:0', '-show_entries', 'stream=width,height,codec_name,duration,avg_frame_rate',
             '-of', 'json',
-            self.source.file.name
+            Path(getRoot()) / self.source.file.name
         ]
         try:
             output = subprocess.check_output(cmd)
