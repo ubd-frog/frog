@@ -33,6 +33,9 @@ from django.contrib.auth.models import User
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.core.files.storage import get_storage_class
+from django.contrib.auth import get_user_model
+from django.dispatch import receiver
+from django.db.models.signals import post_save
 
 from path import Path
 from PIL import Image as pilImage
@@ -786,6 +789,12 @@ class UserPref(models.Model):
         self.data = json.dumps(data)
 
         self.save()
+
+
+@receiver(post_save, sender=get_user_model())
+def create_user_pref(sender, instance, created, **kwargs):
+    if created:
+        UserPref.objects.get_or_create(user=instance)
 
 
 class Guid(object):
