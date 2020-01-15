@@ -76,7 +76,7 @@ def login_(request):
     user = None
 
     if email:
-        user = authenticate(username=email, password=password)
+        user = authenticate(request=request, username=email, password=password)
     else:
         result.message = "Please enter an email address"
         result.isError = True

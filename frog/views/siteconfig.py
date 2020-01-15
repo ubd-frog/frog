@@ -33,7 +33,6 @@ from frog.uploader import handle_uploaded_file
 
 
 @login_required
-@permission_required('siteconfig.can_change')
 @require_http_methods(["GET", "POST"])
 def index(request):
     if request.method == "GET":
@@ -42,6 +41,7 @@ def index(request):
         return post(request)
 
 
+@permission_required('frog.view_siteconfig')
 def get(request):
     res = Result()
     res.append(SiteConfig.getSiteConfig().json())
@@ -49,6 +49,7 @@ def get(request):
     return JsonResponse(res.asDict())
 
 
+@permission_required('frog.change_siteconfig')
 def post(request):
     res = Result()
     config = SiteConfig.getSiteConfig()
