@@ -36,7 +36,7 @@ from frog.models import (
     Marmoset,
     Group,
     SiteConfig,
-)
+    Badge)
 
 
 class GalleryAdmin(admin.ModelAdmin):
@@ -98,3 +98,4 @@ admin.site.register(ReleaseNotes)
 admin.site.register(Group, GroupAdmin)
 admin.site.register(Marmoset)
 admin.site.register(SiteConfig)
+admin.site.register(Badge)
