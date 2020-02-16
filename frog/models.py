@@ -912,3 +912,18 @@ class SiteConfig(models.Model):
     @staticmethod
     def getSiteConfig():
         return SiteConfig.objects.get_or_create(pk=1)[0]
+
+
+class Badge(models.Model):
+    tag = models.ForeignKey(Tag, on_delete=models.CASCADE)
+    image = models.FileField(upload_to=str(getRoot()))
+
+    def __str__(self):
+        return '<{}: {}>'.format(self.__class__.__name__, self.id)
+
+    def json(self):
+        return {
+            'id': self.id,
+            'tag': self.tag.json(),
+            'image': self.image.url,
+        }

@@ -54,7 +54,7 @@ from frog.models import (
 from frog.common import Result, getObjectsFromGuids, userToJson
 from frog.uploader import upload
 from frog.send_file import send_zipfile
-from frog.views import comment, gallery, piece, tag, userpref, siteconfig
+from frog.views import comment, gallery, piece, tag, userpref, siteconfig, badge
 
 
 LOGGER = logging.getLogger("frog")
