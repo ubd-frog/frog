@@ -916,7 +916,7 @@ class SiteConfig(models.Model):
 
 class Badge(models.Model):
     tag = models.ForeignKey(Tag, on_delete=models.CASCADE)
-    image = models.FileField(upload_to=str(getRoot()))
+    image = models.FileField(upload_to="badges")
 
     def __str__(self):
         return '<{}: {}>'.format(self.__class__.__name__, self.id)
