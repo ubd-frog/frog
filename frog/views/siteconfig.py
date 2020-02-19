@@ -41,7 +41,6 @@ def index(request):
         return post(request)
 
 
-@permission_required('frog.view_siteconfig')
 def get(request):
     res = Result()
     res.append(SiteConfig.getSiteConfig().json())
