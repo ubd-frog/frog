@@ -51,6 +51,7 @@ urlpatterns = [
     url(r'^comment/(?P<obj_id>\d+)/$', views.comment.index),
     # -- Badge
     url(r'^badge/$', views.badge.index),
+    url(r'^badge/(?P<badge_id>\d+)/$', views.badge.index),
     # -- Misc functions
     url(r'^download$', views.download),
     url(r'^switchartist$', views.switchArtist),

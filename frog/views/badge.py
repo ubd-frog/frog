@@ -35,12 +35,14 @@ from frog.uploader import handle_uploaded_file
 
 
 @login_required
-@require_http_methods(["GET", "POST"])
-def index(request):
+@require_http_methods(["GET", "POST", "DELETE"])
+def index(request, badge_id=None):
     if request.method == "GET":
         return get(request)
     elif request.method == "POST":
         return post(request)
+    elif request.method == "DELETE":
+        return delete(request, badge_id)
 
 
 def get(request):
@@ -76,5 +78,15 @@ def post(request):
     else:
         res.isError = True
         res.message = "No badge found"
+
+    return JsonResponse(res.asDict())
+
+
+@permission_required('forg.change_badge')
+def delete(request, badge_id):
+    res = Result()
+
+    badge = Badge.objects.get(pk=badge_id)
+    badge.delete()
 
     return JsonResponse(res.asDict())
