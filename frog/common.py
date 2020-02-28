@@ -175,54 +175,6 @@ def getClientIP(request):
     return ip
 
 
-def cropCenter(image, width, height):
-    """Resizes and crops the center of an image to fit width and height"""
-    image = image.copy()
-    size = max(width, height)
-    sourceratio = image.size[0] / image.size[1]
-    targetratio = width / height
-
-    # Scale
-    scaledratio = width / image.size[0]
-    if (sourceratio >= 1.0 and targetratio >= 1.0) or (
-        sourceratio < 1.0 and targetratio >= 1.0
-    ):
-        h = image.size[1] * scaledratio
-        w = width
-    else:
-        scaledratio = height / image.size[1]
-        w = image.size[0] * scaledratio
-        h = height
-
-    image = image.resize((int(w), int(h)), PIL.Image.BILINEAR)
-
-    # Crop
-    ratio = float(width) / float(height)
-    if ratio >= 1.0:
-        pad = image.size[1] - height
-        clip = int(pad / 2)
-        box = (
-            0,
-            clip if pad % 2 == 0 else clip + 1,
-            size,
-            image.size[1] - clip,
-        )
-    else:
-        pad = image.size[0] - width
-        clip = int(pad / 2)
-        box = (
-            clip if pad % 2 == 0 else clip + 1,
-            0,
-            image.size[0] - clip,
-            size,
-        )
-
-    cropped = image.crop(box)
-    cropped.load()
-
-    return cropped
-
-
 def getUser(request):
     data = json.loads(request.body)["body"]
     username = data.get("user")

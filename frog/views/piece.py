@@ -59,8 +59,8 @@ from frog.models import (
     Gallery,
     SiteConfig,
     FROG_SITE_URL,
-    FROG_THUMB_SIZE
-)
+    FROG_THUMB_SIZE,
+    squareCropDimensions)
 from frog.models import ViewRecord
 from frog.common import Result, getObjectsFromGuids, getRoot, getUser
 from frog.uploader import handle_uploaded_file
@@ -199,18 +199,19 @@ def post(request, obj):
                 image = psd_tools.PSDLoad(dest).as_PIL()
             else:
                 image = pilImage.open(dest)
-        except IOError as err:
+        except IOError:
             res.isError = True
             res.message = "{} is not a supported thumbnail image type".format(
                 f.name
             )
             return JsonResponse(res.asDict())
 
-        box, width, height = cropBox(*image.size)
         # Resize
+        width, height = squareCropDimensions(*image.size)
         image.thumbnail((width, height), pilImage.ANTIALIAS)
+
         # Crop from center
-        box = cropBox(*image.size)[0]
+        box = cropBox(*image.size)
         image.crop(box).save(dest)
 
         obj.save()

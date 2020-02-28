@@ -24,8 +24,11 @@ from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
 from django.http import JsonResponse
 
-from frog import models
-from frog.common import Result, getHashForFile, cropCenter, saveAsPng
+from PIL import Image as pilImage
+
+from frog.models import Piece, Gallery, Image, Video, Marmoset, squareCropDimensions
+from frog.models import cropBox, FROG_THUMB_SIZE, FILE_TYPES
+from frog.common import Result, getHashForFile, saveAsPng
 from frog import getRoot
 
 from path import Path
@@ -64,21 +67,21 @@ def upload(request):
                 user = request.user
 
             uniqueName = request.POST.get(
-                "uid", models.Piece.getUniqueID(foreignPath, user)
+                "uid", Piece.getUniqueID(foreignPath, user)
             )
 
-            if galleries and models.Gallery.objects.filter(
+            if galleries and Gallery.objects.filter(
                 pk__in=[int(g) for g in galleries], uploads=False
             ):
                 raise PermissionDenied()
 
             extension = Path(filename).ext.lower()
-            if extension in models.FILE_TYPES["image"]:
-                model = models.Image
-            elif extension in models.FILE_TYPES["video"]:
-                model = models.Video
-            elif extension in models.FILE_TYPES["marmoset"]:
-                model = models.Marmoset
+            if extension in FILE_TYPES["image"]:
+                model = Image
+            elif extension in FILE_TYPES["video"]:
+                model = Video
+            elif extension in FILE_TYPES["marmoset"]:
+                model = Marmoset
             else:
                 raise MediaTypeError(
                     "{} is not a supported file type".format(extension)
@@ -92,7 +95,7 @@ def upload(request):
 
             if hashVal == obj.hash and not force:
                 for gal in galleries:
-                    g = models.Gallery.objects.get(pk=int(gal))
+                    g = Gallery.objects.get(pk=int(gal))
                     obj.gallery_set.add(g)
 
                 res.append(obj.json())
@@ -116,15 +119,17 @@ def upload(request):
 
                     if key == "thumbnail":
                         thumbnail = saveAsPng(dest)
-                        cropped = cropCenter(
-                            models.pilImage.open(thumbnail),
-                            models.FROG_THUMB_SIZE,
-                            models.FROG_THUMB_SIZE,
-                        )
-                        cropped.save(thumbnail)
-                        obj.custom_thumbnail = (
-                            obj.getPath(True) / thumbnail.name
-                        )
+
+                        # Resize
+                        image = pilImage.open(thumbnail)
+                        width, height = squareCropDimensions(*image.size)
+                        image.thumbnail((width, height), pilImage.ANTIALIAS)
+
+                        # Crop from center
+                        box = cropBox(*image.size)
+                        image.crop(box).save(thumbnail)
+
+                        obj.custom_thumbnail = obj.getPath(True) / thumbnail.name
                         obj.save()
 
             obj.hash = hashVal

@@ -83,14 +83,33 @@ FILE_TYPES = {
 LOGGER = logging.getLogger('frog')
 
 
-def cropBox(width, height):
+def squareCropDimensions(width, height):
     size = FROG_THUMB_SIZE
+
+    # Check to see if this image is smaller than the thumbnail size
     if width < size and height < size:
         size = min(width, height)
+
     ratio = float(width) / float(height)
     if ratio >= 1.0:
         w = size * ratio
         h = size
+    else:
+        w = size
+        h = size / ratio
+
+    return w, h
+
+
+def cropBox(width, height):
+    size = FROG_THUMB_SIZE
+
+    # Check to see if this image is smaller than the thumbnail size
+    if width < size and height < size:
+        size = min(width, height)
+
+    ratio = float(width) / float(height)
+    if ratio >= 1.0:
         box = (
             int(math.floor(width / 2.0 - (size / 2.0))),
             0,
@@ -98,8 +117,6 @@ def cropBox(width, height):
             size
         )
     else:
-        w = size
-        h = size / ratio
         box = (
             0,
             int(math.floor(height / 2.0 - (size / 2.0))),
@@ -107,7 +124,7 @@ def cropBox(width, height):
             int(math.floor(height / 2.0 + (size / 2.0))),
         )
 
-    return box, w, h
+    return box
 
 
 class Tag(models.Model):
@@ -386,14 +403,15 @@ class Image(Piece):
 
     def generateThumbnail(self):
         """Generates a square thumbnail"""
-        image = pilImage.open(getRoot() / self.source.name)
-        box, width, height = cropBox(self.width, self.height)
-
         # Resize
+        image = pilImage.open(getRoot() / self.source.name)
+        width, height = squareCropDimensions(self.width, self.height)
         image.thumbnail((width, height), pilImage.ANTIALIAS)
+
         # Crop from center
-        box = cropBox(*image.size)[0]
+        box = cropBox(*image.size)
         image = image.crop(box)
+
         # save
         self.thumbnail = self.source.name.replace(self.hash, '{0}{1}'.format('_' * 3, self.hash))
         image.save(getRoot() / self.thumbnail.name)
@@ -488,13 +506,14 @@ class Video(Piece):
         image.save(poster)
         self.poster = poster.replace(getRoot(), '')
 
-        box, width, height = cropBox(self.width, self.height)
-
         # Resize
+        width, height = squareCropDimensions(self.width, self.height)
         image.thumbnail((width, height), pilImage.ANTIALIAS)
+
         # Crop from center
-        box = cropBox(*image.size)[0]
+        box = cropBox(*image.size)
         image = image.crop(box)
+
         # save
         self.thumbnail = thumbnail.replace(getRoot(), '')
         image.save(thumbnail)
