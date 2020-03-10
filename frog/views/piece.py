@@ -162,10 +162,8 @@ def post(request, obj):
     if crop:
         box = [int(_) for _ in crop]
         # -- Handle thumbnail upload
-        source = Path(obj.source.name)
-        relativedest = obj.getPath(True) / "{:.0f}{}".format(
-            time.time(), source.ext
-        )
+        source = Path(obj.cropSource.name)
+        relativedest = obj.getPath(True) / "{:.0f}{}".format(time.time(), source.ext)
         dest = getRoot() / relativedest
         source = getRoot() / source
         if not dest.parent.exists():
@@ -173,10 +171,7 @@ def post(request, obj):
         source.copy(dest)
         obj.custom_thumbnail = relativedest
 
-        image = pilImage.open(dest)
-
-        # Crop from center
-        image = image.crop(box)
+        image = pilImage.open(dest).crop(box)
         image.load()
         # Resize
         image.thumbnail(

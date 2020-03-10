@@ -190,6 +190,10 @@ class Piece(models.Model):
     thumbnail_tag.allow_tags = True
     thumbnail_tag.short_description = 'Image'
 
+    @property
+    def cropSource(self):
+        raise NotImplementedError
+
     @staticmethod
     def getUniqueID(path, user):
         if FROG_UNIQUE_ID:
@@ -323,6 +327,10 @@ class Image(Piece):
     group = GenericRelation('GroupChild')
     panoramic = models.BooleanField(default=False)
 
+    @property
+    def cropSource(self):
+        return self.source
+
     def export(self, hashVal=None, hashPath=None, tags=None, galleries=None):
         """
         The export function needs to:
@@ -425,6 +433,10 @@ class Video(Piece):
     poster = models.ImageField(upload_to='%Y/%m/%d', max_length=255, blank=True, null=True)
     framerate = models.IntegerField(default=24)
     duration = models.FloatField(default=0.0)
+
+    @property
+    def cropSource(self):
+        return self.poster
 
     def export(self, hashVal, hashPath, tags=None, galleries=None):
         """
@@ -650,6 +662,10 @@ class Group(Piece):
 class Marmoset(Piece):
     AssetType = 6
     source = models.FileField(upload_to='%Y/%m/%d', max_length=255, blank=True, null=True)
+
+    @property
+    def cropSource(self):
+        return self.custom_thumbnail
 
     def export(self, hashVal, hashPath, tags=None, galleries=None):
         """"""
